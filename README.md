@@ -2,7 +2,8 @@
 
 A Windows system tray app that monitors your Claude AI usage limits in real time — without needing the Claude CLI or any extra configuration.
 
-![Preview](assets/preview.png)
+![Preview](img/1.png)
+![Preview](img/2.png)
 
 ---
 
