@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Usage</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-dot" id="status-dot"></div>
+      <span class="app-title">Claude Usage</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-close" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- ── Body ── -->
+  <div class="content">
+
+    <!-- Error banner -->
+    <div class="error-banner" id="error-banner"></div>
+
+    <!-- Gauges -->
+    <div class="gauges-grid">
+      <div class="gauge-card">
+        <span class="gauge-label" data-i18n="sessionLabel">Session (5h)</span>
+        <div class="gauge-wrapper">
+          <canvas id="gauge-session"></canvas>
+          <span class="gauge-pct" id="pct-session">—</span>
+        </div>
+        <span class="gauge-reset" id="reset-session">—</span>
+      </div>
+      <div class="gauge-card">
+        <span class="gauge-label" data-i18n="weeklyLabel">Weekly (7d)</span>
+        <div class="gauge-wrapper">
+          <canvas id="gauge-weekly"></canvas>
+          <span class="gauge-pct" id="pct-weekly">—</span>
+        </div>
+        <span class="gauge-reset" id="reset-weekly">—</span>
+      </div>
+    </div>
+
+    <!-- Sonnet / extra bars -->
+    <div class="extra-section" id="extra-section">
+      <div class="extra-row" id="sonnet-row" style="display:none">
+        <span class="extra-label" data-i18n="sonnetLabel">Sonnet</span>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="bar-sonnet" style="width:0%"></div>
+        </div>
+        <span class="extra-pct" id="pct-sonnet">0%</span>
+      </div>
+      <div class="extra-row" id="credits-row" style="display:none">
+        <span class="extra-label" data-i18n="creditsLabel">Credits</span>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="bar-credits" style="width:0%"></div>
+        </div>
+        <span class="extra-pct" id="pct-credits">0%</span>
+      </div>
+    </div>
+
+    <!-- Updated / refresh footer -->
+    <div class="footer">
+      <span class="updated-text" id="updated-text">Loading...</span>
+      <button class="refresh-btn" id="btn-refresh" data-i18n="refreshText">↺ Refresh</button>
+    </div>
+
+    <!-- ── Divider ── -->
+    <div class="section-divider"></div>
+
+    <!-- ── Settings ── -->
+    <div class="settings-area">
+
+      <!-- General -->
+      <div class="settings-group">
+        <div class="settings-title" data-i18n="generalTitle">General</div>
+        <div class="settings-row">
+          <label data-i18n="launchAtStartup">Launch at startup</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-startup" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="alwaysVisible">Always visible</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-always-visible" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="themeLabel">Theme</label>
+          <select class="setting-select" id="setting-theme">
+            <option value="system">System</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="languageLabel">Language</label>
+          <select class="setting-select" id="setting-language">
+            <option value="en">English</option>
+            <option value="pt-BR">Português (BR)</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="sizeLabel">Size</label>
+          <select class="setting-select" id="setting-window-size">
+            <option value="normal"  data-i18n-opt="sizeNormal">Normal</option>
+            <option value="medium"  data-i18n-opt="sizeMedium">Medium</option>
+            <option value="large"   data-i18n-opt="sizeLarge">Large</option>
+            <option value="xlarge"  data-i18n-opt="sizeXLarge">Very Large</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="autoRefreshLabel">Auto refresh</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-auto-refresh" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row" id="row-auto-refresh-interval">
+          <label data-i18n="autoRefreshIntervalLabel">Interval (s)</label>
+          <div class="spinner-row">
+            <input type="number" class="spinner-input" id="setting-auto-refresh-interval" min="5" max="3600" step="5" />
+            <span class="spinner-unit">s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="settings-group">
+        <div class="settings-title" data-i18n="notifTitle">Notifications</div>
+        <div class="settings-row">
+          <label data-i18n="enable">Enable</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-notif-enabled" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="sound">Sound</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-sound-enabled" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="notifyOnReset">Notify on reset</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-notify-on-window-reset" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="sessionThreshold">Session limit</label>
+          <div class="spinner-row">
+            <input type="number" class="spinner-input" id="setting-session-threshold" min="1" max="100" step="1" />
+            <span class="spinner-unit">%</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <label data-i18n="weeklyThreshold">Weekly limit</label>
+          <div class="spinner-row">
+            <input type="number" class="spinner-input" id="setting-weekly-threshold" min="1" max="100" step="1" />
+            <span class="spinner-unit">%</span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <label></label>
+          <button class="test-btn" id="btn-test-notif" data-i18n="test">Test</button>
+        </div>
+      </div>
+
+    </div><!-- /settings-area -->
+
+  </div>
+
+  <!-- Hidden canvas for tray icon rendering -->
+  <canvas id="tray-canvas" width="32" height="32"></canvas>
+
+  <script src="app.js"></script>
+</body>
+</html>
