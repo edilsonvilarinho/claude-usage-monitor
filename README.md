@@ -22,7 +22,13 @@ A Windows system tray app that monitors your Claude AI usage limits in real time
 
 ### Auto refresh
 - Toggle **Auto refresh** in settings to poll the API automatically while the window is open
-- Configurable interval (minimum 5 seconds)
+- Configurable interval (minimum 60 seconds — recommended 300s to avoid rate limiting)
+
+### Rate limit handling
+- When the API returns 429, the app stops retrying immediately and shows a countdown banner
+- Exponential backoff on consecutive rate limits: 5m → 10m → 20m → 40m → 60m (cap)
+- The countdown and backoff state survive app restarts — reopening the app shows the correct remaining time
+- Automatically resumes normal polling once the cooldown expires
 
 ### Notifications
 - Desktop toast when usage crosses your configured threshold (session and/or weekly)
@@ -34,9 +40,9 @@ A Windows system tray app that monitors your Claude AI usage limits in real time
 Four sizes to choose from — scales the gauge charts:
 | Size | Description |
 |---|---|
-| Normal | Compact (default) |
+| Normal | Compact |
 | Medium | Slightly larger gauges |
-| Large | Big gauges, easy to read |
+| Large | Big gauges, easy to read (default) |
 | Very Large | Maximum gauge size |
 
 ### Moveable window
@@ -79,7 +85,7 @@ Download the latest release from the [Releases](../../releases) page:
 Requirements: Node.js 18+, Windows
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/edilsonvilarinho/claude-usage-monitor
 cd claude-usage-monitor
 npm install
 

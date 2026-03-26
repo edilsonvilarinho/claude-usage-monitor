@@ -40,6 +40,7 @@ declare global {
     claudeUsage: {
       onUsageUpdated: (cb: (data: UsageData) => void) => void;
       onError: (cb: (msg: string) => void) => void;
+      onRateLimited: (cb: (until: number) => void) => void;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -85,12 +86,16 @@ const translations = {
     sizeXLarge:                'Very Large',
     autoRefreshLabel:          'Auto refresh',
     autoRefreshIntervalLabel:  'Interval (s)',
+    autoRefreshHint:           'Min 60s — recommended: 300s',
     enable:           'Enable',
     sound:            'Sound',
     notifyOnReset:    'Notify when usage resets to 0%',
     sessionThreshold: 'Session limit',
     weeklyThreshold:  'Weekly limit',
     test:             'Test',
+    rateLimitMsg:    'Rate limited',
+    rateLimitRetry:  (t: string) => `Retry in ${t}`,
+    rateLimitNow:    'Retrying...',
     updatedAt:  (time: string) => `Updated: ${time}`,
     failedAt:   (time: string) => `Failed: ${time}`,
     resetsIn:   (d: number, h: number, m: number) =>
@@ -124,12 +129,16 @@ const translations = {
     sizeXLarge:                'Muito Grande',
     autoRefreshLabel:          'Atualizar automaticamente',
     autoRefreshIntervalLabel:  'Intervalo (s)',
+    autoRefreshHint:           'Mín 60s — recomendado: 300s',
     enable:           'Ativar',
     sound:            'Som',
     notifyOnReset:    'Avisar quando uso zerar',
     sessionThreshold: 'Limite da sessão',
     weeklyThreshold:  'Limite semanal',
     test:             'Testar',
+    rateLimitMsg:    'Limite de requisições',
+    rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
+    rateLimitNow:    'Tentando novamente...',
     updatedAt:  (time: string) => `Atualizado: ${time}`,
     failedAt:   (time: string) => `Falhou: ${time}`,
     resetsIn:   (d: number, h: number, m: number) =>
@@ -211,13 +220,48 @@ function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
     autoRefreshTimer = null;
   }
   if (enabled) {
-    const ms = Math.max(5, intervalSeconds) * 1000;
+    const ms = Math.max(60, intervalSeconds) * 1000;
     autoRefreshTimer = setInterval(() => {
       void window.claudeUsage.refreshNow();
     }, ms);
   }
   const intervalRow = document.getElementById('row-auto-refresh-interval') as HTMLElement;
   intervalRow.style.opacity = enabled ? '1' : '0.4';
+}
+
+// ── Rate limit countdown ──────────────────────────────────────────────────────
+
+let countdownTimer: ReturnType<typeof setInterval> | null = null;
+
+function startRateLimitCountdown(until: number): void {
+  if (countdownTimer) clearInterval(countdownTimer);
+
+  const banner = document.getElementById('rate-limit-banner') as HTMLElement;
+  const label  = document.getElementById('rl-label') as HTMLElement;
+  const timer  = document.getElementById('rl-timer') as HTMLElement;
+  document.getElementById('error-banner')!.classList.remove('visible');
+  banner.classList.add('visible');
+
+  function tick(): void {
+    const remaining = until - Date.now();
+    if (remaining <= 0) {
+      timer.textContent = tr().rateLimitNow;
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+      return;
+    }
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    label.textContent = tr().rateLimitMsg;
+    timer.textContent = tr().rateLimitRetry(`${m}:${String(s).padStart(2, '0')}`);
+  }
+
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+function clearRateLimitBanner(): void {
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  document.getElementById('rate-limit-banner')!.classList.remove('visible');
 }
 
 // ── Gauge factory ─────────────────────────────────────────────────────────────
@@ -388,6 +432,7 @@ function updateUI(data: UsageData): void {
   dot.className = 'logo-dot';
 
   document.getElementById('error-banner')!.classList.remove('visible');
+  clearRateLimitBanner();
 
   updateTrayIcon(sessionPct, weeklyPct);
 
@@ -439,7 +484,7 @@ async function saveSettingsFromUI(): Promise<void> {
   const lang             = (document.getElementById('setting-language') as HTMLSelectElement).value as Lang;
   const windowSize       = (document.getElementById('setting-window-size') as HTMLSelectElement).value as AppSettings['windowSize'];
   const autoRefresh      = (document.getElementById('setting-auto-refresh') as HTMLInputElement).checked;
-  const autoRefreshInterval = Math.max(5, Number((document.getElementById('setting-auto-refresh-interval') as HTMLInputElement).value));
+  const autoRefreshInterval = Math.max(60, Number((document.getElementById('setting-auto-refresh-interval') as HTMLInputElement).value));
   const sessionTh        = Math.min(100, Math.max(1, Number((document.getElementById('setting-session-threshold') as HTMLInputElement).value)));
   const weeklyTh         = Math.min(100, Math.max(1, Number((document.getElementById('setting-weekly-threshold') as HTMLInputElement).value)));
 
@@ -490,7 +535,14 @@ function init(): void {
 
   window.claudeUsage.onUsageUpdated((data) => updateUI(data));
 
+  window.claudeUsage.onRateLimited((until) => {
+    startRateLimitCountdown(until);
+  });
+
   window.claudeUsage.onError((msg) => {
+    // Rate limit errors are handled by onRateLimited — don't show generic banner
+    if (msg.includes('429') || msg.toLowerCase().includes('rate limit')) return;
+
     const banner = document.getElementById('error-banner') as HTMLElement;
     banner.textContent = `${tr().errorPrefix}${msg}`;
     banner.classList.add('visible');

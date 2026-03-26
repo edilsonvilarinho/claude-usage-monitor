@@ -14,6 +14,7 @@ let popup: BrowserWindow | null = null;
 let lastUsageData: UsageData | null = null;
 let suppressNextNotification = false;
 let userMovedPopup = false;
+let currentRateLimitUntil = 0; // restored from disk on startup
 
 const POPUP_WIDTH  = 340;
 const POPUP_HEIGHT = 210;
@@ -88,6 +89,10 @@ function togglePopup(): void {
     // Send current data immediately when opening
     if (lastUsageData) {
       popup.webContents.send('usage-updated', lastUsageData);
+    }
+    // Restore rate-limit countdown if still active
+    if (currentRateLimitUntil > Date.now()) {
+      popup.webContents.send('rate-limited', currentRateLimitUntil);
     }
   }
 }
@@ -195,11 +200,13 @@ function registerIpcHandlers(): void {
 
   ipcMain.on('set-window-height', (_event, height: number) => {
     if (!popup) return;
-    const h = Math.round(height);
+    const workArea = screen.getPrimaryDisplay().workArea;
+    const h = Math.min(Math.round(height), workArea.height - 16);
     if (userMovedPopup) {
-      // User dragged the window — only resize, keep current position
       const [x, y] = popup.getPosition();
-      popup.setBounds({ x, y, width: POPUP_WIDTH, height: h }, false);
+      // Clamp y so the window doesn't go below the screen bottom
+      const clampedY = Math.min(y, workArea.y + workArea.height - h);
+      popup.setBounds({ x, y: Math.max(workArea.y, clampedY), width: POPUP_WIDTH, height: h }, false);
     } else {
       popup.setSize(POPUP_WIDTH, h, false);
       positionPopup();
@@ -217,12 +224,23 @@ app.whenReady().then(() => {
 
   registerIpcHandlers();
 
+  // Restore rate-limit state from previous session
+  const { rateLimitedUntil: saved, rateLimitCount: savedCount } = getSettings();
+  if (saved > Date.now()) {
+    currentRateLimitUntil = saved;
+    pollingService.restoreRateLimit(saved, savedCount || 1);
+  }
+
   tray = createTray();
   popup = createPopup();
 
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {
     lastUsageData = data;
+    if (currentRateLimitUntil > 0) {
+      currentRateLimitUntil = 0;
+      saveSettings({ rateLimitedUntil: 0, rateLimitCount: 0 });
+    }
     updateTrayTooltip(data);
     if (suppressNextNotification) {
       syncWindowState(data);
@@ -239,6 +257,14 @@ app.whenReady().then(() => {
     // Send to renderer to draw the canvas icon
     if (popup) {
       popup.webContents.send('usage-updated', data);
+    }
+  });
+
+  pollingService.on('rate-limited', (until: number, count: number) => {
+    currentRateLimitUntil = until;
+    saveSettings({ rateLimitedUntil: until, rateLimitCount: count });
+    if (popup?.isVisible()) {
+      popup.webContents.send('rate-limited', until);
     }
   });
 

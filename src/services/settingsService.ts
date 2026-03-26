@@ -20,6 +20,8 @@ export interface AppSettings {
   windowSize: 'normal' | 'medium' | 'large' | 'xlarge';
   autoRefresh: boolean;
   autoRefreshInterval: number; // seconds
+  rateLimitedUntil: number;    // unix ms — 0 means not rate limited
+  rateLimitCount: number;      // consecutive 429s for backoff
 }
 
 const defaults: AppSettings = {
@@ -37,9 +39,11 @@ const defaults: AppSettings = {
   theme: 'system',
   language: 'en',
   pollIntervalMinutes: 7,
-  windowSize: 'normal',
+  windowSize: 'large',
   autoRefresh: false,
-  autoRefreshInterval: 30,
+  autoRefreshInterval: 300,
+  rateLimitedUntil: 0,
+  rateLimitCount: 0,
 };
 
 const store = new Store<AppSettings>({
@@ -65,7 +69,9 @@ const store = new Store<AppSettings>({
     pollIntervalMinutes: { type: 'number', minimum: 1, maximum: 60 },
     windowSize: { type: 'string', enum: ['normal', 'medium', 'large', 'xlarge'] },
     autoRefresh: { type: 'boolean' },
-    autoRefreshInterval: { type: 'number', minimum: 5, maximum: 3600 },
+    autoRefreshInterval: { type: 'number', minimum: 1, maximum: 3600 },
+    rateLimitedUntil: { type: 'number' },
+    rateLimitCount: { type: 'number' },
   },
 });
 
@@ -80,6 +86,8 @@ export function getSettings(): AppSettings {
     windowSize: store.get('windowSize', defaults.windowSize),
     autoRefresh: store.get('autoRefresh', defaults.autoRefresh),
     autoRefreshInterval: store.get('autoRefreshInterval', defaults.autoRefreshInterval),
+    rateLimitedUntil: store.get('rateLimitedUntil', defaults.rateLimitedUntil),
+    rateLimitCount: store.get('rateLimitCount', defaults.rateLimitCount),
   };
 }
 
@@ -110,5 +118,11 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   }
   if (settings.autoRefreshInterval !== undefined) {
     store.set('autoRefreshInterval', settings.autoRefreshInterval);
+  }
+  if (settings.rateLimitedUntil !== undefined) {
+    store.set('rateLimitedUntil', settings.rateLimitedUntil);
+  }
+  if (settings.rateLimitCount !== undefined) {
+    store.set('rateLimitCount', settings.rateLimitCount);
   }
 }

@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.on('usage-error', (_event, message: string) => cb(message));
   },
 
+  onRateLimited: (cb: (until: number) => void) => {
+    ipcRenderer.on('rate-limited', (_event, until: number) => cb(until));
+  },
+
   getSettings: (): Promise<AppSettings> => {
     return ipcRenderer.invoke('get-settings');
   },

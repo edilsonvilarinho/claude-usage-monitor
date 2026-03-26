@@ -27,6 +27,15 @@
     <!-- Error banner -->
     <div class="error-banner" id="error-banner"></div>
 
+    <!-- Rate limit banner -->
+    <div class="rate-limit-banner" id="rate-limit-banner">
+      <span class="rl-icon">⏱</span>
+      <div class="rl-text">
+        <span id="rl-label"></span>
+        <span id="rl-timer"></span>
+      </div>
+    </div>
+
     <!-- Gauges -->
     <div class="gauges-grid">
       <div class="gauge-card">
@@ -128,10 +137,11 @@
         <div class="settings-row" id="row-auto-refresh-interval">
           <label data-i18n="autoRefreshIntervalLabel">Interval (s)</label>
           <div class="spinner-row">
-            <input type="number" class="spinner-input" id="setting-auto-refresh-interval" min="5" max="3600" step="5" />
+            <input type="number" class="spinner-input" id="setting-auto-refresh-interval" min="60" max="3600" step="30" />
             <span class="spinner-unit">s</span>
           </div>
         </div>
+        <div class="settings-hint" id="hint-auto-refresh" data-i18n="autoRefreshHint"></div>
       </div>
 
       <!-- Notifications -->

@@ -22,14 +22,18 @@ function getClaudeVersion(): string {
   return cachedClaudeVersion;
 }
 
-function httpsGet(hostname: string, path: string, headers: Record<string, string>): Promise<{ statusCode: number; body: string }> {
+function httpsGet(hostname: string, path: string, headers: Record<string, string>): Promise<{ statusCode: number; body: string; retryAfter?: number }> {
   return new Promise((resolve, reject) => {
     const options = { hostname, port: 443, path, method: 'GET', headers };
 
     const req = https.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => resolve({ statusCode: res.statusCode ?? 0, body: data }));
+      res.on('end', () => {
+        const retryAfterRaw = res.headers['retry-after'];
+        const retryAfter = retryAfterRaw ? parseInt(String(retryAfterRaw), 10) : undefined;
+        resolve({ statusCode: res.statusCode ?? 0, body: data, retryAfter });
+      });
     });
 
     req.on('error', reject);
@@ -50,7 +54,7 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
     const version = getClaudeVersion();
 
     try {
-      const { statusCode, body } = await httpsGet(API_HOST, API_PATH, {
+      const { statusCode, body, retryAfter } = await httpsGet(API_HOST, API_PATH, {
         'Authorization': `Bearer ${token}`,
         'User-Agent': `claude-code/${version}`,
         'anthropic-beta': 'oauth-2025-04-20',
@@ -76,8 +80,16 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
         throw new Error(`Authentication failed (401): ${body}`);
       }
 
-      if (statusCode === 429 || statusCode >= 500) {
-        // Retry with exponential backoff
+      if (statusCode === 429) {
+        // Do not retry — let the polling service handle rescheduling
+        // Pass retryAfter (seconds) if the API provided it
+        const waitSec = retryAfter && !isNaN(retryAfter) ? retryAfter : undefined;
+        console.warn(`[UsageAPI] Rate limited (429)${waitSec ? ` — retry after ${waitSec}s` : ''}`);
+        throw Object.assign(new Error(`Rate limited (429)`), { isRateLimit: true, retryAfterMs: waitSec ? waitSec * 1000 : undefined });
+      }
+
+      if (statusCode >= 500) {
+        // Retry with exponential backoff for transient server errors
         const backoffMs = Math.min(1000 * Math.pow(2, attempt), 16000);
         lastError = new Error(`API returned ${statusCode}: ${body.slice(0, 100)}`);
         console.warn(`[UsageAPI] Attempt ${attempt + 1} failed (${statusCode}), retrying in ${backoffMs}ms`);
@@ -89,6 +101,9 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
     } catch (err) {
       if (err instanceof Error && err.message.includes('Authentication failed')) {
         throw err;
+      }
+      if ((err as { isRateLimit?: boolean }).isRateLimit) {
+        throw err; // never retry rate limit errors
       }
       lastError = err instanceof Error ? err : new Error(String(err));
       if (attempt < MAX_RETRIES - 1) {
