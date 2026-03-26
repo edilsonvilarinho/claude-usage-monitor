@@ -40,7 +40,7 @@ declare global {
     claudeUsage: {
       onUsageUpdated: (cb: (data: UsageData) => void) => void;
       onError: (cb: (msg: string) => void) => void;
-      onRateLimited: (cb: (until: number) => void) => void;
+      onRateLimited: (cb: (until: number, resetAt?: number) => void) => void;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -95,6 +95,7 @@ const translations = {
     test:             'Test',
     rateLimitMsg:    'Rate limited',
     rateLimitRetry:  (t: string) => `Retry in ${t}`,
+    rateLimitAt:     (time: string) => `(at ${time})`,
     rateLimitNow:    'Retrying...',
     updatedAt:  (time: string) => `Updated: ${time}`,
     failedAt:   (time: string) => `Failed: ${time}`,
@@ -138,6 +139,7 @@ const translations = {
     test:             'Testar',
     rateLimitMsg:    'Limite de requisições',
     rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
+    rateLimitAt:     (time: string) => `(às ${time})`,
     rateLimitNow:    'Tentando novamente...',
     updatedAt:  (time: string) => `Atualizado: ${time}`,
     failedAt:   (time: string) => `Falhou: ${time}`,
@@ -233,7 +235,7 @@ function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
 
-function startRateLimitCountdown(until: number): void {
+function startRateLimitCountdown(until: number, resetAt?: number): void {
   if (countdownTimer) clearInterval(countdownTimer);
 
   const banner = document.getElementById('rate-limit-banner') as HTMLElement;
@@ -241,6 +243,10 @@ function startRateLimitCountdown(until: number): void {
   const timer  = document.getElementById('rl-timer') as HTMLElement;
   document.getElementById('error-banner')!.classList.remove('visible');
   banner.classList.add('visible');
+
+  const clockTime = resetAt
+    ? new Date(resetAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   function tick(): void {
     const remaining = until - Date.now();
@@ -252,7 +258,8 @@ function startRateLimitCountdown(until: number): void {
     const m = Math.floor(remaining / 60000);
     const s = Math.floor((remaining % 60000) / 1000);
     label.textContent = tr().rateLimitMsg;
-    timer.textContent = tr().rateLimitRetry(`${m}:${String(s).padStart(2, '0')}`);
+    const countdown = tr().rateLimitRetry(`${m}:${String(s).padStart(2, '0')}`);
+    timer.textContent = clockTime ? `${countdown} ${tr().rateLimitAt(clockTime)}` : countdown;
   }
 
   tick();
@@ -535,8 +542,8 @@ function init(): void {
 
   window.claudeUsage.onUsageUpdated((data) => updateUI(data));
 
-  window.claudeUsage.onRateLimited((until) => {
-    startRateLimitCountdown(until);
+  window.claudeUsage.onRateLimited((until, resetAt) => {
+    startRateLimitCountdown(until, resetAt);
   });
 
   window.claudeUsage.onError((msg) => {

@@ -22,7 +22,19 @@ function getClaudeVersion(): string {
   return cachedClaudeVersion;
 }
 
-function httpsGet(hostname: string, path: string, headers: Record<string, string>): Promise<{ statusCode: number; body: string; retryAfter?: number }> {
+function parseIsoToMs(value: string | string[] | undefined): number | undefined {
+  if (!value) return undefined;
+  const ms = new Date(String(value)).getTime();
+  return isNaN(ms) ? undefined : ms;
+}
+
+function httpsGet(hostname: string, path: string, headers: Record<string, string>): Promise<{
+  statusCode: number;
+  body: string;
+  retryAfter?: number;
+  requestsResetMs?: number;
+  tokensResetMs?: number;
+}> {
   return new Promise((resolve, reject) => {
     const options = { hostname, port: 443, path, method: 'GET', headers };
 
@@ -32,7 +44,9 @@ function httpsGet(hostname: string, path: string, headers: Record<string, string
       res.on('end', () => {
         const retryAfterRaw = res.headers['retry-after'];
         const retryAfter = retryAfterRaw ? parseInt(String(retryAfterRaw), 10) : undefined;
-        resolve({ statusCode: res.statusCode ?? 0, body: data, retryAfter });
+        const requestsResetMs = parseIsoToMs(res.headers['anthropic-ratelimit-requests-reset']);
+        const tokensResetMs   = parseIsoToMs(res.headers['anthropic-ratelimit-tokens-reset']);
+        resolve({ statusCode: res.statusCode ?? 0, body: data, retryAfter, requestsResetMs, tokensResetMs });
       });
     });
 
@@ -54,7 +68,7 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
     const version = getClaudeVersion();
 
     try {
-      const { statusCode, body, retryAfter } = await httpsGet(API_HOST, API_PATH, {
+      const { statusCode, body, retryAfter, requestsResetMs, tokensResetMs } = await httpsGet(API_HOST, API_PATH, {
         'Authorization': `Bearer ${token}`,
         'User-Agent': `claude-code/${version}`,
         'anthropic-beta': 'oauth-2025-04-20',
@@ -82,10 +96,13 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
 
       if (statusCode === 429) {
         // Do not retry — let the polling service handle rescheduling
-        // Pass retryAfter (seconds) if the API provided it
-        const waitSec = retryAfter && !isNaN(retryAfter) ? retryAfter : undefined;
-        console.warn(`[UsageAPI] Rate limited (429)${waitSec ? ` — retry after ${waitSec}s` : ''}`);
-        throw Object.assign(new Error(`Rate limited (429)`), { isRateLimit: true, retryAfterMs: waitSec ? waitSec * 1000 : undefined });
+        const apiResetMs = Math.max(requestsResetMs ?? 0, tokensResetMs ?? 0);
+        const resetAt = apiResetMs > Date.now() ? apiResetMs : undefined;
+        const retryAfterMs = resetAt
+          ? resetAt - Date.now()
+          : (retryAfter && !isNaN(retryAfter) ? retryAfter * 1000 : undefined);
+        console.warn(`[UsageAPI] Rate limited (429)${resetAt ? ` — resets at ${new Date(resetAt).toLocaleTimeString()}` : ''}`);
+        throw Object.assign(new Error(`Rate limited (429)`), { isRateLimit: true, retryAfterMs, resetAt });
       }
 
       if (statusCode >= 500) {

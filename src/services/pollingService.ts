@@ -122,19 +122,25 @@ export class PollingService extends EventEmitter {
       if (isRateLimit) {
         this.rateLimited = true;
         this.rateLimitCount++;
-        // Exponential backoff: 5m, 10m, 20m, 40m, 60m (cap)
-        const backoffMs = Math.min(
-          POLL_RATE_LIMIT_BASE * Math.pow(2, this.rateLimitCount - 1),
-          POLL_RATE_LIMIT_MAX
-        );
-        // Honour Retry-After header if it's longer than our backoff
-        const retryAfterMs = (err as { retryAfterMs?: number }).retryAfterMs;
-        const waitMs = retryAfterMs ? Math.max(retryAfterMs, backoffMs) : backoffMs;
+        const resetAt = (err as { resetAt?: number }).resetAt;
+        let waitMs: number;
+        if (resetAt && resetAt > Date.now()) {
+          // API told us exactly when — use it directly, no backoff needed
+          waitMs = resetAt - Date.now();
+        } else {
+          // Exponential backoff: 5m, 10m, 20m, 40m, 60m (cap)
+          const backoffMs = Math.min(
+            POLL_RATE_LIMIT_BASE * Math.pow(2, this.rateLimitCount - 1),
+            POLL_RATE_LIMIT_MAX
+          );
+          const retryAfterMs = (err as { retryAfterMs?: number }).retryAfterMs;
+          waitMs = retryAfterMs ? Math.max(retryAfterMs, backoffMs) : backoffMs;
+        }
         this.rateLimitedUntil = Date.now() + waitMs;
         const waitMin = Math.round(waitMs / 60000);
         const waitSec = Math.round((waitMs % 60000) / 1000);
         console.warn(`[PollingService] Rate limited (attempt ${this.rateLimitCount}) — cooling down for ${waitMin > 0 ? `${waitMin}m ${waitSec}s` : `${waitSec}s`}`);
-        this.emit('rate-limited', this.rateLimitedUntil, this.rateLimitCount);
+        this.emit('rate-limited', this.rateLimitedUntil, this.rateLimitCount, resetAt);
       } else {
         this.rateLimited = false;
         this.errorCount = Math.min(this.errorCount + 1, 8);

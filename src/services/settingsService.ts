@@ -22,6 +22,7 @@ export interface AppSettings {
   autoRefreshInterval: number; // seconds
   rateLimitedUntil: number;    // unix ms — 0 means not rate limited
   rateLimitCount: number;      // consecutive 429s for backoff
+  rateLimitResetAt: number;    // API-provided reset timestamp (unix ms), 0 if absent
 }
 
 const defaults: AppSettings = {
@@ -44,6 +45,7 @@ const defaults: AppSettings = {
   autoRefreshInterval: 300,
   rateLimitedUntil: 0,
   rateLimitCount: 0,
+  rateLimitResetAt: 0,
 };
 
 const store = new Store<AppSettings>({
@@ -72,6 +74,7 @@ const store = new Store<AppSettings>({
     autoRefreshInterval: { type: 'number', minimum: 1, maximum: 3600 },
     rateLimitedUntil: { type: 'number' },
     rateLimitCount: { type: 'number' },
+    rateLimitResetAt: { type: 'number' },
   },
 });
 
@@ -88,6 +91,7 @@ export function getSettings(): AppSettings {
     autoRefreshInterval: store.get('autoRefreshInterval', defaults.autoRefreshInterval),
     rateLimitedUntil: store.get('rateLimitedUntil', defaults.rateLimitedUntil),
     rateLimitCount: store.get('rateLimitCount', defaults.rateLimitCount),
+    rateLimitResetAt: store.get('rateLimitResetAt', defaults.rateLimitResetAt),
   };
 }
 
@@ -124,5 +128,8 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   }
   if (settings.rateLimitCount !== undefined) {
     store.set('rateLimitCount', settings.rateLimitCount);
+  }
+  if (settings.rateLimitResetAt !== undefined) {
+    store.set('rateLimitResetAt', settings.rateLimitResetAt);
   }
 }

@@ -92,7 +92,8 @@ function togglePopup(): void {
     }
     // Restore rate-limit countdown if still active
     if (currentRateLimitUntil > Date.now()) {
-      popup.webContents.send('rate-limited', currentRateLimitUntil);
+      const { rateLimitResetAt } = getSettings();
+      popup.webContents.send('rate-limited', currentRateLimitUntil, rateLimitResetAt || undefined);
     }
   }
 }
@@ -225,7 +226,7 @@ app.whenReady().then(() => {
   registerIpcHandlers();
 
   // Restore rate-limit state from previous session
-  const { rateLimitedUntil: saved, rateLimitCount: savedCount } = getSettings();
+  const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt } = getSettings();
   if (saved > Date.now()) {
     currentRateLimitUntil = saved;
     pollingService.restoreRateLimit(saved, savedCount || 1);
@@ -260,11 +261,11 @@ app.whenReady().then(() => {
     }
   });
 
-  pollingService.on('rate-limited', (until: number, count: number) => {
+  pollingService.on('rate-limited', (until: number, count: number, resetAt?: number) => {
     currentRateLimitUntil = until;
-    saveSettings({ rateLimitedUntil: until, rateLimitCount: count });
+    saveSettings({ rateLimitedUntil: until, rateLimitCount: count, rateLimitResetAt: resetAt ?? 0 });
     if (popup?.isVisible()) {
-      popup.webContents.send('rate-limited', until);
+      popup.webContents.send('rate-limited', until, resetAt);
     }
   });
 
