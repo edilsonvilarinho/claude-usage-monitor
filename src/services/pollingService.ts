@@ -123,18 +123,20 @@ export class PollingService extends EventEmitter {
         this.rateLimited = true;
         this.rateLimitCount++;
         const resetAt = (err as { resetAt?: number }).resetAt;
+        const retryAfterMs = (err as { retryAfterMs?: number }).retryAfterMs;
         let waitMs: number;
         if (resetAt && resetAt > Date.now()) {
-          // API told us exactly when — use it directly, no backoff needed
+          // API told us exactly when via reset header — trust it
           waitMs = resetAt - Date.now();
+        } else if (retryAfterMs && retryAfterMs > 0) {
+          // API told us via Retry-After header — trust it
+          waitMs = retryAfterMs;
         } else {
-          // Exponential backoff: 5m, 10m, 20m, 40m, 60m (cap)
-          const backoffMs = Math.min(
+          // No hint from API — exponential backoff: 5m, 10m, 20m, 40m, 60m (cap)
+          waitMs = Math.min(
             POLL_RATE_LIMIT_BASE * Math.pow(2, this.rateLimitCount - 1),
             POLL_RATE_LIMIT_MAX
           );
-          const retryAfterMs = (err as { retryAfterMs?: number }).retryAfterMs;
-          waitMs = retryAfterMs ? Math.max(retryAfterMs, backoffMs) : backoffMs;
         }
         this.rateLimitedUntil = Date.now() + waitMs;
         const waitMin = Math.round(waitMs / 60000);

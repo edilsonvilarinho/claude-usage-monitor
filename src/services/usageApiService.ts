@@ -34,6 +34,8 @@ function httpsGet(hostname: string, path: string, headers: Record<string, string
   retryAfter?: number;
   requestsResetMs?: number;
   tokensResetMs?: number;
+  inputTokensResetMs?: number;
+  outputTokensResetMs?: number;
 }> {
   return new Promise((resolve, reject) => {
     const options = { hostname, port: 443, path, method: 'GET', headers };
@@ -44,9 +46,11 @@ function httpsGet(hostname: string, path: string, headers: Record<string, string
       res.on('end', () => {
         const retryAfterRaw = res.headers['retry-after'];
         const retryAfter = retryAfterRaw ? parseInt(String(retryAfterRaw), 10) : undefined;
-        const requestsResetMs = parseIsoToMs(res.headers['anthropic-ratelimit-requests-reset']);
-        const tokensResetMs   = parseIsoToMs(res.headers['anthropic-ratelimit-tokens-reset']);
-        resolve({ statusCode: res.statusCode ?? 0, body: data, retryAfter, requestsResetMs, tokensResetMs });
+        const requestsResetMs    = parseIsoToMs(res.headers['anthropic-ratelimit-requests-reset']);
+        const tokensResetMs      = parseIsoToMs(res.headers['anthropic-ratelimit-tokens-reset']);
+        const inputTokensResetMs = parseIsoToMs(res.headers['anthropic-ratelimit-input-tokens-reset']);
+        const outputTokensResetMs= parseIsoToMs(res.headers['anthropic-ratelimit-output-tokens-reset']);
+        resolve({ statusCode: res.statusCode ?? 0, body: data, retryAfter, requestsResetMs, tokensResetMs, inputTokensResetMs, outputTokensResetMs });
       });
     });
 
@@ -68,7 +72,7 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
     const version = getClaudeVersion();
 
     try {
-      const { statusCode, body, retryAfter, requestsResetMs, tokensResetMs } = await httpsGet(API_HOST, API_PATH, {
+      const { statusCode, body, retryAfter, requestsResetMs, tokensResetMs, inputTokensResetMs, outputTokensResetMs } = await httpsGet(API_HOST, API_PATH, {
         'Authorization': `Bearer ${token}`,
         'User-Agent': `claude-code/${version}`,
         'anthropic-beta': 'oauth-2025-04-20',
@@ -96,7 +100,12 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
 
       if (statusCode === 429) {
         // Do not retry — let the polling service handle rescheduling
-        const apiResetMs = Math.max(requestsResetMs ?? 0, tokensResetMs ?? 0);
+        const apiResetMs = Math.max(
+          requestsResetMs    ?? 0,
+          tokensResetMs      ?? 0,
+          inputTokensResetMs ?? 0,
+          outputTokensResetMs?? 0,
+        );
         const resetAt = apiResetMs > Date.now() ? apiResetMs : undefined;
         const retryAfterMs = resetAt
           ? resetAt - Date.now()
