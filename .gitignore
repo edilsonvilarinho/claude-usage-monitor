@@ -4,3 +4,4 @@ dist-build/
 *.js.map
 .env
 *.log
+.claude/settings.local.json
