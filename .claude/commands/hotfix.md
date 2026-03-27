@@ -1,17 +1,20 @@
 # /hotfix — Hotfix Workflow (Critical / Production)
 
-Use this for critical bugs that need to go directly to `master` without a long-lived branch review cycle.
+For critical bugs that need to go directly to `master`. Speed matters, but correctness still comes first.
 
-## Step 1 — Enter Plan Mode
+---
 
-Before any code change, enter plan mode:
+## Step 1 — Plan Mode (you, the orchestrator)
 
-- Confirm this is a critical issue (data loss, crash, security, broken core feature)
-- Identify the exact root cause
-- Propose the minimal fix (no refactoring, no extras)
-- Identify risk of regression
+Enter plan mode. Confirm:
+- This is a critical issue (crash, data loss, security, broken core feature)
+- Exact root cause
+- The minimal fix — no refactoring, no extras
+- Regression risk
 
-Do NOT proceed until the user approves the plan.
+**Do NOT proceed until the user approves the plan.**
+
+---
 
 ## Step 2 — Create GitHub Issue (urgent)
 
@@ -20,8 +23,8 @@ gh issue create \
   --title "hotfix: <short description>" \
   --label "bug" \
   --body "$(cat <<'EOF'
-## 🚨 Critical Issue
-<what is broken and why it's urgent>
+## Critical Issue
+<what is broken and why it is urgent>
 
 ## Root Cause
 <diagnosis>
@@ -32,19 +35,38 @@ EOF
 )"
 ```
 
+---
+
 ## Step 3 — Create Hotfix Branch from master
 
 ```bash
-git checkout master
-git pull origin master
+git checkout master && git pull origin master
 git checkout -b hotfix/<slug>#<issue-number>
 ```
 
-## Step 4 — Implement Minimal Fix
+---
 
-Apply only what is needed. No cosmetic changes. Run `npm run build` — must exit cleanly.
+## Step 4 — Delegate Fix to @implementer
 
-## Step 5 — Commit
+Hand off to the `implementer` agent with the approved minimal fix.
+
+The implementer will:
+- Apply only the exact change needed — nothing else
+- Run `npm run build` — must exit cleanly
+- Report what changed
+
+---
+
+## Step 5 — Delegate Quick Validation to @tester
+
+Hand off to the `tester` agent for a fast focused check:
+- Does the fix address the root cause?
+- Any immediate regression risk?
+- Minimal smoke test checklist (keep it short — this is a hotfix)
+
+---
+
+## Step 6 — Commit
 
 ```
 hotfix: <short description> (closes #<issue>)
@@ -52,14 +74,16 @@ hotfix: <short description> (closes #<issue>)
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
-## Step 6 — Open PR targeting master
+---
+
+## Step 7 — Open PR targeting master
 
 ```bash
 gh pr create \
   --base master \
   --title "hotfix: <short description>" \
   --body "$(cat <<'EOF'
-## 🚨 Hotfix
+## Hotfix
 <what broke and what was fixed>
 
 ## Root Cause
@@ -75,11 +99,11 @@ Closes #<issue>
 ## Test plan
 - [ ] `npm run build` exits cleanly
 - [ ] Issue no longer reproduces
-- [ ] No regression observed
+- [ ] <quick regression check from tester>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )"
 ```
 
-Inform the user: after merge, run `/release` to cut a patch version.
+Inform the user: after merge, run `/release patch` to cut a patch version.

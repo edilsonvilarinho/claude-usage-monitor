@@ -1,21 +1,22 @@
 # /fix — Bug Fix Workflow
 
-You are helping fix a bug using a structured plan → issue → branch → code → PR workflow.
+Structured workflow: plan → issue → branch → implement → test → PR.
 
-## Step 1 — Enter Plan Mode
+---
 
-Before writing any code, enter plan mode and present a diagnosis and fix plan:
+## Step 1 — Plan Mode (you, the orchestrator)
 
+Enter plan mode. Present to the user:
 - Root cause of the bug
 - Files affected
-- Proposed fix approach
-- Any edge cases to consider
+- Proposed minimal fix
+- Edge cases or regression risks
 
-Do NOT proceed until the user approves the plan.
+**Do NOT proceed until the user approves the plan.**
+
+---
 
 ## Step 2 — Create GitHub Issue
-
-After plan approval, create a GitHub issue to track the bug:
 
 ```bash
 gh issue create \
@@ -44,28 +45,52 @@ EOF
 
 Note the issue number (e.g. #7).
 
+---
+
 ## Step 3 — Create Fix Branch
 
 ```bash
 git checkout -b fix/<slug>#<issue-number>
-# Example: fix/rate-limit-header#7
 ```
 
-## Step 4 — Implement the Fix
+---
 
-Execute the approved plan. Keep the fix minimal — do not refactor unrelated code. Run `npm run build` and confirm clean exit.
+## Step 4 — Delegate Fix to @implementer
 
-## Step 5 — Commit
+Hand off to the `implementer` agent with the root cause diagnosis and approved fix plan.
+
+The implementer will:
+- Read every file to be modified before changing anything
+- Apply the minimal fix — no unrelated cleanup
+- Run `npm run build` to confirm clean exit
+- Report what changed
+
+---
+
+## Step 5 — Delegate Validation to @tester
+
+After the fix is applied, hand off to the `tester` agent with:
+- The original bug description
+- The fix that was applied
+
+The tester will:
+- Confirm the fix addresses the root cause
+- Check for regressions in related code paths
+- Produce a manual verification checklist
+
+---
+
+## Step 6 — Commit
 
 ```
 fix: <short description> (closes #<issue>)
 
-<optional: explain why the fix works>
-
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
-## Step 6 — Open Pull Request
+---
+
+## Step 7 — Open Pull Request
 
 ```bash
 gh pr create \
@@ -83,7 +108,7 @@ Closes #<issue>
 ## Test plan
 - [ ] `npm run build` exits cleanly
 - [ ] Bug no longer reproduces
-- [ ] No regression in related functionality
+- [ ] <regression check from tester>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF

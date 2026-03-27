@@ -1,21 +1,21 @@
 # /feat — New Feature Workflow
 
-You are helping implement a new feature using a structured plan → issue → branch → code → PR workflow.
+Structured workflow: plan → issue → branch → implement → test → PR.
 
-## Step 1 — Enter Plan Mode
+---
 
-Before writing any code, enter plan mode and present a clear implementation plan:
+## Step 1 — Plan Mode (you, the orchestrator)
 
-- What will be built (scope)
+Enter plan mode. Present to the user:
+- What will be built (scope and acceptance criteria)
 - Which files will be created or modified
 - Any architectural decisions or trade-offs
-- Acceptance criteria
 
-Do NOT proceed until the user approves the plan.
+**Do NOT proceed until the user approves the plan.**
+
+---
 
 ## Step 2 — Create GitHub Issue
-
-After plan approval, create a GitHub issue documenting the feature:
 
 ```bash
 gh issue create \
@@ -36,30 +36,51 @@ EOF
 
 Note the issue number (e.g. #42).
 
+---
+
 ## Step 3 — Create Feature Branch
 
 ```bash
 git checkout -b feat/<slug>#<issue-number>
-# Example: feat/auto-refresh#42
 ```
 
-## Step 4 — Implement
+---
 
-Execute the approved plan. Run `npm run build` after changes and confirm clean exit before moving on.
+## Step 4 — Delegate Implementation to @implementer
 
-## Step 5 — Commit
+Hand off to the `implementer` agent with the full approved plan and issue number.
 
-Stage only relevant files. Commit message format:
+The implementer will:
+- Read all files to be modified before touching anything
+- Apply the changes following the plan
+- Run `npm run build` to confirm clean exit
+- Report which files changed
+
+---
+
+## Step 5 — Delegate Testing to @tester
+
+After implementation is confirmed, hand off to the `tester` agent.
+
+The tester will:
+- Analyze the new code for testable scenarios and edge cases
+- Produce a manual smoke test checklist
+- Implement automated tests if feasible
+- Report coverage gaps
+
+---
+
+## Step 6 — Commit
 
 ```
 feat: <short description> (closes #<issue>)
 
-<optional body>
-
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
-## Step 6 — Open Pull Request
+---
+
+## Step 7 — Open Pull Request
 
 ```bash
 gh pr create \
@@ -74,7 +95,8 @@ Closes #<issue>
 
 ## Test plan
 - [ ] `npm run build` exits cleanly
-- [ ] Manual smoke test in tray
+- [ ] <scenario from tester checklist>
+- [ ] <scenario from tester checklist>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF

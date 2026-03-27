@@ -1,21 +1,23 @@
 # /test — Test Workflow
 
-You are helping add or improve tests using a structured plan → issue → branch → code → PR workflow.
+Structured workflow: plan → issue → branch → implement → PR.
+Lead agent is @tester, with @implementer supporting if test code needs to be written.
 
-## Step 1 — Enter Plan Mode
+---
 
-Before writing any code, enter plan mode and present a clear test plan:
+## Step 1 — Plan Mode (you, the orchestrator)
 
-- What will be tested (unit, integration, e2e, manual smoke)
-- Which files will be created or modified
-- What scenarios/edge cases will be covered
-- What tooling or setup is needed (if any)
+Enter plan mode. Present to the user:
+- What will be tested (scope, which service or behavior)
+- Type of testing: unit, integration, manual smoke, edge cases
+- What tooling or setup is needed
+- What is explicitly out of scope
 
-Do NOT proceed until the user approves the plan.
+**Do NOT proceed until the user approves the plan.**
+
+---
 
 ## Step 2 — Create GitHub Issue
-
-After plan approval, create a GitHub issue to track the test work:
 
 ```bash
 gh issue create \
@@ -33,36 +35,55 @@ gh issue create \
 ## Out of Scope
 <what will NOT be tested in this task>
 
-## Implementation Plan
+## Plan
 <key steps from approved plan>
 EOF
 )"
 ```
 
-Note the issue number (e.g. #15).
+Note the issue number.
+
+---
 
 ## Step 3 — Create Test Branch
 
 ```bash
 git checkout -b test/<slug>#<issue-number>
-# Example: test/polling-rate-limit#15
 ```
 
-## Step 4 — Implement
+---
 
-Execute the approved plan. Run `npm run build` after changes and confirm clean exit. If tests are runnable, execute them and confirm all pass.
+## Step 4 — Delegate to @tester
 
-## Step 5 — Commit
+Hand off to the `tester` agent with the full approved plan.
+
+The tester will:
+- Analyze the target code for all testable scenarios
+- Produce a concrete manual smoke test checklist
+- Implement automated tests where feasible (no real network calls, no real timers)
+- Report what is covered and what gaps remain
+
+---
+
+## Step 5 — Delegate implementation to @implementer (if needed)
+
+If the tester identified test code to be written (new test files, test utilities, mocks), hand off to the `implementer` agent to write and wire it up.
+
+The implementer will run `npm run build` to confirm nothing broke.
+
+---
+
+## Step 6 — Commit
 
 ```
 test: <short description> (closes #<issue>)
 
-<optional: what scenarios are now covered>
-
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
-## Step 6 — Open Pull Request
+---
+
+## Step 7 — Open Pull Request
 
 ```bash
 gh pr create \
@@ -74,7 +95,9 @@ gh pr create \
 ## Scenarios Covered
 - <scenario 1>
 - <scenario 2>
-- <edge case>
+
+## Coverage Gaps
+<what still needs manual verification or future automation>
 
 ## Related
 Closes #<issue>
@@ -82,7 +105,7 @@ Closes #<issue>
 ## Test plan
 - [ ] `npm run build` exits cleanly
 - [ ] All new tests pass
-- [ ] No regression in existing functionality
+- [ ] Manual checklist verified
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
