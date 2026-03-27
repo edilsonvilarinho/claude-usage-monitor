@@ -48,7 +48,7 @@ npm run dist
 
 If the build fails, stop and report the error. Do NOT create a tag or release with a failed build.
 
-Confirm that `dist-build/` contains the expected files:
+Confirm that `dist/` contains the expected files:
 - `Claude Usage Monitor Setup <version>.exe` (NSIS installer)
 - `Claude Usage Monitor <version>.exe` (portable)
 
@@ -77,9 +77,12 @@ Group them by type: `feat`, `fix`, `hotfix`, `chore`.
 
 ## Step 8 — Create GitHub Release with assets
 
+Use the full paths to the EXE files (glob may not work in all shells on Windows):
+
 ```bash
 gh release create v<new-version> \
-  dist-build/*.exe \
+  "dist/Claude Usage Monitor Setup <version>.exe" \
+  "dist/Claude Usage Monitor <version>.exe" \
   --title "v<new-version>" \
   --notes "$(cat <<'EOF'
 ## What's Changed
