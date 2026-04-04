@@ -2,7 +2,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMoni
 import * as path from 'path';
 import { pollingService } from './services/pollingService';
 import { getSettings, saveSettings } from './services/settingsService';
-import { setLaunchAtStartup } from './services/startupService';
+import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { UsageData } from './models/usageData';
 
@@ -164,6 +164,9 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('save-settings', (_event, settings) => {
     saveSettings(settings);
+    if (settings.launchAtStartup !== undefined) {
+      setLaunchAtStartup(settings.launchAtStartup);
+    }
     // Rebuild tray context menu to reflect startup state changes
     tray?.setContextMenu(buildContextMenu());
   });
@@ -218,18 +221,18 @@ function registerIpcHandlers(): void {
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
-  // Prevent app from showing in taskbar
-  if (process.platform === 'win32') {
-    app.setLoginItemSettings({ openAtLogin: false });
-  }
-
   registerIpcHandlers();
 
   // Restore rate-limit state from previous session
-  const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt } = getSettings();
+  const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt, launchAtStartup } = getSettings();
   if (saved > Date.now()) {
     currentRateLimitUntil = saved;
     pollingService.restoreRateLimit(saved, savedCount || 1);
+  }
+
+  // Sync registry state: re-apply stored preference if it differs from actual registry value
+  if (launchAtStartup !== undefined && isLaunchAtStartupEnabled() !== launchAtStartup) {
+    setLaunchAtStartup(launchAtStartup);
   }
 
   tray = createTray();
