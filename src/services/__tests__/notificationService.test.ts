@@ -181,12 +181,12 @@ describe('checkAndNotify', () => {
     mockGetSettings.mockReturnValue(defaultSettings({ notifyOnWindowReset: true }))
 
     // First call establishes prevSessionResetsAt
-    checkAndNotify(makeData(50, 50, 'A', 'W1'))
+    checkAndNotify(makeData(50, 50, '2026-03-26T10:00:00Z', 'W1'))
     mockNotificationShow.mockReset()
     MockNotification.mockClear()
 
-    // Second call with different resets_at
-    checkAndNotify(makeData(50, 50, 'B', 'W1'))
+    // Second call with resets_at advanced by 2 hours (genuine window reset)
+    checkAndNotify(makeData(50, 50, '2026-03-26T12:00:00Z', 'W1'))
 
     const titles = MockNotification.mock.calls.map((c) => (c[0] as { title: string }).title)
     expect(titles.some((t) => t.includes('Session Window Reset'))).toBe(true)
@@ -195,11 +195,11 @@ describe('checkAndNotify', () => {
   it('does NOT send session window reset notification when notifyOnWindowReset=false', async () => {
     mockGetSettings.mockReturnValue(defaultSettings({ notifyOnWindowReset: false }))
 
-    checkAndNotify(makeData(50, 50, 'A', 'W1'))
+    checkAndNotify(makeData(50, 50, '2026-03-26T10:00:00Z', 'W1'))
     mockNotificationShow.mockReset()
     MockNotification.mockClear()
 
-    checkAndNotify(makeData(50, 50, 'B', 'W1'))
+    checkAndNotify(makeData(50, 50, '2026-03-26T12:00:00Z', 'W1'))
 
     expect(mockNotificationShow).not.toHaveBeenCalled()
   })
