@@ -1,6 +1,7 @@
 import { Notification, shell } from 'electron';
 import { UsageData } from '../models/usageData';
 import { getSettings } from './settingsService';
+import { getMainTranslations } from '../i18n/mainTranslations';
 import * as path from 'path';
 
 interface NotificationState {
@@ -34,11 +35,8 @@ export function syncWindowState(data: UsageData): void {
 
 export function sendTestNotification(): void {
   const settings = getSettings();
-  showToast(
-    'Claude — Test Notification',
-    'Notifications are working correctly',
-    settings.notifications.soundEnabled
-  );
+  const t = getMainTranslations(settings.language);
+  showToast(t.notifTestTitle, t.notifTestBody, settings.notifications.soundEnabled);
 }
 
 function isSignificantReset(prevAt: string, newAt: string, minGapMs: number): boolean {
@@ -57,13 +55,14 @@ export function checkAndNotify(data: UsageData): void {
     notifyOnWindowReset, soundEnabled,
   } = settings.notifications;
 
+  const t = getMainTranslations(settings.language);
   const sessionPct = Math.round(data.five_hour.utilization);
   const weeklyPct  = Math.round(data.seven_day.utilization);
 
   // Detect time-window reset (resets_at changed to a new value)
   if (prevSessionResetsAt !== null && isSignificantReset(prevSessionResetsAt, data.five_hour.resets_at, 60 * 60 * 1000)) {
     if (notifyOnWindowReset) {
-      showToast('Claude — Session Window Reset', 'Your 5-hour usage window has reset', soundEnabled);
+      showToast(t.notifSessionWindowResetTitle, t.notifSessionWindowResetBody, soundEnabled);
     }
     state.sessionNotified = false;
   }
@@ -71,7 +70,7 @@ export function checkAndNotify(data: UsageData): void {
 
   if (prevWeeklyResetsAt !== null && isSignificantReset(prevWeeklyResetsAt, data.seven_day.resets_at, 24 * 60 * 60 * 1000)) {
     if (notifyOnWindowReset) {
-      showToast('Claude — Weekly Window Reset', 'Your weekly usage window has reset', soundEnabled);
+      showToast(t.notifWeeklyWindowResetTitle, t.notifWeeklyWindowResetBody, soundEnabled);
     }
     state.weeklyNotified = false;
   }
@@ -80,11 +79,7 @@ export function checkAndNotify(data: UsageData): void {
   // Session: detect drop below resetThreshold after having been notified
   if (sessionPct < resetThreshold) {
     if (state.sessionNotified && notifyOnReset) {
-      showToast(
-        'Claude — Session Limit Freed',
-        `Session usage dropped to ${sessionPct}% — limit has reset`,
-        soundEnabled
-      );
+      showToast(t.notifSessionFreedTitle, t.notifSessionFreedBody(sessionPct), soundEnabled);
     }
     state.sessionNotified = false;
   }
@@ -92,32 +87,20 @@ export function checkAndNotify(data: UsageData): void {
   // Weekly: detect drop below resetThreshold after having been notified
   if (weeklyPct < resetThreshold) {
     if (state.weeklyNotified && notifyOnReset) {
-      showToast(
-        'Claude — Weekly Limit Freed',
-        `Weekly usage dropped to ${weeklyPct}% — limit has reset`,
-        soundEnabled
-      );
+      showToast(t.notifWeeklyFreedTitle, t.notifWeeklyFreedBody(weeklyPct), soundEnabled);
     }
     state.weeklyNotified = false;
   }
 
   // Session threshold crossed (warn)
   if (!state.sessionNotified && sessionPct >= sessionThreshold) {
-    showToast(
-      'Claude — Session Limit Warning',
-      `Session usage is at ${sessionPct}% (${sessionThreshold}% threshold reached)`,
-      soundEnabled
-    );
+    showToast(t.notifSessionWarnTitle, t.notifSessionWarnBody(sessionPct, sessionThreshold), soundEnabled);
     state.sessionNotified = true;
   }
 
   // Weekly threshold crossed (warn)
   if (!state.weeklyNotified && weeklyPct >= weeklyThreshold) {
-    showToast(
-      'Claude — Weekly Limit Warning',
-      `Weekly usage is at ${weeklyPct}% (${weeklyThreshold}% threshold reached)`,
-      soundEnabled
-    );
+    showToast(t.notifWeeklyWarnTitle, t.notifWeeklyWarnBody(weeklyPct, weeklyThreshold), soundEnabled);
     state.weeklyNotified = true;
   }
 }

@@ -4,6 +4,7 @@ import { pollingService } from './services/pollingService';
 import { getSettings, saveSettings } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
+import { getMainTranslations } from './i18n/mainTranslations';
 import { UsageData } from './models/usageData';
 
 // Required for Windows notifications
@@ -120,26 +121,28 @@ function formatTimeUntil(isoDate: string): string {
 
 function updateTrayTooltip(data: UsageData): void {
   if (!tray) return;
-  const sessionPct     = Math.round(data.five_hour.utilization);
-  const weeklyPct      = Math.round(data.seven_day.utilization);
-  const sessionResets  = formatTimeUntil(data.five_hour.resets_at);
-  const weeklyResets   = formatTimeUntil(data.seven_day.resets_at);
+  const t = getMainTranslations(getSettings().language);
+  const sessionPct    = Math.round(data.five_hour.utilization).toString();
+  const weeklyPct     = Math.round(data.seven_day.utilization).toString();
+  const sessionResets = formatTimeUntil(data.five_hour.resets_at);
+  const weeklyResets  = formatTimeUntil(data.seven_day.resets_at);
   tray.setToolTip(
-    `Claude Usage — Session: ${sessionPct}% | Weekly: ${weeklyPct}%\n` +
-    `Session resets in: ${sessionResets} | Weekly resets in: ${weeklyResets}`
+    t.trayTooltipLine1(sessionPct, weeklyPct) + '\n' +
+    t.trayTooltipLine2(sessionResets, weeklyResets)
   );
 }
 
 function buildContextMenu(): Menu {
   const settings = getSettings();
+  const t = getMainTranslations(settings.language);
   return Menu.buildFromTemplate([
     {
-      label: 'Refresh Now',
+      label: t.trayRefreshNow,
       click: () => void pollingService.triggerNow(),
     },
     { type: 'separator' },
     {
-      label: 'Launch at Startup',
+      label: t.trayLaunchAtStartup,
       type: 'checkbox',
       checked: settings.launchAtStartup,
       click: (menuItem) => {
@@ -152,7 +155,7 @@ function buildContextMenu(): Menu {
     },
     { type: 'separator' },
     {
-      label: 'Exit',
+      label: t.trayExit,
       click: () => app.quit(),
     },
   ]);
@@ -166,7 +169,7 @@ function createTray(): Tray {
     : nativeImage.createFromPath(iconPath);
 
   const t = new Tray(icon);
-  t.setToolTip('Claude Usage Monitor');
+  t.setToolTip(getMainTranslations(getSettings().language).trayInitialTooltip);
   t.setContextMenu(buildContextMenu());
 
   t.on('click', () => togglePopup());
