@@ -41,6 +41,12 @@ export function sendTestNotification(): void {
   );
 }
 
+function isSignificantReset(prevAt: string, newAt: string, minGapMs: number): boolean {
+  const prev = new Date(prevAt).getTime();
+  const next = new Date(newAt).getTime();
+  return !isNaN(prev) && !isNaN(next) && (next - prev) > minGapMs;
+}
+
 export function checkAndNotify(data: UsageData): void {
   const settings = getSettings();
   if (!settings.notifications.enabled) return;
@@ -55,7 +61,7 @@ export function checkAndNotify(data: UsageData): void {
   const weeklyPct  = Math.round(data.seven_day.utilization);
 
   // Detect time-window reset (resets_at changed to a new value)
-  if (prevSessionResetsAt !== null && data.five_hour.resets_at !== prevSessionResetsAt) {
+  if (prevSessionResetsAt !== null && isSignificantReset(prevSessionResetsAt, data.five_hour.resets_at, 60 * 60 * 1000)) {
     if (notifyOnWindowReset) {
       showToast('Claude — Session Window Reset', 'Your 5-hour usage window has reset', soundEnabled);
     }
@@ -63,7 +69,7 @@ export function checkAndNotify(data: UsageData): void {
   }
   prevSessionResetsAt = data.five_hour.resets_at;
 
-  if (prevWeeklyResetsAt !== null && data.seven_day.resets_at !== prevWeeklyResetsAt) {
+  if (prevWeeklyResetsAt !== null && isSignificantReset(prevWeeklyResetsAt, data.seven_day.resets_at, 24 * 60 * 60 * 1000)) {
     if (notifyOnWindowReset) {
       showToast('Claude — Weekly Window Reset', 'Your weekly usage window has reset', soundEnabled);
     }
