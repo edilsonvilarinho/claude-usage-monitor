@@ -106,11 +106,28 @@ function buildTrayIcon(): Electron.NativeImage {
   return nativeImage.createEmpty();
 }
 
+function formatTimeUntil(isoDate: string): string {
+  const diffMs = new Date(isoDate).getTime() - Date.now();
+  if (diffMs <= 0) return 'soon';
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const days    = Math.floor(totalMinutes / 1440);
+  const hours   = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0)  return hours > 0  ? `${days}d ${hours}h`  : `${days}d`;
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  return `${minutes}m`;
+}
+
 function updateTrayTooltip(data: UsageData): void {
   if (!tray) return;
-  const sessionPct = Math.round(data.five_hour.utilization);
-  const weeklyPct  = Math.round(data.seven_day.utilization);
-  tray.setToolTip(`Claude Usage — Session: ${sessionPct}% | Weekly: ${weeklyPct}%`);
+  const sessionPct     = Math.round(data.five_hour.utilization);
+  const weeklyPct      = Math.round(data.seven_day.utilization);
+  const sessionResets  = formatTimeUntil(data.five_hour.resets_at);
+  const weeklyResets   = formatTimeUntil(data.seven_day.resets_at);
+  tray.setToolTip(
+    `Claude Usage — Session: ${sessionPct}% | Weekly: ${weeklyPct}%\n` +
+    `Session resets in: ${sessionResets} | Weekly resets in: ${weeklyResets}`
+  );
 }
 
 function buildContextMenu(): Menu {
