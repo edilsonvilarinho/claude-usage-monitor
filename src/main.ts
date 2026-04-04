@@ -82,8 +82,10 @@ function togglePopup(): void {
   if (popup.isVisible()) {
     popup.hide();
   } else {
-    userMovedPopup = false;
-    positionPopup();
+    if (!getSettings().alwaysVisible) {
+      userMovedPopup = false;
+      positionPopup();
+    }
     popup.show();
     popup.focus();
 
@@ -233,7 +235,9 @@ function registerIpcHandlers(): void {
       popup.setBounds({ x, y: Math.max(workArea.y, clampedY), width: POPUP_WIDTH, height: h }, false);
     } else {
       popup.setSize(POPUP_WIDTH, h, false);
-      positionPopup();
+      if (!getSettings().alwaysVisible || !popup.isVisible()) {
+        positionPopup();
+      }
     }
   });
 }
