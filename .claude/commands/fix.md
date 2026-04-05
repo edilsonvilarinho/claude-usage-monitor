@@ -1,22 +1,24 @@
 # /fix — Bug Fix Workflow
 
-Structured workflow: plan → issue → branch → implement → test → PR.
+Structured workflow optimized for token efficiency.
 
 ---
 
-## Step 1 — Plan Mode (you, the orchestrator)
+## Step 0 — Assess complexity BEFORE spawning any agent
 
-Enter plan mode. Present to the user:
-- Root cause of the bug
-- Files affected
-- Proposed minimal fix
-- Edge cases or regression risks
+Read the user's bug report and classify:
 
-**Do NOT proceed until the user approves the plan.**
+**SIMPLE** (root cause is clear, fix is in ≤3 files):
+→ Skip Plan Mode and Explore agents. Read the relevant files directly, apply the fix, proceed to Step 1.
+
+**COMPLEX** (root cause is unclear, touches many files, regression risk is high):
+→ Use Plan Mode. Launch at most 1 Explore agent to diagnose root cause. Present diagnosis + fix plan. Wait for approval.
+
+> Default to SIMPLE. Most bugs have an obvious root cause once you read the file.
 
 ---
 
-## Step 2 — Create GitHub Issue
+## Step 1 — Create GitHub Issue
 
 ```bash
 gh issue create \
@@ -27,18 +29,10 @@ gh issue create \
 <what is wrong>
 
 ## Root Cause
-<diagnosis from plan>
-
-## Steps to Reproduce
-1.
-2.
-
-## Expected vs Actual
-- **Expected:**
-- **Actual:**
+<diagnosis>
 
 ## Fix Plan
-<key steps from approved plan>
+<what will be changed>
 EOF
 )"
 ```
@@ -47,7 +41,7 @@ Note the issue number (e.g. #7).
 
 ---
 
-## Step 3 — Create Fix Branch
+## Step 2 — Create Fix Branch
 
 ```bash
 git checkout -b fix/<slug>#<issue-number>
@@ -55,9 +49,11 @@ git checkout -b fix/<slug>#<issue-number>
 
 ---
 
-## Step 4 — Delegate Fix to @implementer
+## Step 3 — Apply Fix
 
-Hand off to the `implementer` agent with the root cause diagnosis and approved fix plan.
+**SIMPLE:** Apply the fix directly (read → edit → build). No subagent needed for small fixes.
+
+**COMPLEX:** Delegate to `@implementer` with root cause and fix plan.
 
 The implementer will:
 - Read every file to be modified before changing anything
@@ -67,20 +63,18 @@ The implementer will:
 
 ---
 
-## Step 5 — Delegate Validation to @tester
+## Step 4 — Validate (OPTIONAL)
 
-After the fix is applied, hand off to the `tester` agent with:
-- The original bug description
-- The fix that was applied
+Only delegate to `@tester` if:
+- The fix touches complex logic or shared state
+- There's a real regression risk
+- The user asked for validation
 
-The tester will:
-- Confirm the fix addresses the root cause
-- Check for regressions in related code paths
-- Produce a manual verification checklist
+For obvious, isolated fixes: **skip this step**.
 
 ---
 
-## Step 6 — Commit
+## Step 5 — Commit
 
 ```
 fix: <short description> (closes #<issue>)
@@ -90,7 +84,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ---
 
-## Step 7 — Open Pull Request
+## Step 6 — Open Pull Request
 
 ```bash
 gh pr create \
@@ -108,7 +102,6 @@ Closes #<issue>
 ## Test plan
 - [ ] `npm run build` exits cleanly
 - [ ] Bug no longer reproduces
-- [ ] <regression check from tester>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF

@@ -1,21 +1,24 @@
 # /feat — New Feature Workflow
 
-Structured workflow: plan → issue → branch → implement → test → PR.
+Structured workflow optimized for token efficiency.
 
 ---
 
-## Step 1 — Plan Mode (you, the orchestrator)
+## Step 0 — Assess complexity BEFORE spawning any agent
 
-Enter plan mode. Present to the user:
-- What will be built (scope and acceptance criteria)
-- Which files will be created or modified
-- Any architectural decisions or trade-offs
+Read the user's request and classify:
 
-**Do NOT proceed until the user approves the plan.**
+**SIMPLE** (≤3 files, user described what to change, no architectural decisions):
+→ Skip Plan Mode and Explore agents. Go directly to Step 1.
+
+**COMPLEX** (many files, unclear scope, architectural trade-offs):
+→ Use Plan Mode. Launch at most 1 Explore agent (not 2) to understand scope. Present plan and wait for approval before proceeding.
+
+> Default to SIMPLE unless genuinely uncertain. Explore agents and Plan Mode cost ~50-80k tokens combined — only use them when they add real value.
 
 ---
 
-## Step 2 — Create GitHub Issue
+## Step 1 — Create GitHub Issue
 
 ```bash
 gh issue create \
@@ -27,9 +30,6 @@ gh issue create \
 ## Acceptance Criteria
 - [ ] <criterion 1>
 - [ ] <criterion 2>
-
-## Implementation Plan
-<key steps from approved plan>
 EOF
 )"
 ```
@@ -38,7 +38,7 @@ Note the issue number (e.g. #42).
 
 ---
 
-## Step 3 — Create Feature Branch
+## Step 2 — Create Feature Branch
 
 ```bash
 git checkout -b feat/<slug>#<issue-number>
@@ -46,9 +46,11 @@ git checkout -b feat/<slug>#<issue-number>
 
 ---
 
-## Step 4 — Delegate Implementation to @implementer
+## Step 3 — Implement
 
-Hand off to the `implementer` agent with the full approved plan and issue number.
+**SIMPLE:** Implement directly (read files → edit → build). No subagent needed unless the change spans many files.
+
+**COMPLEX:** Delegate to `@implementer` with the approved plan.
 
 The implementer will:
 - Read all files to be modified before touching anything
@@ -58,19 +60,18 @@ The implementer will:
 
 ---
 
-## Step 5 — Delegate Testing to @tester
+## Step 4 — Test (OPTIONAL)
 
-After implementation is confirmed, hand off to the `tester` agent.
+Only delegate to `@tester` if:
+- The change is risky (touches critical paths, state management, IPC)
+- The user explicitly asked for a test checklist
+- Automated tests need to be written
 
-The tester will:
-- Analyze the new code for testable scenarios and edge cases
-- Produce a manual smoke test checklist
-- Implement automated tests if feasible
-- Report coverage gaps
+For safe, isolated changes (new translations, UI strings, simple helpers): **skip this step**.
 
 ---
 
-## Step 6 — Commit
+## Step 5 — Commit
 
 ```
 feat: <short description> (closes #<issue>)
@@ -80,7 +81,7 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 
 ---
 
-## Step 7 — Open Pull Request
+## Step 6 — Open Pull Request
 
 ```bash
 gh pr create \
@@ -88,15 +89,13 @@ gh pr create \
   --body "$(cat <<'EOF'
 ## Summary
 - <bullet 1>
-- <bullet 2>
 
 ## Related
 Closes #<issue>
 
 ## Test plan
 - [ ] `npm run build` exits cleanly
-- [ ] <scenario from tester checklist>
-- [ ] <scenario from tester checklist>
+- [ ] <manual check>
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
