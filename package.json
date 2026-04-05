@@ -32,6 +32,7 @@
     "productName": "Claude Usage Monitor",
     "files": [
       "dist/**/*",
+      "!dist/**/__tests__/**",
       "assets/**/*"
     ],
     "win": {
