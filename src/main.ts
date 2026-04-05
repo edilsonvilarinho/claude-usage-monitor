@@ -20,6 +20,7 @@ app.setAppUserModelId('com.claudeusage.monitor');
 let tray: Tray | null = null;
 let popup: BrowserWindow | null = null;
 let lastUsageData: UsageData | null = null;
+let tooltipRefreshTimer: NodeJS.Timeout | null = null;
 let suppressNextNotification = false;
 let positionedByUser = false;
 let savedPopupPosition: { x: number; y: number } | null = null;
@@ -202,6 +203,16 @@ function formatResetAt(isoDate: string, locale: string): string {
   return tz ? `${timeStr} • ${tz}` : timeStr;
 }
 
+function formatNextPoll(nextPollAt: number): string {
+  const remaining = nextPollAt - Date.now();
+  if (remaining <= 0) return '…';
+  const totalSec = Math.ceil(remaining / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  if (min === 0) return `${sec}s`;
+  return `${min}m ${String(sec).padStart(2, '0')}s`;
+}
+
 function updateTrayTooltip(data: UsageData): void {
   if (!tray) return;
   const t = getMainTranslations(getSettings().language);
@@ -212,10 +223,13 @@ function updateTrayTooltip(data: UsageData): void {
   const locale        = getSettings().language === 'pt-BR' ? 'pt-BR' : 'en';
   const sessionAt     = formatResetAt(data.five_hour.resets_at, locale);
   const weeklyAt      = formatResetAt(data.seven_day.resets_at, locale);
+  const npAt = pollingService.nextPollAt;
+  const nextLine = npAt > 0 ? t.trayTooltipNextUpdate(formatNextPoll(npAt)) : '';
   tray.setToolTip(
     t.trayTooltipLine1(sessionPct, weeklyPct) + '\n' +
     t.trayTooltipLine2(sessionResets, weeklyResets) + '\n' +
     t.trayTooltipLine3(sessionAt, weeklyAt) + '\n' +
+    (nextLine ? nextLine + '\n' : '') +
     `v${app.getVersion()}`
   );
 }
@@ -404,6 +418,10 @@ app.whenReady().then(() => {
       saveSettings({ rateLimitedUntil: 0, rateLimitCount: 0 });
     }
     updateTrayTooltip(data);
+    if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
+    tooltipRefreshTimer = setInterval(() => {
+      if (lastUsageData) updateTrayTooltip(lastUsageData);
+    }, 30_000);
     if (suppressNextNotification) {
       syncWindowState(data);
       suppressNextNotification = false;
@@ -477,4 +495,5 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   pollingService.stop();
+  if (tooltipRefreshTimer) { clearInterval(tooltipRefreshTimer); tooltipRefreshTimer = null; }
 });

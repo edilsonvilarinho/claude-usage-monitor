@@ -22,6 +22,9 @@ export class PollingService extends EventEmitter {
   private rateLimitCount = 0; // consecutive 429s — drives exponential backoff
   private fastCyclesLeft = 0;
   private running = false;
+  private _nextPollAt = 0;
+
+  get nextPollAt(): number { return this._nextPollAt; }
 
   restoreRateLimit(until: number, count = 1): void {
     if (until > Date.now()) {
@@ -98,6 +101,7 @@ export class PollingService extends EventEmitter {
     // Respect rate limit before making any request
     if (this.rateLimited && this.rateLimitedUntil > Date.now()) {
       const delay = this.nextInterval();
+      this._nextPollAt = Date.now() + delay;
       this.timer = setTimeout(() => void this.poll(), delay);
       return;
     }
@@ -163,6 +167,7 @@ export class PollingService extends EventEmitter {
     if (!this.running) return;
 
     const delay = this.nextInterval();
+    this._nextPollAt = Date.now() + delay;
     this.timer = setTimeout(() => void this.poll(), delay);
   }
 }
