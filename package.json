@@ -49,11 +49,14 @@
       ],
       "icon": "assets/icon.ico"
     },
+    "asar": true,
+    "compression": "maximum",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": false,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "compression": "lzma"
     }
   }
 }
