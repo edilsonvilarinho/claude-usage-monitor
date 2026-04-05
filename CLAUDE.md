@@ -13,6 +13,14 @@ node build-renderer.js           # renderer only
 ```
 No tests. Run `npm run build` and confirm clean exit before committing.
 
+## Release checklist (`npm run dist`)
+After every dist build, verify **before** publishing:
+1. `dist-build/*.exe` sizes are ~70–90 MB — if much larger, old artifacts leaked in
+2. `dist/` contains only compiled JS/HTML (no `.exe`, no `win-unpacked/`)
+3. `predist` script auto-cleans `dist-build/` before each build to prevent accumulation
+
+**Never** change `electron-builder` output dir or `files` glob without verifying sizes.
+
 ## Architecture
 Electron app: main process (`src/main.ts`) + renderer (`src/renderer/`), context-isolated preload bridge.
 
