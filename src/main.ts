@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification } from 'electron';
 import * as path from 'path';
 import { pollingService } from './services/pollingService';
 import { getSettings, saveSettings } from './services/settingsService';
@@ -6,6 +6,7 @@ import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startup
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
 import { UsageData } from './models/usageData';
+import { checkForUpdate } from './services/updateService';
 
 // Prevent multiple instances (also allows NSIS installer to detect running process)
 const gotTheLock = app.requestSingleInstanceLock();
@@ -140,6 +141,40 @@ function updateTrayTooltip(data: UsageData): void {
   );
 }
 
+// ─── Update check ────────────────────────────────────────────────────────────
+
+async function runUpdateCheck(forceCheck = false): Promise<void> {
+  const settings = getSettings();
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  if (!forceCheck && Date.now() - settings.lastUpdateCheck < TWENTY_FOUR_HOURS) {
+    return;
+  }
+  try {
+    const result = await checkForUpdate(app.getVersion());
+    saveSettings({ lastUpdateCheck: Date.now() });
+    if (result.hasUpdate) {
+      showUpdateAvailableToast(result.latestVersion, result.releaseUrl);
+      if (popup) {
+        popup.webContents.send('update-available', { version: result.latestVersion, url: result.releaseUrl });
+      }
+    }
+  } catch {
+    // silent failure
+  }
+}
+
+function showUpdateAvailableToast(version: string, url: string): void {
+  if (!Notification.isSupported()) return;
+  const notif = new Notification({
+    title: 'Claude Usage Monitor',
+    body: `v${version} is available. Click to download.`,
+  });
+  notif.on('click', () => {
+    void shell.openExternal(url);
+  });
+  notif.show();
+}
+
 function buildContextMenu(): Menu {
   const settings = getSettings();
   const t = getMainTranslations(settings.language);
@@ -147,6 +182,10 @@ function buildContextMenu(): Menu {
     {
       label: t.trayRefreshNow,
       click: () => void pollingService.triggerNow(),
+    },
+    {
+      label: 'Check for Updates',
+      click: () => void runUpdateCheck(true),
     },
     { type: 'separator' },
     {
@@ -235,6 +274,10 @@ function registerIpcHandlers(): void {
     popup?.hide();
   });
 
+  ipcMain.on('open-release-url', (_e, url: string) => {
+    void shell.openExternal(url);
+  });
+
   ipcMain.on('set-window-height', (_event, height: number) => {
     if (!popup) return;
     const workArea = screen.getPrimaryDisplay().workArea;
@@ -314,6 +357,10 @@ app.whenReady().then(() => {
   });
 
   pollingService.start();
+
+  setTimeout(() => {
+    void runUpdateCheck();
+  }, 5000);
 });
 
 app.on('window-all-closed', () => {

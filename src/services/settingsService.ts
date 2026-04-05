@@ -23,6 +23,8 @@ export interface AppSettings {
   rateLimitedUntil: number;    // unix ms — 0 means not rate limited
   rateLimitCount: number;      // consecutive 429s for backoff
   rateLimitResetAt: number;    // API-provided reset timestamp (unix ms), 0 if absent
+  lastUpdateCheck: number;     // unix ms timestamp of last update check, 0 if never
+  skippedVersion: string;      // version tag the user chose to skip
 }
 
 const defaults: AppSettings = {
@@ -46,6 +48,8 @@ const defaults: AppSettings = {
   rateLimitedUntil: 0,
   rateLimitCount: 0,
   rateLimitResetAt: 0,
+  lastUpdateCheck: 0,
+  skippedVersion: '',
 };
 
 const store = new Store<AppSettings>({
@@ -75,6 +79,8 @@ const store = new Store<AppSettings>({
     rateLimitedUntil: { type: 'number' },
     rateLimitCount: { type: 'number' },
     rateLimitResetAt: { type: 'number' },
+    lastUpdateCheck: { type: 'number' },
+    skippedVersion: { type: 'string' },
   },
 });
 
@@ -92,6 +98,8 @@ export function getSettings(): AppSettings {
     rateLimitedUntil: store.get('rateLimitedUntil', defaults.rateLimitedUntil),
     rateLimitCount: store.get('rateLimitCount', defaults.rateLimitCount),
     rateLimitResetAt: store.get('rateLimitResetAt', defaults.rateLimitResetAt),
+    lastUpdateCheck: store.get('lastUpdateCheck', defaults.lastUpdateCheck),
+    skippedVersion: store.get('skippedVersion', defaults.skippedVersion),
   };
 }
 
@@ -131,5 +139,11 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   }
   if (settings.rateLimitResetAt !== undefined) {
     store.set('rateLimitResetAt', settings.rateLimitResetAt);
+  }
+  if (settings.lastUpdateCheck !== undefined) {
+    store.set('lastUpdateCheck', settings.lastUpdateCheck);
+  }
+  if (settings.skippedVersion !== undefined) {
+    store.set('skippedVersion', settings.skippedVersion);
   }
 }

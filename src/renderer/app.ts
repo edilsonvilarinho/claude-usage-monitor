@@ -50,6 +50,8 @@ declare global {
       sendTrayIcon: (dataUrl: string) => void;
       closeWindow: () => void;
       setWindowHeight: (h: number) => void;
+      onUpdateAvailable: (cb: (info: { version: string; url: string }) => void) => void;
+      openReleaseUrl: (url: string) => void;
     };
   }
 }
@@ -569,6 +571,22 @@ function init(): void {
 
     (document.getElementById('updated-text') as HTMLElement).textContent =
       tr().failedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  });
+
+  window.claudeUsage.onUpdateAvailable(({ version, url }) => {
+    const banner = document.getElementById('update-banner') as HTMLElement;
+    const label  = document.getElementById('update-version-label') as HTMLElement;
+    if (banner && label) {
+      label.textContent = `v${version} available`;
+      banner.style.display = 'flex';
+      banner.dataset.url = url;
+      fitWindow();
+    }
+  });
+
+  document.getElementById('btn-update-download')!.addEventListener('click', () => {
+    const url = (document.getElementById('update-banner') as HTMLElement)?.dataset.url;
+    if (url) window.claudeUsage.openReleaseUrl(url);
   });
 
   document.getElementById('btn-close')!.addEventListener('click', () => {
