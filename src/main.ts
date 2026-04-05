@@ -302,9 +302,7 @@ function registerIpcHandlers(): void {
       popup.setBounds({ x, y: Math.max(workArea.y, clampedY), width: POPUP_WIDTH, height: h }, false);
     } else {
       popup.setSize(POPUP_WIDTH, h, false);
-      if (!popup.isVisible()) {
-        positionPopup();
-      }
+      positionPopup();
     }
   });
 }
