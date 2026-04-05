@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-monitor",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Windows system tray app to monitor Claude AI usage limits",
   "main": "dist/main.js",
   "scripts": {
