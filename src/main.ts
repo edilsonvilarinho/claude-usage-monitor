@@ -23,6 +23,8 @@ let lastUsageData: UsageData | null = null;
 let suppressNextNotification = false;
 let userMovedPopup = false;
 let currentRateLimitUntil = 0; // restored from disk on startup
+let credentialMissing = false;
+let credentialPath = '';
 
 const POPUP_WIDTH  = 340;
 const POPUP_HEIGHT = 210;
@@ -48,6 +50,13 @@ function createPopup(): BrowserWindow {
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  // Re-send any pending state once renderer is ready (handles early IPC timing)
+  win.webContents.once('did-finish-load', () => {
+    if (credentialMissing) {
+      win.webContents.send('credential-missing', credentialPath);
+    }
+  });
 
   win.on('blur', () => {
     if (popup && popup.isVisible() && !getSettings().alwaysVisible) {
@@ -104,6 +113,10 @@ function togglePopup(): void {
     if (currentRateLimitUntil > Date.now()) {
       const { rateLimitResetAt } = getSettings();
       popup.webContents.send('rate-limited', currentRateLimitUntil, rateLimitResetAt || undefined);
+    }
+    // Re-surface credential error if still unresolved
+    if (credentialMissing) {
+      popup.webContents.send('credential-missing', credentialPath);
     }
   }
 }
@@ -319,6 +332,7 @@ app.whenReady().then(() => {
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {
     lastUsageData = data;
+    credentialMissing = false;
     if (currentRateLimitUntil > 0) {
       currentRateLimitUntil = 0;
       saveSettings({ rateLimitedUntil: 0, rateLimitCount: 0 });
@@ -329,10 +343,6 @@ app.whenReady().then(() => {
       suppressNextNotification = false;
     } else {
       checkAndNotify(data);
-    }
-
-    if (popup?.isVisible()) {
-      popup.webContents.send('usage-updated', data);
     }
 
     // Always update tray icon via renderer (even when hidden)
@@ -351,6 +361,28 @@ app.whenReady().then(() => {
   });
 
   pollingService.on('error', (err: Error) => {
+    const isCredError = err.message.includes('credentials not found') ||
+                        err.message.includes('Invalid credentials file');
+    if (isCredError) {
+      credentialMissing = true;
+      // Extract path from error message or fall back to default
+      const match = err.message.match(/Expected location: (.+)/);
+      credentialPath = match
+        ? match[1].trim()
+        : path.join(process.env['USERPROFILE'] || '~', '.claude', '.credentials.json');
+      if (popup) {
+        if (!popup.isVisible()) {
+          if (!getSettings().alwaysVisible) {
+            userMovedPopup = false;
+            positionPopup();
+          }
+          popup.show();
+          popup.focus();
+        }
+        popup.webContents.send('credential-missing', credentialPath);
+      }
+      return; // do not send usage-error for credential errors
+    }
     if (popup?.isVisible()) {
       popup.webContents.send('usage-error', err.message);
     }

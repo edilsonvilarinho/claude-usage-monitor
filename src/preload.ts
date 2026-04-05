@@ -58,4 +58,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   openReleaseUrl: (url: string): void => {
     ipcRenderer.send('open-release-url', url);
   },
+
+  onCredentialMissing: (cb: (credPath: string) => void): void => {
+    ipcRenderer.on('credential-missing', (_e, credPath: string) => cb(credPath));
+  },
 });

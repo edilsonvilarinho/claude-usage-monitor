@@ -52,6 +52,7 @@ declare global {
       setWindowHeight: (h: number) => void;
       onUpdateAvailable: (cb: (info: { version: string; url: string }) => void) => void;
       openReleaseUrl: (url: string) => void;
+      onCredentialMissing: (cb: (credPath: string) => void) => void;
     };
   }
 }
@@ -551,7 +552,10 @@ function init(): void {
 
   void loadSettings();
 
-  window.claudeUsage.onUsageUpdated((data) => updateUI(data));
+  window.claudeUsage.onUsageUpdated((data) => {
+    (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
+    updateUI(data);
+  });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {
     isRateLimited = true;
@@ -571,6 +575,15 @@ function init(): void {
 
     (document.getElementById('updated-text') as HTMLElement).textContent =
       tr().failedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  });
+
+  window.claudeUsage.onCredentialMissing((credPath: string) => {
+    (document.getElementById('credential-path-value') as HTMLElement).textContent = credPath;
+    (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
+  });
+
+  document.getElementById('credential-retry-btn')?.addEventListener('click', async () => {
+    await window.claudeUsage.refreshNow();
   });
 
   window.claudeUsage.onUpdateAvailable(({ version, url }) => {
