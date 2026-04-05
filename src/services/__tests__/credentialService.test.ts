@@ -228,6 +228,47 @@ describe('getAccessToken', () => {
     expect(token).toBe('newer-token')
   })
 
+  it('expired token without refreshToken returns existing token directly', async () => {
+    // expiresAt in the past, no refreshToken field
+    const creds: CredentialsFile = {
+      claudeAiOauth: {
+        accessToken: 'expired-but-only-token',
+        refreshToken: undefined as unknown as string,
+        expiresAt: Date.now() - 60 * 1000, // expired 1 min ago
+      },
+    }
+    mockSingleCredFile(creds)
+
+    const token = await getAccessToken()
+
+    // No refresh attempted because refreshToken is absent
+    expect(https.request).not.toHaveBeenCalled()
+    expect(token).toBe('expired-but-only-token')
+  })
+
+  it('expiresAt undefined causes needsRefresh=true and triggers refresh attempt', async () => {
+    const creds: CredentialsFile = {
+      claudeAiOauth: {
+        accessToken: 'token-without-expiry',
+        refreshToken: 'some-refresh-token',
+        expiresAt: undefined as unknown as number,
+      },
+    }
+    mockSingleCredFile(creds)
+    mockHttpsRefreshResponse({
+      access_token: 'refreshed-token',
+      refresh_token: 'new-refresh',
+      expires_in: 3600,
+    })
+    vi.mocked(fs.writeFileSync).mockImplementation(() => undefined)
+
+    const token = await getAccessToken()
+
+    // needsRefresh = true because (undefined ?? 0) - Date.now() < 5min
+    expect(https.request).toHaveBeenCalled()
+    expect(token).toBe('refreshed-token')
+  })
+
   it('does not check WSL paths when wslBase does not exist', async () => {
     const creds = buildCreds()
 

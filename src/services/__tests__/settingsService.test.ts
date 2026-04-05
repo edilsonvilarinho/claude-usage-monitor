@@ -122,4 +122,26 @@ describe('saveSettings()', () => {
     expect(settings.language).toBe('pt-BR')
     expect(settings.pollIntervalMinutes).toBe(3)
   })
+
+  it('saves and reads lastUpdateCheck correctly', () => {
+    const ts = '2025-01-01T00:00:00Z'
+    const tsMs = new Date(ts).getTime()
+    saveSettings({ lastUpdateCheck: tsMs })
+
+    expect(getSettings().lastUpdateCheck).toBe(tsMs)
+  })
+
+  it('saves and reads skippedVersion correctly', () => {
+    saveSettings({ skippedVersion: 'v3.1.0' })
+
+    expect(getSettings().skippedVersion).toBe('v3.1.0')
+  })
+
+  it('saves and reads rateLimitResetAt correctly', () => {
+    const ts = '2025-01-01T01:00:00Z'
+    const tsMs = new Date(ts).getTime()
+    saveSettings({ rateLimitResetAt: tsMs })
+
+    expect(getSettings().rateLimitResetAt).toBe(tsMs)
+  })
 })
