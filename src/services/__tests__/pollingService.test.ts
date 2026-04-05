@@ -21,7 +21,9 @@ const { PollingService } = await import('../../services/pollingService')
 
 const FIVE_MIN_MS   = 5 * 60 * 1000
 const SEVEN_MIN_MS  = 7 * 60 * 1000
+const TEN_MIN_MS    = 10 * 60 * 1000
 const TWENTY_MIN_MS = 20 * 60 * 1000
+const THIRTY_MIN_MS = 30 * 60 * 1000
 const ONE_MIN_MS    = 60 * 1000
 
 const makeData = (session = 0.5, weekly = 0.5) => ({
@@ -128,10 +130,10 @@ describe('PollingService', () => {
 
     const calls = mockFetch.mock.calls.length
 
-    // After reset, next timer is NORMAL (7min), so no poll at 5min
+    // After reset, next timer is NORMAL (10min), so no poll at 5min
     await vi.advanceTimersByTimeAsync(FIVE_MIN_MS + 100)
     expect(mockFetch).toHaveBeenCalledTimes(calls)
-    await vi.advanceTimersByTimeAsync(2 * ONE_MIN_MS)
+    await vi.advanceTimersByTimeAsync(5 * ONE_MIN_MS)
     await Promise.resolve()
     expect(mockFetch).toHaveBeenCalledTimes(calls + 1)
   })
@@ -180,10 +182,10 @@ describe('PollingService', () => {
     await Promise.resolve()
 
     const calls = mockFetch.mock.calls.length
-    // No fast cycles — should not fire before 7min
+    // No fast cycles — should not fire before 10min
     await vi.advanceTimersByTimeAsync(FIVE_MIN_MS + 100)
     expect(mockFetch).toHaveBeenCalledTimes(calls)
-    await vi.advanceTimersByTimeAsync(2 * ONE_MIN_MS)
+    await vi.advanceTimersByTimeAsync(5 * ONE_MIN_MS)
     await Promise.resolve()
     expect(mockFetch).toHaveBeenCalledTimes(calls + 1)
   })
@@ -364,10 +366,10 @@ describe('PollingService', () => {
 
     const calls = mockFetch.mock.calls.length
 
-    // Next interval back to NORMAL (7min)
+    // Next interval back to NORMAL (10min)
     await vi.advanceTimersByTimeAsync(FIVE_MIN_MS + 100)
     expect(mockFetch).toHaveBeenCalledTimes(calls)
-    await vi.advanceTimersByTimeAsync(2 * ONE_MIN_MS)
+    await vi.advanceTimersByTimeAsync(5 * ONE_MIN_MS)
     await Promise.resolve()
     expect(mockFetch).toHaveBeenCalledTimes(calls + 1)
   })
@@ -400,8 +402,8 @@ describe('PollingService', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1)
   })
 
-  // 19. Idle interval (20min) when system is idle
-  it('idle system (>600s) uses 20min poll interval', async () => {
+  // 19. Idle interval (30min) when system is idle
+  it('idle system (>600s) uses 30min poll interval', async () => {
     mockGetSystemIdleTime.mockReturnValue(601) // > IDLE_THRESHOLD (600s)
     mockFetch.mockResolvedValue(makeData())
 
@@ -411,13 +413,13 @@ describe('PollingService', () => {
     const callsAfterFirst = mockFetch.mock.calls.length
     expect(callsAfterFirst).toBe(1)
 
-    // Should NOT poll before 20min
+    // Should NOT poll before 30min
     await vi.advanceTimersByTimeAsync(SEVEN_MIN_MS + 1000)
     await flushPromises()
     expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst)
 
-    // Should poll after 20min
-    await vi.advanceTimersByTimeAsync(TWENTY_MIN_MS - SEVEN_MIN_MS - 1000 + 100)
+    // Should poll after 30min
+    await vi.advanceTimersByTimeAsync(THIRTY_MIN_MS - SEVEN_MIN_MS - 1000 + 100)
     await flushPromises()
     expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
   })
@@ -430,9 +432,9 @@ describe('PollingService', () => {
     service.start()
     await Promise.resolve() // should not throw
 
-    // Since isIdle() returned false, interval is NORMAL (7min)
+    // Since isIdle() returned false, interval is NORMAL (10min)
     const callsAfterFirst = mockFetch.mock.calls.length
-    await vi.advanceTimersByTimeAsync(SEVEN_MIN_MS + 100)
+    await vi.advanceTimersByTimeAsync(TEN_MIN_MS + 100)
     await Promise.resolve()
     expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
   })

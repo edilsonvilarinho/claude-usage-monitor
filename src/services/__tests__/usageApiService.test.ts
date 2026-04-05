@@ -48,9 +48,9 @@ const makeUsageData = () => ({
   seven_day: { utilization: 0.3, resets_at: '2026-03-30T12:00:00Z' },
 })
 
-// MAX_RETRIES = 5; advance all backoff sleeps to exhaust retries
+// MAX_RETRIES = 3; advance all backoff sleeps to exhaust retries
 async function exhaustRetries() {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     const backoff = Math.min(1000 * Math.pow(2, i), 16000)
     await vi.advanceTimersByTimeAsync(backoff + 100)
   }
@@ -259,7 +259,7 @@ describe('usageApiService', () => {
     await exhaustRetries()
 
     await assertion
-    expect(callCount).toBe(5)
+    expect(callCount).toBe(3)
   })
 
   // 10. Network error → retries, eventually throws
@@ -284,7 +284,7 @@ describe('usageApiService', () => {
     await exhaustRetries()
 
     await assertion
-    expect(callCount).toBe(5)
+    expect(callCount).toBe(3)
   })
 
   // 11. getClaudeVersion falls back to '2.0.0' when execSync throws
