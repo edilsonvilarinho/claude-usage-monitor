@@ -1,114 +1,138 @@
 # Claude Usage Monitor
 
-A Windows system tray app that monitors your Claude AI usage limits in real time — without needing the Claude CLI or any extra configuration.
+Aplicativo Windows para a bandeja do sistema que monitora seus limites de uso da IA Claude em tempo real — sem precisar do CLI do Claude ou de qualquer configuração adicional.
 
 ![Preview](img/1.png)
 ![Preview](img/2.png)
 
 ---
 
-## Features
+## Funcionalidades
 
-### Usage gauges
-- **Session (5h)** and **Weekly (7d)** half-arc speedometers showing current utilization at a glance
-- Color coding: green → yellow (60%) → red (80%)
-- Displays time remaining until each window resets
-- Optional bars for **Sonnet** model usage and **extra credits** (shown only when your account has them)
+### Medidores de Uso
+- **Sessão (5h)** e **Semanal (7d)** — velocímetros semicirculares mostrando a utilização atual de forma imediata
+- Código de cores progressivo: verde → amarelo (60%) → vermelho (80%)
+- Exibe o tempo restante até cada janela de uso ser reiniciada
+- Barras opcionais para uso do modelo **Sonnet** e **créditos extras** (exibidas apenas quando a conta possui créditos adicionais)
 
-### Tray icon
-- Live circular progress ring in the system tray reflecting the highest of the two gauges
-- Shows the percentage number inside the icon
-- Displays `!!!` when usage exceeds 100%
-- Tooltip shows session and weekly percentages on hover
+### Ícone na Bandeja do Sistema
+- Anel de progresso circular ao vivo na bandeja do sistema, refletindo o maior valor entre os dois medidores
+- Exibe o número percentual dentro do ícone
+- Mostra `!!!` quando o uso ultrapassa 100%
+- Tooltip ao passar o mouse exibe os percentuais de sessão e semanal, além da versão instalada
 
-### Auto refresh
-- Toggle **Auto refresh** in settings to poll the API automatically while the window is open
-- Configurable interval (minimum 60 seconds — recommended 300s to avoid rate limiting)
+### Atualização Automática
+- Polling automático da API em intervalos configuráveis
+- Intervalo padrão: 7 minutos
+- Modo rápido (5 min): ativado automaticamente quando detecta um pico de uso superior a 1%
+- Modo ocioso (20 min): ativado automaticamente quando o sistema está inativo por mais de 10 minutos
 
-### Rate limit handling
-- When the API returns 429, the app stops retrying immediately and shows a countdown banner
-- Exponential backoff on consecutive rate limits: 5m → 10m → 20m → 40m → 60m (cap)
-- The countdown and backoff state survive app restarts — reopening the app shows the correct remaining time
-- Automatically resumes normal polling once the cooldown expires
+### Gerenciamento de Rate Limit
+- Quando a API retorna erro 429, o app para as tentativas imediatamente e exibe um banner de contagem regressiva
+- Backoff exponencial em rate limits consecutivos: `5m → 10m → 20m → 40m → 60m` (limite máximo)
+- Respeita o header `Retry-After` ou `X-RateLimit-Reset` quando a API os fornece
+- A contagem regressiva e o estado de backoff **sobrevivem a reinicializações do app** — ao reabrir, o tempo correto restante é exibido
+- Retoma o polling normal automaticamente quando o período de espera expira
 
-### Notifications
-- Desktop toast when usage crosses your configured threshold (session and/or weekly)
-- Optional sound alert
-- Notify when a usage window resets
-- Test button to preview the notification
+### Notificações
+- Toast nativo do Windows quando o uso ultrapassa o limiar configurado (sessão e/ou semanal)
+- Alerta sonoro opcional
+- Notificação quando uma janela de uso é reiniciada
+- Botão de teste para visualizar a notificação antes de configurar
+- Debounce inteligente — não notifica novamente até o uso cair abaixo de 50%
 
-### Configurable window size
-Four sizes to choose from — scales the gauge charts:
-| Size | Description |
+### Tamanhos de Janela Configuráveis
+Quatro tamanhos disponíveis — escala os gráficos dos medidores:
+
+| Tamanho | Descrição |
 |---|---|
-| Normal | Compact |
-| Medium | Slightly larger gauges |
-| Large | Big gauges, easy to read (default) |
-| Very Large | Maximum gauge size |
+| Normal | Compacto |
+| Médio | Medidores ligeiramente maiores |
+| Grande | Medidores grandes, fácil leitura (padrão) |
+| Muito Grande | Tamanho máximo dos medidores |
 
-### Moveable window
-Drag the popup anywhere on screen — it stays where you left it. It only returns above the tray icon when you close and reopen it.
+### Janela Movível
+Arraste o popup para qualquer lugar da tela — ele permanece onde você o deixou. Retorna acima do ícone da bandeja somente ao fechar e reabrir o app.
 
-### Themes
-- **System** (follows Windows light/dark mode)
-- **Dark**
-- **Light**
+### Temas
+- **Sistema** — segue o modo claro/escuro do Windows automaticamente
+- **Escuro**
+- **Claro**
 
-Native Windows 11 Acrylic blur effect on the popup background.
+Efeito de desfoque Acrylic nativo do Windows 11 no fundo do popup.
 
-### Language
+### Idiomas
 - English
 - Português (BR)
 
-### General settings
-- **Launch at startup** — registers to Windows `HKCU\Run` so the app starts with Windows
-- **Always visible** — disables auto-hide on focus loss
+### Configurações Gerais
+- **Iniciar com o Windows** — registra no `HKCU\Run` para iniciar automaticamente com o sistema
+- **Sempre visível** — desativa o auto-ocultar ao perder o foco
+
+### Verificação de Atualizações
+- Verifica automaticamente novas versões uma vez por dia via GitHub Releases
+- Exibe toast de notificação e banner no popup quando há atualização disponível
+- Não bloqueia o app em caso de falha na verificação (falha silenciosa)
 
 ---
 
-## How it works
+## Como Funciona
 
-Claude Usage Monitor reads credentials directly from `~/.claude/.credentials.json` (the same file the Claude CLI uses) and calls the Anthropic API with your OAuth token. No API key setup needed — if you have the Claude CLI installed and logged in, it just works.
+O Claude Usage Monitor lê as credenciais diretamente do arquivo `~/.claude/.credentials.json` — o mesmo arquivo usado pelo Claude CLI — e chama a API da Anthropic com seu token OAuth. **Não é necessária nenhuma chave de API**: se você tem o Claude CLI instalado e está logado, o app simplesmente funciona.
 
-The token is automatically refreshed when it's close to expiry.
+O token OAuth é **renovado automaticamente** quando está próximo do vencimento (margem de 5 minutos).
+
+O app também suporta instalações via **WSL (Windows Subsystem for Linux)**: ele busca automaticamente credenciais em todos os caminhos WSL disponíveis (`\\wsl.localhost\<distro>\home\<user>\.claude\`) e utiliza o arquivo modificado mais recentemente.
 
 ---
 
-## Installation
+## Instalação
 
-Download the latest release from the [Releases](../../releases) page:
+Baixe a versão mais recente na página de [Releases](../../releases):
 
-- **`Claude Usage Monitor Setup.exe`** — NSIS installer
-- **`Claude Usage Monitor.exe`** — Portable, no installation needed
+- **`Claude Usage Monitor Setup.exe`** — instalador NSIS com opção de diretório customizável
+- **`Claude Usage Monitor.exe`** — portátil, sem instalação necessária
 
-### Build from source
+### Compilar a partir do Código Fonte
 
-Requirements: Node.js 18+, Windows
+**Requisitos:** Node.js 18+, Windows
 
 ```bash
 git clone https://github.com/edilsonvilarinho/claude-usage-monitor
 cd claude-usage-monitor
 npm install
 
-# Run in development
+# Executar em modo de desenvolvimento
 npm run dev
 
-# Build installer + portable EXE
+# Compilar (main + renderer)
+npm run build
+
+# Gerar instalador NSIS + EXE portátil
 npm run dist
 
-# Portable EXE only
+# Somente EXE portátil
 npm run dist:portable
+
+# Gerar tudo e zipar para release
+npm run release
 ```
 
 ---
 
-## Requirements
+## Requisitos
 
 - Windows 10 / 11
-- [Claude CLI](https://claude.ai/download) installed and logged in (`~/.claude/.credentials.json` must exist)
+- [Claude CLI](https://claude.ai/download) instalado e com sessão ativa (`~/.claude/.credentials.json` deve existir)
 
 ---
 
-## Privacy
+## Privacidade
 
-All data stays local. The app only makes requests to `api.anthropic.com` using your existing Claude OAuth token — the same requests the Claude CLI itself makes. No telemetry, no third-party services.
+Todos os dados ficam locais. O app realiza apenas requisições para `api.anthropic.com` usando seu token OAuth existente do Claude — as mesmas requisições que o próprio CLI do Claude faz. **Sem telemetria, sem serviços de terceiros.**
+
+---
+
+## Licença
+
+MIT
