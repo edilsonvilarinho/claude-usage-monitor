@@ -7,6 +7,12 @@ import { checkAndNotify, syncWindowState, sendTestNotification } from './service
 import { getMainTranslations } from './i18n/mainTranslations';
 import { UsageData } from './models/usageData';
 
+// Prevent multiple instances (also allows NSIS installer to detect running process)
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+}
+
 // Required for Windows notifications
 app.setAppUserModelId('com.claudeusage.monitor');
 
