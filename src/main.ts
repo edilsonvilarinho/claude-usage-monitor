@@ -185,6 +185,23 @@ function formatTimeUntil(isoDate: string): string {
   return `${minutes}m`;
 }
 
+function formatResetAt(isoDate: string, locale: string): string {
+  const date = new Date(isoDate);
+  const diffMs = date.getTime() - Date.now();
+  const isMultiDay = diffMs > 24 * 60 * 60 * 1000;
+
+  const timeStr = date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
+
+  const tzParts = Intl.DateTimeFormat(locale, { timeZoneName: 'short' }).formatToParts(date);
+  const tz = tzParts.find((p) => p.type === 'timeZoneName')?.value ?? '';
+
+  if (isMultiDay) {
+    const dayStr = date.toLocaleDateString(locale, { weekday: 'short' });
+    return tz ? `${dayStr} ${timeStr} • ${tz}` : `${dayStr} ${timeStr}`;
+  }
+  return tz ? `${timeStr} • ${tz}` : timeStr;
+}
+
 function updateTrayTooltip(data: UsageData): void {
   if (!tray) return;
   const t = getMainTranslations(getSettings().language);
@@ -192,9 +209,13 @@ function updateTrayTooltip(data: UsageData): void {
   const weeklyPct     = Math.round(data.seven_day.utilization).toString();
   const sessionResets = formatTimeUntil(data.five_hour.resets_at);
   const weeklyResets  = formatTimeUntil(data.seven_day.resets_at);
+  const locale        = getSettings().language === 'pt-BR' ? 'pt-BR' : 'en';
+  const sessionAt     = formatResetAt(data.five_hour.resets_at, locale);
+  const weeklyAt      = formatResetAt(data.seven_day.resets_at, locale);
   tray.setToolTip(
     t.trayTooltipLine1(sessionPct, weeklyPct) + '\n' +
     t.trayTooltipLine2(sessionResets, weeklyResets) + '\n' +
+    t.trayTooltipLine3(sessionAt, weeklyAt) + '\n' +
     `v${app.getVersion()}`
   );
 }

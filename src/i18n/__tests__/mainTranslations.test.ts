@@ -41,6 +41,7 @@ describe('getMainTranslations', () => {
     expect(t.notifWeeklyWarnBody(90, 80)).toBe('Weekly usage is at 90% (80% threshold reached)')
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Session: 55% | Weekly: 33%')
     expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Session resets in: 4h 30m | Weekly resets in: 2d 10h')
+    expect(t.trayTooltipLine3('6:00 AM • BRT', 'Mon 9:00 AM • BRT')).toBe('Session at: 6:00 AM • BRT | Weekly at: Mon 9:00 AM • BRT')
   })
 
   it('pt-BR function strings interpolate correctly', () => {
@@ -51,6 +52,7 @@ describe('getMainTranslations', () => {
     expect(t.notifWeeklyWarnBody(90, 80)).toBe('Uso semanal em 90% (limite de 80% atingido)')
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Sessão: 55% | Semanal: 33%')
     expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sessão reinicia em: 4h 30m | Semana reinicia em: 2d 10h')
+    expect(t.trayTooltipLine3('6:00 • BRT', 'Mon 9:00 • BRT')).toBe('Sessão às: 6:00 • BRT | Semanal às: Mon 9:00 • BRT')
   })
 
   it('has all required keys for "en"', () => {
@@ -63,7 +65,7 @@ describe('getMainTranslations', () => {
       'notifWeeklyFreedTitle', 'notifWeeklyFreedBody',
       'notifSessionWarnTitle', 'notifSessionWarnBody',
       'notifWeeklyWarnTitle', 'notifWeeklyWarnBody',
-      'trayInitialTooltip', 'trayTooltipLine1', 'trayTooltipLine2',
+      'trayInitialTooltip', 'trayTooltipLine1', 'trayTooltipLine2', 'trayTooltipLine3',
       'trayRefreshNow', 'trayLaunchAtStartup', 'trayExit',
     ]
     for (const key of requiredKeys) {
@@ -81,7 +83,7 @@ describe('getMainTranslations', () => {
       'notifWeeklyFreedTitle', 'notifWeeklyFreedBody',
       'notifSessionWarnTitle', 'notifSessionWarnBody',
       'notifWeeklyWarnTitle', 'notifWeeklyWarnBody',
-      'trayInitialTooltip', 'trayTooltipLine1', 'trayTooltipLine2',
+      'trayInitialTooltip', 'trayTooltipLine1', 'trayTooltipLine2', 'trayTooltipLine3',
       'trayRefreshNow', 'trayLaunchAtStartup', 'trayExit',
     ]
     for (const key of requiredKeys) {

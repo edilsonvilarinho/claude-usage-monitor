@@ -207,6 +207,13 @@ body {
   text-align: center;
 }
 
+.gauge-reset-at {
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-align: center;
+  opacity: 0.6;
+}
+
 /* ── Extra bars ────────────────────────────────────────────────────── */
 .extra-section {
   background: var(--surface);
