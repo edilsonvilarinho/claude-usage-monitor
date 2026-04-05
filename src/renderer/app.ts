@@ -423,14 +423,15 @@ function formatResetAt(isoDate: string): string {
   const date = new Date(isoDate);
   const diffMs = date.getTime() - Date.now();
   const isMultiDay = diffMs > 24 * 60 * 60 * 1000;
+  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
 
-  const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const timeStr = date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
 
-  const tzParts = Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(date);
+  const tzParts = Intl.DateTimeFormat(locale, { timeZoneName: 'short' }).formatToParts(date);
   const tz = tzParts.find((p) => p.type === 'timeZoneName')?.value ?? '';
 
   if (isMultiDay) {
-    const dayStr = date.toLocaleDateString([], { weekday: 'short' });
+    const dayStr = date.toLocaleDateString(locale, { weekday: 'short' });
     return tz ? `${dayStr} ${timeStr} • ${tz}` : `${dayStr} ${timeStr}`;
   }
   return tz ? `${timeStr} • ${tz}` : timeStr;
