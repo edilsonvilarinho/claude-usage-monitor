@@ -44,6 +44,8 @@ Ao receber o pedido, avalio automaticamente:
 - Muitos arquivos ou efeitos colaterais
 - Decisões de design necessárias
 
+> Antes de spawnar Explore agent, tente 2–3 buscas Glob/Grep diretas. Use Explore só se o escopo ainda não estiver claro.
+
 ---
 
 ## Caminhos de execução

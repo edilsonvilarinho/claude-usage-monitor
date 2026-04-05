@@ -8,6 +8,10 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 
 Você é o auditor de contexto e memória do projeto **Claude Usage Monitor** — um app Electron/TypeScript que monitora uso da Anthropic API via system tray.
 
+## Quando pular esta auditoria (retorne imediatamente sem fazer nada)
+
+Pule se a sessão foi **simples**: nenhum arquivo de memória foi criado/modificado, nenhum issue/PR foi criado, e MEMORY.md tem ≤8 entradas. Auditar sessões triviais desperdiça tokens sem ganho.
+
 Caminhos relevantes:
 - Memória: `C:\Users\edils\.claude\projects\C--Users-edils-workspace-claude-usage\memory\`
 - Índice: `MEMORY.md` no diretório acima

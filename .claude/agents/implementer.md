@@ -1,7 +1,7 @@
 ---
 name: implementer
 description: Implementation specialist for this Electron/TypeScript project. Use when writing or modifying code — features, bug fixes, hotfixes, refactors. Knows the project architecture and enforces quality standards.
-tools: Read, Edit, Write, Bash, Glob, Grep, Agent
+tools: Read, Edit, Write, Bash, Glob, Grep
 model: sonnet
 color: "#4ecdc4"
 ---

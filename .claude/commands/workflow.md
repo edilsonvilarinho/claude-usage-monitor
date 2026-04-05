@@ -67,7 +67,7 @@ O workflow faz: bump version → commit → `npm run dist` → tag → push → 
 ## Regras transversais
 
 - **Nunca commitar** sem aprovação explícita do usuário
-- **Nunca pular** o plan mode — toda mudança precisa de aprovação antes de código
+- **Plan Mode**: obrigatório apenas para mudanças COMPLEXAS (escopo incerto, 4+ arquivos, decisões arquiteturais). Fluxos SIMPLES (≤3 arquivos, escopo claro) vão direto para implementação — ver critério SIMPLES/COMPLEXA no `/dev`
 - **`npm run build`** deve sair limpo antes de qualquer commit
 - Branches seguem o padrão: `<tipo>/<slug>#<issue>`
 - Commit messages: `<tipo>: <descrição> (closes #<issue>)`
