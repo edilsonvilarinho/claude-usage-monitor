@@ -6,6 +6,8 @@ npm run dev          # compile main + start Electron (system tray)
 npm run build        # compile main TS + bundle renderer
 npm run dist         # NSIS installer + portable EXE → dist-build/
 npm run dist:portable
+npm run dist:zip     # zip installer + portable → dist-build/
+npm run release      # dist + dist:portable + zip → dist-build/
 npx tsc -p tsconfig.main.json   # main only
 node build-renderer.js           # renderer only
 ```
