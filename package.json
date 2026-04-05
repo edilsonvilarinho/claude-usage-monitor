@@ -57,8 +57,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": false,
-      "runAfterFinish": true,
-      "compression": "lzma"
+      "runAfterFinish": true
     }
   }
 }
