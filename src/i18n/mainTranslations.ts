@@ -17,6 +17,7 @@ export interface MainTranslations {
   trayTooltipLine1: (sessionPct: string, weeklyPct: string) => string;
   trayTooltipLine2: (sessionResets: string, weeklyResets: string) => string;
   trayTooltipLine3: (sessionAt: string, weeklyAt: string) => string;
+  trayTooltipNextUpdate: (time: string) => string;
   trayRefreshNow: string;
   trayLaunchAtStartup: string;
   trayExit: string;
@@ -41,6 +42,7 @@ const en: MainTranslations = {
   trayTooltipLine1: (sessionPct, weeklyPct) => `Claude Usage — Session: ${sessionPct}% | Weekly: ${weeklyPct}%`,
   trayTooltipLine2: (sessionResets, weeklyResets) => `Session resets in: ${sessionResets} | Weekly resets in: ${weeklyResets}`,
   trayTooltipLine3: (sessionAt, weeklyAt) => `Session at: ${sessionAt} | Weekly at: ${weeklyAt}`,
+  trayTooltipNextUpdate: (t) => `Next update in: ${t}`,
   trayRefreshNow: 'Refresh Now',
   trayLaunchAtStartup: 'Launch at Startup',
   trayExit: 'Exit',
@@ -65,6 +67,7 @@ const ptBR: MainTranslations = {
   trayTooltipLine1: (sessionPct, weeklyPct) => `Claude Usage — Sessão: ${sessionPct}% | Semanal: ${weeklyPct}%`,
   trayTooltipLine2: (sessionResets, weeklyResets) => `Sessão reinicia em: ${sessionResets} | Semana reinicia em: ${weeklyResets}`,
   trayTooltipLine3: (sessionAt, weeklyAt) => `Sessão às: ${sessionAt} | Semanal às: ${weeklyAt}`,
+  trayTooltipNextUpdate: (t) => `Próxima atualização em: ${t}`,
   trayRefreshNow: 'Atualizar Agora',
   trayLaunchAtStartup: 'Iniciar com o sistema',
   trayExit: 'Sair',
