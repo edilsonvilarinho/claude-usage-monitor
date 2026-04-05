@@ -21,13 +21,25 @@ let tray: Tray | null = null;
 let popup: BrowserWindow | null = null;
 let lastUsageData: UsageData | null = null;
 let suppressNextNotification = false;
-let userMovedPopup = false;
+let positionedByUser = false;
+let savedPopupPosition: { x: number; y: number } | null = null;
+let isProgrammaticMove = false;
+let programmaticMoveTimer: ReturnType<typeof setTimeout> | null = null;
 let currentRateLimitUntil = 0; // restored from disk on startup
 let credentialMissing = false;
 let credentialPath = '';
 
 const POPUP_WIDTH  = 340;
 const POPUP_HEIGHT = 210;
+
+function markAsProgrammaticMove(): void {
+  isProgrammaticMove = true;
+  if (programmaticMoveTimer) clearTimeout(programmaticMoveTimer);
+  programmaticMoveTimer = setTimeout(() => {
+    isProgrammaticMove = false;
+    programmaticMoveTimer = null;
+  }, 300);
+}
 
 // ─── Window management ───────────────────────────────────────────────────────
 
@@ -65,7 +77,24 @@ function createPopup(): BrowserWindow {
   });
 
   win.on('moved', () => {
-    userMovedPopup = true;
+    if (isProgrammaticMove) {
+      isProgrammaticMove = false;
+      if (programmaticMoveTimer) {
+        clearTimeout(programmaticMoveTimer);
+        programmaticMoveTimer = null;
+      }
+      return;
+    }
+    positionedByUser = true;
+    const [px, py] = win.getPosition();
+    savedPopupPosition = { x: px, y: py };
+  });
+
+  win.on('hide', () => {
+    if (positionedByUser && popup) {
+      const [px, py] = popup.getPosition();
+      savedPopupPosition = { x: px, y: py };
+    }
   });
 
   return win;
@@ -89,6 +118,7 @@ function positionPopup(height?: number): void {
     y = trayBounds.y + trayBounds.height + 8;
   }
 
+  markAsProgrammaticMove();
   if (height !== undefined) {
     popup.setBounds({ x, y, width: POPUP_WIDTH, height: h }, false);
   } else {
@@ -103,8 +133,18 @@ function togglePopup(): void {
     popup.hide();
   } else {
     if (!getSettings().alwaysVisible) {
-      userMovedPopup = false;
-      positionPopup();
+      if (savedPopupPosition) {
+        const workArea = screen.getPrimaryDisplay().workArea;
+        const clampedX = Math.max(workArea.x, Math.min(savedPopupPosition.x, workArea.x + workArea.width - POPUP_WIDTH));
+        const [, currentH] = popup.getSize();
+        const clampedY = Math.max(workArea.y, Math.min(savedPopupPosition.y, workArea.y + workArea.height - currentH));
+        markAsProgrammaticMove();
+        popup.setPosition(clampedX, clampedY, false);
+        positionedByUser = true;
+      } else {
+        positionedByUser = false;
+        positionPopup();
+      }
     }
     popup.show();
     popup.focus();
@@ -302,10 +342,11 @@ function registerIpcHandlers(): void {
     if (!popup) return;
     const workArea = screen.getPrimaryDisplay().workArea;
     const h = Math.min(Math.round(height), workArea.height - 16);
-    if (userMovedPopup) {
+    if (positionedByUser) {
       const [x, y] = popup.getPosition();
       // Clamp y so the window doesn't go below the screen bottom
       const clampedY = Math.min(y, workArea.y + workArea.height - h);
+      markAsProgrammaticMove();
       popup.setBounds({ x, y: Math.max(workArea.y, clampedY), width: POPUP_WIDTH, height: h }, false);
     } else {
       positionPopup(h);
@@ -377,8 +418,18 @@ app.whenReady().then(() => {
       if (popup) {
         if (!popup.isVisible()) {
           if (!getSettings().alwaysVisible) {
-            userMovedPopup = false;
-            positionPopup();
+            if (savedPopupPosition) {
+              const workArea = screen.getPrimaryDisplay().workArea;
+              const clampedX = Math.max(workArea.x, Math.min(savedPopupPosition.x, workArea.x + workArea.width - POPUP_WIDTH));
+              const [, currentH] = popup.getSize();
+              const clampedY = Math.max(workArea.y, Math.min(savedPopupPosition.y, workArea.y + workArea.height - currentH));
+              markAsProgrammaticMove();
+              popup.setPosition(clampedX, clampedY, false);
+              positionedByUser = true;
+            } else {
+              positionedByUser = false;
+              positionPopup();
+            }
           }
           popup.show();
           popup.focus();
