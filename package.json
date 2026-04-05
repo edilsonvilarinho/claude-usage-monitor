@@ -61,7 +61,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": false,
-      "runAfterFinish": false
+      "runAfterFinish": true
     }
   }
 }
