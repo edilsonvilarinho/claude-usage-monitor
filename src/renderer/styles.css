@@ -632,3 +632,84 @@ body {
 #modal-confirm:hover {
   background: rgba(59, 130, 246, 0.8);
 }
+
+/* ── Credential missing modal ──────────────────────────────────────── */
+.credential-modal-box {
+  width: 280px;
+  text-align: left;
+}
+
+.credential-modal-icon {
+  font-size: 28px;
+  color: var(--accent-yellow);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.credential-modal-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.credential-modal-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+
+.credential-steps {
+  font-size: 11px;
+  color: var(--text-primary);
+  padding-left: 16px;
+  margin: 0 0 10px 0;
+  line-height: 1.6;
+}
+
+.credential-steps li {
+  margin-bottom: 6px;
+}
+
+.credential-steps code {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: monospace;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.credential-path-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin: 0 0 2px 0;
+}
+
+.credential-path {
+  display: block;
+  font-size: 9px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 5px;
+  margin-bottom: 10px;
+  font-family: monospace;
+}
+
+#credential-retry-btn {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+#credential-retry-btn:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
