@@ -3,15 +3,15 @@ import { powerMonitor } from 'electron';
 import { fetchUsageData } from './usageApiService';
 import { UsageData } from '../models/usageData';
 
-const POLL_NORMAL_MS         = 7 * 60 * 1000;  // 7 min
-const POLL_FAST_MS           = 5 * 60 * 1000;  // 5 min
-const POLL_IDLE_MS           = 20 * 60 * 1000; // 20 min
+const POLL_NORMAL_MS         = 10 * 60 * 1000; // 10 min
+const POLL_FAST_MS           = 7 * 60 * 1000;  // 7 min
+const POLL_IDLE_MS           = 30 * 60 * 1000; // 30 min
 const POLL_ERROR_BASE        = 60 * 1000;      // 1 min base for backoff
 const POLL_ERROR_MAX         = 20 * 60 * 1000; // 20 min cap
 const POLL_RATE_LIMIT_BASE   = 5 * 60 * 1000;  // 5 min base for rate limit backoff
 const POLL_RATE_LIMIT_MAX    = 60 * 60 * 1000; // 1 hour cap
 const IDLE_THRESHOLD         = 10 * 60;        // 10 min in seconds
-const FAST_CYCLES            = 2;              // how many fast polls after spike
+const FAST_CYCLES            = 1;              // how many fast polls after spike
 
 export class PollingService extends EventEmitter {
   private timer: NodeJS.Timeout | null = null;

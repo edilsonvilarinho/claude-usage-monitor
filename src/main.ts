@@ -421,7 +421,7 @@ app.whenReady().then(() => {
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
     tooltipRefreshTimer = setInterval(() => {
       if (lastUsageData) updateTrayTooltip(lastUsageData);
-    }, 30_000);
+    }, 60_000);
     if (suppressNextNotification) {
       syncWindowState(data);
       suppressNextNotification = false;

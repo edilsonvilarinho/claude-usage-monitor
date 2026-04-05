@@ -5,7 +5,7 @@ import { UsageData } from '../models/usageData';
 
 const API_HOST = 'api.anthropic.com';
 const API_PATH = '/api/oauth/usage';
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 3;
 
 let cachedClaudeVersion: string | null = null;
 
