@@ -50,4 +50,12 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   setWindowHeight: (height: number): void => {
     ipcRenderer.send('set-window-height', height);
   },
+
+  onUpdateAvailable: (cb: (info: { version: string; url: string }) => void): void => {
+    ipcRenderer.on('update-available', (_event, info: { version: string; url: string }) => cb(info));
+  },
+
+  openReleaseUrl: (url: string): void => {
+    ipcRenderer.send('open-release-url', url);
+  },
 });
