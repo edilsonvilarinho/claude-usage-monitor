@@ -105,6 +105,7 @@ const translations = {
     failedAt:   (time: string) => `Failed: ${time}`,
     resetsIn:   (d: number, h: number, m: number) =>
       d > 0 ? `Resets in ${d}d ${h}h` : h > 0 ? `Resets in ${h}h ${m}m` : `Resets in ${m}m`,
+    nextPollIn: (t: string) => `Next update in ${t}`,
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -149,6 +150,7 @@ const translations = {
     failedAt:   (time: string) => `Falhou: ${time}`,
     resetsIn:   (d: number, h: number, m: number) =>
       d > 0 ? `Reinicia em ${d}d ${h}h` : h > 0 ? `Reinicia em ${h}h ${m}m` : `Reinicia em ${m}m`,
+    nextPollIn: (t: string) => `Próxima atualização em ${t}`,
   },
 } as const;
 
@@ -219,20 +221,56 @@ function applySize(size: AppSettings['windowSize']): void {
 // ── Auto-refresh ──────────────────────────────────────────────────────────────
 
 let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
+let currentAutoRefreshIntervalMs = 300 * 1000;
 
 function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
+  stopNextPollCountdown();
   if (autoRefreshTimer !== null) {
     clearInterval(autoRefreshTimer);
     autoRefreshTimer = null;
   }
   if (enabled) {
     const ms = Math.max(60, intervalSeconds) * 1000;
+    currentAutoRefreshIntervalMs = ms;
     autoRefreshTimer = setInterval(() => {
       void window.claudeUsage.refreshNow();
     }, ms);
+    startNextPollCountdown(ms);
   }
   const intervalRow = document.getElementById('row-auto-refresh-interval') as HTMLElement;
   intervalRow.style.opacity = enabled ? '1' : '0.4';
+}
+
+// ── Next poll countdown ───────────────────────────────────────────────────────
+
+let nextPollTimer: ReturnType<typeof setInterval> | null = null;
+let nextPollAt = 0;
+
+function startNextPollCountdown(intervalMs: number): void {
+  stopNextPollCountdown();
+  nextPollAt = Date.now() + intervalMs;
+  const el = document.getElementById('next-poll-text') as HTMLElement;
+  if (!el) return;
+
+  function tick(): void {
+    const remaining = nextPollAt - Date.now();
+    if (remaining <= 0) {
+      el.textContent = '';
+      return;
+    }
+    const m = Math.floor(remaining / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    el.textContent = tr().nextPollIn(`${m}:${String(s).padStart(2, '0')}`);
+  }
+
+  tick();
+  nextPollTimer = setInterval(tick, 1000);
+}
+
+function stopNextPollCountdown(): void {
+  if (nextPollTimer) { clearInterval(nextPollTimer); nextPollTimer = null; }
+  const el = document.getElementById('next-poll-text') as HTMLElement;
+  if (el) el.textContent = '';
 }
 
 // ── Rate limit countdown ──────────────────────────────────────────────────────
@@ -241,6 +279,7 @@ let countdownTimer: ReturnType<typeof setInterval> | null = null;
 let isRateLimited = false;
 
 function startRateLimitCountdown(until: number, resetAt?: number): void {
+  stopNextPollCountdown();
   if (countdownTimer) clearInterval(countdownTimer);
 
   const banner = document.getElementById('rate-limit-banner') as HTMLElement;
@@ -450,6 +489,10 @@ function updateUI(data: UsageData): void {
   updateTrayIcon(sessionPct, weeklyPct);
 
   fitWindow();
+
+  if (autoRefreshTimer !== null) {
+    startNextPollCountdown(currentAutoRefreshIntervalMs);
+  }
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────

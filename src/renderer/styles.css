@@ -279,6 +279,12 @@ body {
   color: var(--text-secondary);
 }
 
+.next-poll-text {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
 .refresh-btn {
   font-size: 10px;
   font-weight: 600;
