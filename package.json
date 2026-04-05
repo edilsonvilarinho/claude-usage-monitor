@@ -51,7 +51,7 @@
       ],
       "icon": "assets/icon.ico"
     },
-    "asar": true,
+    "asar": false,
     "compression": "maximum",
     "nsis": {
       "oneClick": false,
