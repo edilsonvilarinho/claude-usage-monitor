@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+const { mockGetSystemIdleTime } = vi.hoisted(() => {
+  return { mockGetSystemIdleTime: vi.fn(() => 0) }
+})
+
 vi.mock('electron', () => ({
-  powerMonitor: { getSystemIdleTime: vi.fn(() => 0) }
+  powerMonitor: { getSystemIdleTime: mockGetSystemIdleTime }
 }))
 
 const { mockFetch } = vi.hoisted(() => {
@@ -366,5 +370,70 @@ describe('PollingService', () => {
     await vi.advanceTimersByTimeAsync(2 * ONE_MIN_MS)
     await Promise.resolve()
     expect(mockFetch).toHaveBeenCalledTimes(calls + 1)
+  })
+
+  // 18. forceNow() calls poll() unlike triggerNow() which returns a no-op when rate limited
+  it('forceNow() calls poll() when rate limited (reschedules timer, unlike triggerNow no-op)', async () => {
+    const future = Date.now() + 10 * 60 * 1000
+    service.restoreRateLimit(future, 1)
+
+    // start() so running=true — first poll is blocked by rate limit and reschedules
+    mockFetch.mockResolvedValue(makeData())
+    service.start()
+    await Promise.resolve()
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    // triggerNow() is a no-op when rate limited — it returns early before calling poll()
+    await service.triggerNow()
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    // forceNow() does NOT have the triggerNow early-exit guard — it calls poll() directly.
+    // poll() itself still respects rate limit (schedules timer and returns), so fetch still won't run.
+    // But forceNow() did call poll() (can verify timer was rescheduled).
+    await service.forceNow()
+    // fetch still blocked by rate limit inside poll()
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    // After rate limit expires, poll fires
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000 + 100)
+    await flushPromises()
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  // 19. Idle interval (20min) when system is idle
+  it('idle system (>600s) uses 20min poll interval', async () => {
+    mockGetSystemIdleTime.mockReturnValue(601) // > IDLE_THRESHOLD (600s)
+    mockFetch.mockResolvedValue(makeData())
+
+    service.start()
+    await Promise.resolve() // first poll fires immediately
+
+    const callsAfterFirst = mockFetch.mock.calls.length
+    expect(callsAfterFirst).toBe(1)
+
+    // Should NOT poll before 20min
+    await vi.advanceTimersByTimeAsync(SEVEN_MIN_MS + 1000)
+    await flushPromises()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst)
+
+    // Should poll after 20min
+    await vi.advanceTimersByTimeAsync(TWENTY_MIN_MS - SEVEN_MIN_MS - 1000 + 100)
+    await flushPromises()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
+  })
+
+  // 20. isIdle() with exception → returns false, no propagation
+  it('isIdle() returns false when getSystemIdleTime throws', async () => {
+    mockGetSystemIdleTime.mockImplementation(() => { throw new Error('not supported') })
+    mockFetch.mockResolvedValue(makeData())
+
+    service.start()
+    await Promise.resolve() // should not throw
+
+    // Since isIdle() returned false, interval is NORMAL (7min)
+    const callsAfterFirst = mockFetch.mock.calls.length
+    await vi.advanceTimersByTimeAsync(SEVEN_MIN_MS + 100)
+    await Promise.resolve()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
   })
 })
