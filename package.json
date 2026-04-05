@@ -51,6 +51,9 @@
       ],
       "icon": "assets/icon.ico"
     },
+    "directories": {
+      "output": "dist-build"
+    },
     "asar": false,
     "compression": "maximum",
     "nsis": {
