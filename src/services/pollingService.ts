@@ -57,6 +57,14 @@ export class PollingService extends EventEmitter {
     await this.poll();
   }
 
+  async forceNow(): Promise<void> {
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    await this.poll();
+  }
+
   private isIdle(): boolean {
     try {
       return powerMonitor.getSystemIdleTime() >= IDLE_THRESHOLD;

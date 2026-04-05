@@ -31,6 +31,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     return ipcRenderer.invoke('refresh-now');
   },
 
+  forceRefreshNow: (): Promise<void> => {
+    return ipcRenderer.invoke('force-refresh-now');
+  },
+
   sendTrayIcon: (dataUrl: string): void => {
     ipcRenderer.send('tray-icon-data', dataUrl);
   },

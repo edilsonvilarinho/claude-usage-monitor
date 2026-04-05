@@ -45,6 +45,7 @@ declare global {
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
       refreshNow: () => Promise<void>;
+      forceRefreshNow: () => Promise<void>;
       testNotification: () => Promise<void>;
       sendTrayIcon: (dataUrl: string) => void;
       closeWindow: () => void;
@@ -234,6 +235,7 @@ function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
 // ── Rate limit countdown ──────────────────────────────────────────────────────
 
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
+let isRateLimited = false;
 
 function startRateLimitCountdown(until: number, resetAt?: number): void {
   if (countdownTimer) clearInterval(countdownTimer);
@@ -253,6 +255,7 @@ function startRateLimitCountdown(until: number, resetAt?: number): void {
     if (remaining <= 0) {
       timer.textContent = tr().rateLimitNow;
       if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+      isRateLimited = false;
       return;
     }
     const m = Math.floor(remaining / 60000);
@@ -532,6 +535,12 @@ function applyTheme(theme: AppSettings['theme']): void {
   }
 }
 
+// ── Force refresh modal ───────────────────────────────────────────────────────
+
+function showForceRefreshModal(): void {
+  document.getElementById('force-refresh-modal')!.classList.remove('hidden');
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function init(): void {
@@ -543,6 +552,7 @@ function init(): void {
   window.claudeUsage.onUsageUpdated((data) => updateUI(data));
 
   window.claudeUsage.onRateLimited((until, resetAt) => {
+    isRateLimited = true;
     startRateLimitCountdown(until, resetAt);
   });
 
@@ -566,7 +576,21 @@ function init(): void {
   });
 
   document.getElementById('btn-refresh')!.addEventListener('click', () => {
+    if (isRateLimited) {
+      showForceRefreshModal();
+      return;
+    }
     void window.claudeUsage.refreshNow();
+    (document.getElementById('updated-text') as HTMLElement).textContent = tr().refreshingText;
+  });
+
+  document.getElementById('modal-cancel')!.addEventListener('click', () => {
+    document.getElementById('force-refresh-modal')!.classList.add('hidden');
+  });
+
+  document.getElementById('modal-confirm')!.addEventListener('click', () => {
+    document.getElementById('force-refresh-modal')!.classList.add('hidden');
+    void window.claudeUsage.forceRefreshNow();
     (document.getElementById('updated-text') as HTMLElement).textContent = tr().refreshingText;
   });
 
