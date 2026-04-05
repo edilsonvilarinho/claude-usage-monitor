@@ -71,15 +71,15 @@ function createPopup(): BrowserWindow {
   return win;
 }
 
-function positionPopup(): void {
+function positionPopup(height?: number): void {
   if (!tray || !popup) return;
 
-  const [, currentHeight] = popup.getSize();
+  const h = height ?? popup.getSize()[1];
   const trayBounds = tray.getBounds();
   const workArea = screen.getPrimaryDisplay().workArea;
 
   let x = Math.round(trayBounds.x + trayBounds.width / 2 - POPUP_WIDTH / 2);
-  let y = Math.round(trayBounds.y - currentHeight - 8);
+  let y = Math.round(trayBounds.y - h - 8);
 
   // Clamp horizontally
   x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - POPUP_WIDTH));
@@ -89,7 +89,11 @@ function positionPopup(): void {
     y = trayBounds.y + trayBounds.height + 8;
   }
 
-  popup.setPosition(x, y, false);
+  if (height !== undefined) {
+    popup.setBounds({ x, y, width: POPUP_WIDTH, height: h }, false);
+  } else {
+    popup.setPosition(x, y, false);
+  }
 }
 
 function togglePopup(): void {
@@ -301,8 +305,7 @@ function registerIpcHandlers(): void {
       const clampedY = Math.min(y, workArea.y + workArea.height - h);
       popup.setBounds({ x, y: Math.max(workArea.y, clampedY), width: POPUP_WIDTH, height: h }, false);
     } else {
-      popup.setSize(POPUP_WIDTH, h, false);
-      positionPopup();
+      positionPopup(h);
     }
   });
 }
