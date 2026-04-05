@@ -154,7 +154,8 @@ function updateTrayTooltip(data: UsageData): void {
   const weeklyResets  = formatTimeUntil(data.seven_day.resets_at);
   tray.setToolTip(
     t.trayTooltipLine1(sessionPct, weeklyPct) + '\n' +
-    t.trayTooltipLine2(sessionResets, weeklyResets)
+    t.trayTooltipLine2(sessionResets, weeklyResets) + '\n' +
+    `v${app.getVersion()}`
   );
 }
 
@@ -233,7 +234,7 @@ function createTray(): Tray {
     : nativeImage.createFromPath(iconPath);
 
   const t = new Tray(icon);
-  t.setToolTip(getMainTranslations(getSettings().language).trayInitialTooltip);
+  t.setToolTip(`${getMainTranslations(getSettings().language).trayInitialTooltip} v${app.getVersion()}`);
   t.setContextMenu(buildContextMenu());
 
   t.on('click', () => togglePopup());
@@ -245,6 +246,8 @@ function createTray(): Tray {
 
 function registerIpcHandlers(): void {
   ipcMain.handle('get-settings', () => getSettings());
+
+  ipcMain.handle('get-app-version', () => app.getVersion());
 
   ipcMain.handle('save-settings', (_event, settings) => {
     saveSettings(settings);

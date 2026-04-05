@@ -53,6 +53,7 @@ declare global {
       onUpdateAvailable: (cb: (info: { version: string; url: string }) => void) => void;
       openReleaseUrl: (url: string) => void;
       onCredentialMissing: (cb: (credPath: string) => void) => void;
+      getAppVersion: () => Promise<string>;
     };
   }
 }
@@ -594,6 +595,11 @@ function init(): void {
   weeklyChart  = createGauge('gauge-weekly');
 
   void loadSettings();
+
+  void window.claudeUsage.getAppVersion().then((version) => {
+    const el = document.getElementById('app-version');
+    if (el) el.textContent = `v${version}`;
+  });
 
   window.claudeUsage.onUsageUpdated((data) => {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
