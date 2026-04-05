@@ -40,8 +40,8 @@ describe('getMainTranslations', () => {
     expect(t.notifSessionWarnBody(85, 80)).toBe('Session usage is at 85% (80% threshold reached)')
     expect(t.notifWeeklyWarnBody(90, 80)).toBe('Weekly usage is at 90% (80% threshold reached)')
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Session: 55% | Weekly: 33%')
-    expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Session resets in: 4h 30m | Weekly resets in: 2d 10h')
-    expect(t.trayTooltipLine3('6:00 AM • BRT', 'Mon 9:00 AM • BRT')).toBe('Session at: 6:00 AM • BRT | Weekly at: Mon 9:00 AM • BRT')
+    expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sess: 4h 30m | Wkly: 2d 10h')
+    expect(t.trayTooltipLine3('6:00 AM • BRT', 'Mon 9:00 AM • BRT')).toBe('Sess at: 6:00 AM • BRT | 7d at: Mon 9:00 AM • BRT')
   })
 
   it('pt-BR function strings interpolate correctly', () => {
@@ -51,8 +51,8 @@ describe('getMainTranslations', () => {
     expect(t.notifSessionWarnBody(85, 80)).toBe('Uso da sessão em 85% (limite de 80% atingido)')
     expect(t.notifWeeklyWarnBody(90, 80)).toBe('Uso semanal em 90% (limite de 80% atingido)')
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Sessão: 55% | Semanal: 33%')
-    expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sessão reinicia em: 4h 30m | Semana reinicia em: 2d 10h')
-    expect(t.trayTooltipLine3('6:00 • BRT', 'Mon 9:00 • BRT')).toBe('Sessão às: 6:00 • BRT | Semanal às: Mon 9:00 • BRT')
+    expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sess: 4h 30m | Semanal: 2d 10h')
+    expect(t.trayTooltipLine3('6:00 • BRT', 'Mon 9:00 • BRT')).toBe('Sess às: 6:00 • BRT | 7d às: Mon 9:00 • BRT')
   })
 
   it('has all required keys for "en"', () => {
