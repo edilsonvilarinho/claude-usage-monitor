@@ -204,6 +204,11 @@ function registerIpcHandlers(): void {
     await pollingService.triggerNow();
   });
 
+  ipcMain.handle('force-refresh-now', async () => {
+    suppressNextNotification = true;
+    await pollingService.forceNow();
+  });
+
   ipcMain.on('tray-icon-data', (_event, dataUrl: string) => {
     if (!tray || !dataUrl) return;
     try {
