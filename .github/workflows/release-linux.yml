@@ -33,3 +33,4 @@ jobs:
           files: |
             dist-build/*.deb
             dist-build/*.rpm
+            dist-build/*.AppImage
