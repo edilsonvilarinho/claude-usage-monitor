@@ -8,6 +8,8 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -23,9 +25,7 @@ jobs:
         run: npm ci
 
       - name: Build Linux packages
-        run: npm run build && npx electron-builder --linux
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build && npx electron-builder --linux --publish never
 
       - name: Upload .deb and .rpm to release
         uses: softprops/action-gh-release@v2
@@ -33,5 +33,3 @@ jobs:
           files: |
             dist-build/*.deb
             dist-build/*.rpm
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
