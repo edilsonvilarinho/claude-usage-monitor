@@ -72,14 +72,16 @@ function createPopup(): BrowserWindow {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
+  // On Linux: show and center the window immediately — don't wait for did-finish-load
+  if (isLinux) {
+    win.center();
+    win.show();
+  }
+
   // Re-send any pending state once renderer is ready (handles early IPC timing)
   win.webContents.once('did-finish-load', () => {
     if (credentialMissing) {
       win.webContents.send('credential-missing', credentialPath);
-    }
-    // On Linux show window immediately — tray may not be available
-    if (isLinux) {
-      win.show();
     }
   });
 
