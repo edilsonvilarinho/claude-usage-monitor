@@ -8,6 +8,11 @@ import { getMainTranslations } from './i18n/mainTranslations';
 import { UsageData } from './models/usageData';
 import { checkForUpdate } from './services/updateService';
 
+// Enable StatusNotifierItem on Linux for better tray compatibility (GNOME, Pantheon, KDE)
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-features', 'StatusNotifierItem');
+}
+
 // Prevent multiple instances (also allows NSIS installer to detect running process)
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
