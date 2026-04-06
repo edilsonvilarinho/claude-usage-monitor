@@ -2,6 +2,10 @@
   "name": "claude-usage-monitor",
   "version": "3.1.2",
   "description": "Windows system tray app to monitor Claude AI usage limits",
+  "author": {
+    "name": "Edilson Vilarinho",
+    "email": "edilson.vilarinho.messias@gmail.com"
+  },
   "main": "dist/main.js",
   "scripts": {
     "dev": "tsc -p tsconfig.main.json && electron dist/main.js",
