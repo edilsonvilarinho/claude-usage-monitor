@@ -72,14 +72,18 @@ function createPopup(): BrowserWindow {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // On Linux: show and center the window immediately — don't wait for did-finish-load
-  if (isLinux) {
-    win.center();
-    win.show();
-  }
-
   // Re-send any pending state once renderer is ready (handles early IPC timing)
   win.webContents.once('did-finish-load', () => {
+    if (isLinux) {
+      // Auto-show only when tray is not functional (bounds = 0 means DE has no SNI support, e.g. elementary OS 8.1)
+      // On DEs where tray works (e.g. elementary OS 6.1), the user opens the window via tray click
+      const bounds = tray?.getBounds();
+      const trayFunctional = bounds && (bounds.width > 0 || bounds.height > 0);
+      if (!trayFunctional) {
+        win.center();
+        win.show();
+      }
+    }
     if (credentialMissing) {
       win.webContents.send('credential-missing', credentialPath);
     }
