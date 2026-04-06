@@ -54,7 +54,7 @@ function createPopup(): BrowserWindow {
     alwaysOnTop: true,
     resizable: false,
     show: false,
-    backgroundMaterial: 'acrylic',
+    ...(process.platform === 'win32' ? { backgroundMaterial: 'acrylic' as const } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -453,7 +453,7 @@ app.whenReady().then(() => {
       const match = err.message.match(/Expected location: (.+)/);
       credentialPath = match
         ? match[1].trim()
-        : path.join(process.env['USERPROFILE'] || '~', '.claude', '.credentials.json');
+        : path.join(process.env['USERPROFILE'] || process.env['HOME'] || '~', '.claude', '.credentials.json');
       if (popup) {
         if (!popup.isVisible()) {
           if (!getSettings().alwaysVisible) {

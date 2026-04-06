@@ -10,34 +10,36 @@ const OAUTH_REFRESH_PATH = '/v1/oauth/token';
 function findCredentialPaths(): string[] {
   const candidates: string[] = [];
 
-  // Primary: Windows native path
-  const winPath = path.join(process.env['USERPROFILE'] || process.env['HOME'] || '', '.claude', '.credentials.json');
-  if (fs.existsSync(winPath)) {
-    candidates.push(winPath);
+  // Primary: native path (~/.claude/.credentials.json)
+  const homePath = path.join(process.env['USERPROFILE'] || process.env['HOME'] || '', '.claude', '.credentials.json');
+  if (fs.existsSync(homePath)) {
+    candidates.push(homePath);
   }
 
-  // Fallback: WSL paths
-  const wslBase = '\\\\wsl.localhost';
-  if (fs.existsSync(wslBase)) {
-    try {
-      const distros = fs.readdirSync(wslBase);
-      for (const distro of distros) {
-        const homeBase = path.join(wslBase, distro, 'home');
-        if (!fs.existsSync(homeBase)) continue;
-        try {
-          const users = fs.readdirSync(homeBase);
-          for (const user of users) {
-            const wslCredPath = path.join(homeBase, user, '.claude', '.credentials.json');
-            if (fs.existsSync(wslCredPath)) {
-              candidates.push(wslCredPath);
+  // Fallback: WSL paths (Windows only)
+  if (process.platform === 'win32') {
+    const wslBase = '\\\\wsl.localhost';
+    if (fs.existsSync(wslBase)) {
+      try {
+        const distros = fs.readdirSync(wslBase);
+        for (const distro of distros) {
+          const homeBase = path.join(wslBase, distro, 'home');
+          if (!fs.existsSync(homeBase)) continue;
+          try {
+            const users = fs.readdirSync(homeBase);
+            for (const user of users) {
+              const wslCredPath = path.join(homeBase, user, '.claude', '.credentials.json');
+              if (fs.existsSync(wslCredPath)) {
+                candidates.push(wslCredPath);
+              }
             }
+          } catch {
+            // skip inaccessible directories
           }
-        } catch {
-          // skip inaccessible directories
         }
+      } catch {
+        // WSL not available or inaccessible
       }
-    } catch {
-      // WSL not available or inaccessible
     }
   }
 
@@ -140,7 +142,7 @@ export async function getAccessToken(): Promise<string> {
   if (!filePath) {
     throw new Error(
       'Claude credentials not found. Make sure you are logged in to Claude Code.\n' +
-      'Expected location: ' + path.join(process.env['USERPROFILE'] || '~', '.claude', '.credentials.json')
+      'Expected location: ' + path.join(process.env['USERPROFILE'] || process.env['HOME'] || '~', '.claude', '.credentials.json')
     );
   }
 
