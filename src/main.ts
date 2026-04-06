@@ -50,16 +50,19 @@ function markAsProgrammaticMove(): void {
 // ─── Window management ───────────────────────────────────────────────────────
 
 function createPopup(): BrowserWindow {
+  const isLinux = process.platform === 'linux';
+
   const win = new BrowserWindow({
     width: POPUP_WIDTH,
     height: POPUP_HEIGHT,
-    frame: false,
-    transparent: true,
-    skipTaskbar: true,
-    alwaysOnTop: true,
-    resizable: false,
+    frame: isLinux,
+    transparent: !isLinux,
+    skipTaskbar: !isLinux,
+    alwaysOnTop: !isLinux,
+    resizable: isLinux,
     show: false,
     ...(process.platform === 'win32' ? { backgroundMaterial: 'acrylic' as const } : {}),
+    ...(isLinux ? { title: 'Claude Usage Monitor' } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -74,9 +77,22 @@ function createPopup(): BrowserWindow {
     if (credentialMissing) {
       win.webContents.send('credential-missing', credentialPath);
     }
+    // On Linux show window immediately — tray may not be available
+    if (isLinux) {
+      win.show();
+    }
   });
 
+  // On Linux: close button hides the window instead of quitting
+  if (isLinux) {
+    win.on('close', (e) => {
+      e.preventDefault();
+      win.hide();
+    });
+  }
+
   win.on('blur', () => {
+    if (isLinux) return; // Linux: never auto-hide on blur
     if (popup && popup.isVisible() && !getSettings().alwaysVisible) {
       popup.hide();
     }
@@ -499,6 +515,8 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  // Allow the window to close when app is actually quitting (Linux)
+  if (popup) popup.removeAllListeners('close');
   pollingService.stop();
   if (tooltipRefreshTimer) { clearInterval(tooltipRefreshTimer); tooltipRefreshTimer = null; }
 });
