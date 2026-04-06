@@ -47,7 +47,7 @@
         { "target": "AppImage", "arch": ["x64"] }
       ],
       "category": "Utility",
-      "icon": "assets/tray-icon.png"
+      "icon": "assets/icon-linux.png"
     },
     "win": {
       "target": [
