@@ -293,15 +293,16 @@ function showUpdateAvailableToast(version: string, url: string): void {
 function buildContextMenu(): Menu {
   const settings = getSettings();
   const t = getMainTranslations(settings.language);
-  return Menu.buildFromTemplate([
-    {
-      label: t.trayRefreshNow,
-      click: () => void pollingService.triggerNow(),
-    },
-    {
-      label: 'Check for Updates',
-      click: () => void runUpdateCheck(true),
-    },
+  const template: Electron.MenuItemConstructorOptions[] = [];
+
+  if (process.platform === 'linux') {
+    template.push({ label: 'Show Window', click: () => togglePopup() });
+    template.push({ type: 'separator' });
+  }
+
+  template.push(
+    { label: t.trayRefreshNow, click: () => void pollingService.triggerNow() },
+    { label: 'Check for Updates', click: () => void runUpdateCheck(true) },
     { type: 'separator' },
     {
       label: t.trayLaunchAtStartup,
@@ -311,16 +312,14 @@ function buildContextMenu(): Menu {
         const enabled = menuItem.checked;
         saveSettings({ launchAtStartup: enabled });
         void setLaunchAtStartup(enabled);
-        // Rebuild menu to reflect new state
         tray?.setContextMenu(buildContextMenu());
       },
     },
     { type: 'separator' },
-    {
-      label: t.trayExit,
-      click: () => app.quit(),
-    },
-  ]);
+    { label: t.trayExit, click: () => app.quit() }
+  );
+
+  return Menu.buildFromTemplate(template);
 }
 
 function createTray(): Tray {

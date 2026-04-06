@@ -19,7 +19,8 @@ let prevSessionResetsAt: string | null = null;
 let prevWeeklyResetsAt: string | null = null;
 
 function getIconPath(): string {
-  return path.join(process.resourcesPath || __dirname, '..', 'assets', 'icon.ico');
+  const iconFile = process.platform === 'linux' ? 'tray-icon.png' : 'icon.ico';
+  return path.join(process.resourcesPath || __dirname, '..', 'assets', iconFile);
 }
 
 function showToast(title: string, body: string, sound: boolean): void {

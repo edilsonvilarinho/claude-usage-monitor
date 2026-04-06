@@ -652,6 +652,11 @@ function init(): void {
 
   window.claudeUsage.onCredentialMissing((credPath: string) => {
     (document.getElementById('credential-path-value') as HTMLElement).textContent = credPath;
+    const isLinux = credPath.startsWith('/');
+    const winStep = document.getElementById('install-step-win') as HTMLElement;
+    const linuxStep = document.getElementById('install-step-linux') as HTMLElement;
+    if (winStep) winStep.style.display = isLinux ? 'none' : '';
+    if (linuxStep) linuxStep.style.display = isLinux ? '' : 'none';
     (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
   });
 

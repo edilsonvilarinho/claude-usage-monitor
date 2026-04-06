@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-monitor",
-  "version": "3.1.8",
+  "version": "3.2.0",
   "description": "Windows system tray app to monitor Claude AI usage limits",
   "author": {
     "name": "Edilson Vilarinho",
@@ -8,13 +8,14 @@
   },
   "main": "dist/main.js",
   "scripts": {
-    "dev": "tsc -p tsconfig.main.json && electron dist/main.js",
+    "dev": "tsc -p tsconfig.main.json && electron --no-sandbox dist/main.js",
     "build": "tsc -p tsconfig.main.json && node build-renderer.js",
     "predist": "node -e \"require('fs').rmSync('dist-build', {recursive:true, force:true})\"",
     "dist": "npm run build && electron-builder --win",
     "dist:portable": "npm run build && electron-builder --win portable",
     "dist:zip": "node scripts/zip-release.js",
-    "release": "npm run dist && npm run dist:portable && node scripts/zip-release.js",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "release": "npm run dist && npm run dist:portable && npm run dist:linux && node scripts/zip-release.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -43,9 +44,10 @@
     "linux": {
       "target": [
         { "target": "deb", "arch": ["x64"] },
-        { "target": "rpm", "arch": ["x64"] }
+        { "target": "AppImage", "arch": ["x64"] }
       ],
-      "category": "Utility"
+      "category": "Utility",
+      "icon": "assets/tray-icon.png"
     },
     "win": {
       "target": [
