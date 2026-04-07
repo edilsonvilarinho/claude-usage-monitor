@@ -15,7 +15,7 @@
     "dist:portable": "npm run build && electron-builder --win portable",
     "dist:zip": "node scripts/zip-release.js",
     "dist:linux": "npm run build && electron-builder --linux",
-    "release": "npm run dist && npm run dist:portable && npm run dist:linux && node scripts/zip-release.js",
+    "release": "npm run dist && npm run dist:portable && node scripts/zip-release.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
