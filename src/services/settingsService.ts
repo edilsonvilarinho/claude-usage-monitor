@@ -1,6 +1,94 @@
 import Store from 'electron-store';
 import { UsageSnapshot, DailySnapshot } from '../models/usageData';
 
+// ─── Per-account data (keyed by account email) ────────────────────────────────
+
+export interface AccountData {
+  usageHistory: UsageSnapshot[];
+  dailyHistory: DailySnapshot[];
+  rateLimitedUntil: number;
+  rateLimitCount: number;
+  rateLimitResetAt: number;
+}
+
+const accountDataDefaults: AccountData = {
+  usageHistory: [],
+  dailyHistory: [],
+  rateLimitedUntil: 0,
+  rateLimitCount: 0,
+  rateLimitResetAt: 0,
+};
+
+interface AccountStore {
+  activeAccount: string;
+  accounts: Record<string, AccountData>;
+}
+
+const accountStore = new Store<AccountStore>({
+  name: 'accounts',
+  defaults: { activeAccount: '', accounts: {} },
+});
+
+export function setActiveAccount(email: string): void {
+  if (!email) return;
+  const current = accountStore.get('activeAccount', '');
+  if (current === email) return;
+
+  const accounts = accountStore.get('accounts', {}) as Record<string, AccountData>;
+
+  if (!accounts[email]) {
+    // First time seeing this account — migrate any existing legacy or "default" data
+    const legacyStore = new Store<{ usageHistory?: UsageSnapshot[]; dailyHistory?: DailySnapshot[]; rateLimitedUntil?: number; rateLimitCount?: number; rateLimitResetAt?: number }>({ name: 'config' });
+    const legacyHistory = (legacyStore.get('usageHistory', []) as UsageSnapshot[]);
+    const legacyDaily = (legacyStore.get('dailyHistory', []) as DailySnapshot[]);
+    const legacyRLUntil = legacyStore.get('rateLimitedUntil', 0) as number;
+    const legacyRLCount = legacyStore.get('rateLimitCount', 0) as number;
+    const legacyRLResetAt = legacyStore.get('rateLimitResetAt', 0) as number;
+
+    const defaultData = accounts['default'];
+
+    accounts[email] = {
+      usageHistory: legacyHistory.length > 0 ? legacyHistory : (defaultData?.usageHistory ?? []),
+      dailyHistory: legacyDaily.length > 0 ? legacyDaily : (defaultData?.dailyHistory ?? []),
+      rateLimitedUntil: legacyRLUntil || (defaultData?.rateLimitedUntil ?? 0),
+      rateLimitCount: legacyRLCount || (defaultData?.rateLimitCount ?? 0),
+      rateLimitResetAt: legacyRLResetAt || (defaultData?.rateLimitResetAt ?? 0),
+    };
+
+    // Clear legacy top-level fields after migration
+    legacyStore.set('usageHistory', []);
+    legacyStore.set('dailyHistory', []);
+    legacyStore.set('rateLimitedUntil', 0);
+    legacyStore.set('rateLimitCount', 0);
+    legacyStore.set('rateLimitResetAt', 0);
+
+    // Remove default placeholder if it existed
+    if (defaultData) delete accounts['default'];
+
+    accountStore.set('accounts', accounts);
+  }
+
+  accountStore.set('activeAccount', email);
+}
+
+export function getActiveAccount(): string {
+  return (accountStore.get('activeAccount', '') as string) || 'default';
+}
+
+export function getAccountData(): AccountData {
+  const key = getActiveAccount();
+  const accounts = accountStore.get('accounts', {}) as Record<string, AccountData>;
+  return { ...accountDataDefaults, ...(accounts[key] ?? {}) };
+}
+
+export function saveAccountData(data: Partial<AccountData>): void {
+  const key = getActiveAccount();
+  const accounts = accountStore.get('accounts', {}) as Record<string, AccountData>;
+  const current = accounts[key] ?? { ...accountDataDefaults };
+  accounts[key] = { ...current, ...data };
+  accountStore.set('accounts', accounts);
+}
+
 export interface NotificationSettings {
   enabled: boolean;
   sessionThreshold: number;  // 0-100 (%)

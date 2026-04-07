@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut } from 'electron';
 import * as path from 'path';
 import { pollingService } from './services/pollingService';
-import { getSettings, saveSettings } from './services/settingsService';
+import { getSettings, saveSettings, setActiveAccount, getAccountData, saveAccountData } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
@@ -181,7 +181,7 @@ function togglePopup(): void {
     }
     // Restore rate-limit countdown if still active
     if (currentRateLimitUntil > Date.now()) {
-      const { rateLimitResetAt } = getSettings();
+      const { rateLimitResetAt } = getAccountData();
       popup.webContents.send('rate-limited', currentRateLimitUntil, rateLimitResetAt || undefined);
     }
     // Re-surface credential error if still unresolved
@@ -425,12 +425,12 @@ function registerIpcHandlers(): void {
     void shell.openExternal(url);
   });
 
-  ipcMain.handle('get-usage-history', () => getSettings().usageHistory ?? []);
+  ipcMain.handle('get-usage-history', () => getAccountData().usageHistory ?? []);
 
-  ipcMain.handle('get-daily-history', () => getSettings().dailyHistory ?? []);
+  ipcMain.handle('get-daily-history', () => getAccountData().dailyHistory ?? []);
 
   ipcMain.handle('clear-daily-history', () => {
-    saveSettings({ dailyHistory: [] });
+    saveAccountData({ dailyHistory: [] });
   });
 
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
@@ -458,8 +458,9 @@ function registerIpcHandlers(): void {
 app.whenReady().then(() => {
   registerIpcHandlers();
 
-  // Restore rate-limit state from previous session
-  const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt, launchAtStartup } = getSettings();
+  // Restore rate-limit state from previous session (per-account)
+  const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt } = getAccountData();
+  const { launchAtStartup } = getSettings();
   if (saved > Date.now()) {
     currentRateLimitUntil = saved;
     pollingService.restoreRateLimit(saved, savedCount || 1, savedResetAt || undefined);
@@ -478,7 +479,7 @@ app.whenReady().then(() => {
     console.warn('[Main] Failed to register global shortcut Ctrl+Shift+U — may be in use by another app');
   }
 
-  void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); }).catch(() => {});
+  void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); setActiveAccount(p.account.email); }).catch(() => {});
 
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {
@@ -487,7 +488,7 @@ app.whenReady().then(() => {
     credentialMissing = false;
     if (currentRateLimitUntil > 0) {
       currentRateLimitUntil = 0;
-      saveSettings({ rateLimitedUntil: 0, rateLimitCount: 0 });
+      saveAccountData({ rateLimitedUntil: 0, rateLimitCount: 0 });
     }
     // Snapshot de histórico (máx 200 pontos ≈ 24h a cada 7min)
     const MAX_HISTORY = 200;
@@ -496,7 +497,7 @@ app.whenReady().then(() => {
       session: Math.round(data.five_hour.utilization),
       weekly: Math.round(data.seven_day.utilization),
     };
-    const history = getSettings().usageHistory ?? [];
+    const history = getAccountData().usageHistory ?? [];
     history.push(snapshot);
     if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
 
@@ -509,7 +510,7 @@ app.whenReady().then(() => {
     const creditsPctInt = (extra?.is_enabled && extra.monthly_limit > 0)
       ? Math.round((extra.used_credits / extra.monthly_limit) * 100)
       : undefined;
-    const dailyHistory: DailySnapshot[] = getSettings().dailyHistory ?? [];
+    const dailyHistory: DailySnapshot[] = getAccountData().dailyHistory ?? [];
     const existingDay = dailyHistory.find(d => d.date === today);
 
     // Detectar reset de sessão: resets_at avançou desde o último poll
@@ -540,7 +541,7 @@ app.whenReady().then(() => {
     dailyHistory.sort((a, b) => a.date.localeCompare(b.date));
     if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
 
-    saveSettings({ usageHistory: history, dailyHistory });
+    saveAccountData({ usageHistory: history, dailyHistory });
 
     updateTrayTooltip(data);
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
@@ -561,13 +562,13 @@ app.whenReady().then(() => {
     }
 
     if (Date.now() - cachedProfileAt > 3_600_000) {
-      void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
+      void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); setActiveAccount(p.account.email); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
     }
   });
 
   pollingService.on('rate-limited', (until: number, count: number, resetAt?: number) => {
     currentRateLimitUntil = until;
-    saveSettings({ rateLimitedUntil: until, rateLimitCount: count, rateLimitResetAt: resetAt ?? 0 });
+    saveAccountData({ rateLimitedUntil: until, rateLimitCount: count, rateLimitResetAt: resetAt ?? 0 });
     if (popup?.isVisible()) {
       popup.webContents.send('rate-limited', until, resetAt);
     }

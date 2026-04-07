@@ -47,8 +47,10 @@ ProfileData       { account: { display_name, email, has_claude_pro,
                                 has_claude_max } }
 CredentialsFile   { claudeAiOauth: { accessToken, refreshToken, expiresAt,
                                      scopes?, subscriptionType? } }
-AppSettings       (settingsService.ts) — all user preferences + rate limit state
-                  inclui: usageHistory: UsageSnapshot[] (máx 200), showHistory: boolean
+AppSettings       (settingsService.ts) — all user preferences (global)
+AccountData       (settingsService.ts) — per-account data keyed by email:
+                  usageHistory: UsageSnapshot[] (máx 200), dailyHistory: DailySnapshot[],
+                  rateLimitedUntil, rateLimitCount, rateLimitResetAt
 ```
 
 `utilization` is a float (0.0–N). Values above 1.0 mean >100% usage. The UI caps the gauge at 100% and displays `>1600%` for extreme values. The tray shows `!!!` above 100%.
@@ -134,9 +136,11 @@ Key methods:
 - Config file location:
   - Dev: `%APPDATA%\Electron\config.json`
   - Prod: `%APPDATA%\Claude Usage Monitor\config.json`
+- **Two stores:** `config.json` (global AppSettings — preferences) + `accounts.json` (AccountData per email).
+- **Per-account data** (`AccountData`): `usageHistory`, `dailyHistory`, `rateLimitedUntil`, `rateLimitCount`, `rateLimitResetAt` — keyed by account email.
+- `setActiveAccount(email)` — switches active account; migrates legacy top-level data on first call for a given email. Safe to call multiple times.
+- `getAccountData()` / `saveAccountData(partial)` — read/write data for the currently active account.
 - **Rule:** Never tighten `minimum`/`maximum` on existing schema fields without a migration — crashes app on startup with existing data.
-- Persists rate limit state (`rateLimitedUntil`, `rateLimitCount`, `rateLimitResetAt`) so it survives restarts.
-- Persists `usageHistory: UsageSnapshot[]` (máx 200 pontos ≈ 24h) e `showHistory: boolean` para o sparkline.
 
 ### `startupService.ts`
 - Usa `app.setLoginItemSettings()` nativo do Electron (sem dependência `auto-launch`).
