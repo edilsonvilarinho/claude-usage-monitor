@@ -875,6 +875,18 @@ body {
 }
 .daily-col:hover .daily-tooltip { display: block; }
 
+/* Prevent tooltip from being clipped at left/right edges */
+.daily-col:first-child .daily-tooltip {
+  left: 0;
+  transform: none;
+}
+.daily-col:last-child .daily-tooltip,
+.daily-col:nth-last-child(2) .daily-tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
 .tip-dot {
   display: inline-block;
   width: 6px;
