@@ -553,10 +553,12 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
   const BAR_MAX_PX = 40;
   container.innerHTML = slots.map(s => {
     const wPx = s.weeklyPct  !== null ? Math.max(3, Math.round((s.weeklyPct  / 100) * BAR_MAX_PX)) : 0;
-    const sPx = s.sessionPct !== null ? Math.max(3, Math.round((s.sessionPct / 100) * BAR_MAX_PX)) : 0;
+    const accumTotal = s.sessionAccum + (s.sessionPct ?? 0);
+    const totalSessionPct = Math.min(accumTotal, 100);
+    const sPx = s.sessionPct !== null ? Math.max(3, Math.round((totalSessionPct / 100) * BAR_MAX_PX)) : 0;
     const cPx = s.creditsPct !== null ? Math.max(3, Math.round((s.creditsPct / 100) * BAR_MAX_PX)) : 0;
     const wClass = s.weeklyPct  !== null ? (s.weeklyPct  >= 80 ? 'crit' : s.weeklyPct  >= 60 ? 'warn' : 'ok') : '';
-    const sClass = s.sessionPct !== null ? (s.sessionPct >= 80 ? 'crit' : s.sessionPct >= 60 ? 'warn' : 'ok') : '';
+    const sClass = s.sessionPct !== null ? (totalSessionPct >= 80 ? 'crit' : totalSessionPct >= 60 ? 'warn' : 'ok') : '';
     const cClass = s.creditsPct !== null ? (s.creditsPct >= 80 ? 'crit' : s.creditsPct >= 60 ? 'warn' : '') : '';
     const todayClass  = s.isToday  ? ' today'  : '';
     const futureClass = s.isFuture ? ' future' : '';
@@ -567,7 +569,6 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     // Tooltip
     let tooltipHtml = '';
     if (s.weeklyPct !== null) {
-      const accumTotal = s.sessionAccum + (s.sessionPct ?? 0);
       const sessionLine = s.sessionPct !== null
         ? `<div><span class="tip-dot session"></span>${t.tooltipSession}: <b>${s.sessionPct}%</b></div>`
         : '';
