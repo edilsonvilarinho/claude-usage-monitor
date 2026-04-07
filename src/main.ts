@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { pollingService } from './services/pollingService';
@@ -343,6 +343,62 @@ async function backupWeeklyData(): Promise<string> {
   return filepath;
 }
 
+async function importBackupData(): Promise<{ imported: number; merged: number }> {
+  const result = await dialog.showOpenDialog({
+    title: 'Import backup',
+    filters: [{ name: 'JSON Backup', extensions: ['json'] }],
+    properties: ['openFile', 'multiSelections'],
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return { imported: 0, merged: 0 };
+  }
+
+  const accountData = getAccountData();
+  const existing = new Map<string, DailySnapshot>(
+    (accountData.dailyHistory ?? []).map(s => [s.date, s])
+  );
+
+  let mergedCount = 0;
+
+  for (const filepath of result.filePaths) {
+    const raw = fs.readFileSync(filepath, 'utf-8');
+    const payload = JSON.parse(raw);
+    const snapshots: DailySnapshot[] = Array.isArray(payload.dailyHistory) ? payload.dailyHistory : [];
+
+    for (const snap of snapshots) {
+      if (!snap.date || typeof snap.date !== 'string') continue;
+      const cur = existing.get(snap.date);
+      if (!cur) {
+        existing.set(snap.date, snap);
+        mergedCount++;
+      } else {
+        const merged: DailySnapshot = {
+          date: snap.date,
+          maxWeekly: Math.max(cur.maxWeekly ?? 0, snap.maxWeekly ?? 0),
+          maxSession: Math.max(cur.maxSession ?? 0, snap.maxSession ?? 0),
+        };
+        if (cur.maxCredits !== undefined || snap.maxCredits !== undefined) {
+          merged.maxCredits = Math.max(cur.maxCredits ?? 0, snap.maxCredits ?? 0);
+        }
+        if (cur.sessionResets !== undefined || snap.sessionResets !== undefined) {
+          merged.sessionResets = Math.max(cur.sessionResets ?? 1, snap.sessionResets ?? 1);
+        }
+        if (cur.sessionAccum !== undefined || snap.sessionAccum !== undefined) {
+          merged.sessionAccum = Math.max(cur.sessionAccum ?? 0, snap.sessionAccum ?? 0);
+        }
+        existing.set(snap.date, merged);
+        mergedCount++;
+      }
+    }
+  }
+
+  const sorted = Array.from(existing.values()).sort((a, b) => a.date.localeCompare(b.date));
+  saveAccountData({ dailyHistory: sorted });
+
+  return { imported: result.filePaths.length, merged: mergedCount };
+}
+
 function buildContextMenu(): Menu {
   const settings = getSettings();
   const t = getMainTranslations(settings.language);
@@ -372,6 +428,15 @@ function buildContextMenu(): Menu {
           new Notification({ title: 'Backup saved', body: filepath }).show();
         }).catch(err => {
           new Notification({ title: 'Backup failed', body: String(err) }).show();
+        });
+      }
+    },
+    { label: 'Import backup...', click: () => {
+        void importBackupData().then(({ imported, merged }) => {
+          if (imported === 0) return;
+          new Notification({ title: 'Backup imported', body: `${imported} file(s) — ${merged} days merged` }).show();
+        }).catch(err => {
+          new Notification({ title: 'Import failed', body: String(err) }).show();
         });
       }
     },
@@ -503,6 +568,10 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('backup-weekly-data', async () => {
     return backupWeeklyData();
+  });
+
+  ipcMain.handle('import-backup', async () => {
+    return importBackupData();
   });
 
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
