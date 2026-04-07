@@ -1,9 +1,8 @@
-import { Chart, DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, CategoryScale, LinearScale, Filler } from 'chart.js';
+import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 
-Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, CategoryScale, LinearScale, Filler);
+Chart.register(DoughnutController, ArcElement, Tooltip);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface UsageSnapshot { ts: number; session: number; weekly: number }
 interface DailySnapshot { date: string; maxWeekly: number }
 
 interface UsageWindow {
@@ -69,7 +68,6 @@ declare global {
       getAppVersion: () => Promise<string>;
       getProfile: () => Promise<ProfileData | null>;
       setPollInterval: (ms: number | null) => Promise<void>;
-      getUsageHistory: () => Promise<UsageSnapshot[]>;
       getDailyHistory: () => Promise<DailySnapshot[]>;
       clearDailyHistory: () => Promise<void>;
     };
@@ -482,59 +480,7 @@ function barClass(pct: number): string {
 
 let sessionChart: Chart | null = null;
 let weeklyChart:  Chart | null = null;
-let historyChart: Chart | null = null;
 let lastRenderedData: { session: number; weekly: number } | null = null;
-
-function createHistoryChart(): Chart {
-  const canvas = document.getElementById('history-canvas') as HTMLCanvasElement;
-  return new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [
-        {
-          label: 'Session',
-          data: [],
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34,197,94,0.08)',
-          borderWidth: 1.5,
-          pointRadius: 0,
-          tension: 0.3,
-          fill: false,
-        },
-        {
-          label: 'Weekly',
-          data: [],
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.08)',
-          borderWidth: 1.5,
-          pointRadius: 0,
-          tension: 0.3,
-          fill: false,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 0 },
-      scales: {
-        x: {
-          display: false,
-        },
-        y: {
-          min: 0,
-          max: 100,
-          display: false,
-        },
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false },
-      },
-    },
-  });
-}
 
 // ── Daily cycle chart ─────────────────────────────────────────────────────────
 
@@ -563,30 +509,26 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     slots.push({ date: dateStr, label, isToday, isFuture, pct: found ? Math.min(found.maxWeekly, 100) : null });
   }
 
+  const BAR_MAX_PX = 40; // altura máxima da barra em px
+  // Render bars
   container.innerHTML = slots.map(s => {
     const pctDisplay = s.pct !== null ? `${s.pct}%` : '—';
-    const barHeight = s.pct !== null ? Math.max(4, s.pct) : 0;
+    // Escala linear: 100% → BAR_MAX_PX, mínimo 3px para barras > 0
+    const barPx = s.pct !== null ? Math.max(3, Math.round((s.pct / 100) * BAR_MAX_PX)) : 0;
     const colorClass = s.pct !== null ? (s.pct >= 80 ? 'crit' : s.pct >= 60 ? 'warn' : 'ok') : '';
     const todayClass = s.isToday ? ' today' : '';
     const futureClass = s.isFuture ? ' future' : '';
     return `<div class="daily-col${todayClass}${futureClass}">
       <div class="daily-bar-wrap">
-        <div class="daily-bar ${colorClass}" style="height:${barHeight}%"></div>
+        <div class="daily-bar ${colorClass}" style="height:${barPx}px"></div>
       </div>
       <span class="daily-day">${s.label}</span>
       <span class="daily-pct">${pctDisplay}</span>
     </div>`;
   }).join('');
+  fitWindow();
 }
 
-function updateHistoryChart(snapshots: UsageSnapshot[]): void {
-  if (!historyChart) return;
-  const labels = snapshots.map(s => new Date(s.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  historyChart.data.labels = labels;
-  historyChart.data.datasets[0]!.data = snapshots.map(s => Math.min(100, s.session));
-  historyChart.data.datasets[1]!.data = snapshots.map(s => Math.min(100, s.weekly));
-  historyChart.update('none');
-}
 
 function updateUI(data: UsageData): void {
   const sessionPct = Math.round(data.five_hour.utilization);
@@ -714,11 +656,6 @@ async function loadSettings(): Promise<void> {
   historyToggle.checked = showHistory;
   historySection.style.display = showHistory ? 'block' : 'none';
   if (showHistory) {
-    void window.claudeUsage.getUsageHistory().then(h => {
-      if (!historyChart) historyChart = createHistoryChart();
-      updateHistoryChart(h);
-      fitWindow();
-    });
     void window.claudeUsage.getDailyHistory().then(d => {
       if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt);
     });
@@ -835,10 +772,6 @@ function init(): void {
   window.claudeUsage.onUsageUpdated(() => {
     const section = document.getElementById('history-section') as HTMLElement;
     if (section.style.display === 'none') return;
-    void window.claudeUsage.getUsageHistory().then(h => {
-      if (!historyChart) historyChart = createHistoryChart();
-      updateHistoryChart(h);
-    });
     if (lastWeeklyResetsAt) {
       void window.claudeUsage.getDailyHistory().then(d => {
         renderDailyChart(d, lastWeeklyResetsAt!);
@@ -851,14 +784,9 @@ function init(): void {
     const section = document.getElementById('history-section') as HTMLElement;
     section.style.display = checked ? 'block' : 'none';
     await window.claudeUsage.saveSettings({ showHistory: checked });
-    if (checked) {
-      if (!historyChart) historyChart = createHistoryChart();
-      const h = await window.claudeUsage.getUsageHistory();
-      updateHistoryChart(h);
-      if (lastWeeklyResetsAt) {
-        const d = await window.claudeUsage.getDailyHistory();
-        renderDailyChart(d, lastWeeklyResetsAt);
-      }
+    if (checked && lastWeeklyResetsAt) {
+      const d = await window.claudeUsage.getDailyHistory();
+      renderDailyChart(d, lastWeeklyResetsAt);
     }
     fitWindow();
   });
@@ -868,9 +796,6 @@ function init(): void {
     await window.claudeUsage.clearDailyHistory();
     if (lastWeeklyResetsAt) {
       renderDailyChart([], lastWeeklyResetsAt);
-    }
-    if (historyChart) {
-      updateHistoryChart([]);
     }
   });
 
