@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-monitor",
-  "version": "6.1.0",
+  "version": "7.0.0",
   "description": "Windows system tray app to monitor Claude AI usage limits",
   "author": {
     "name": "Edilson Vilarinho",
@@ -43,9 +43,24 @@
     ],
     "linux": {
       "target": [
-        { "target": "deb", "arch": ["x64"] },
-        { "target": "rpm", "arch": ["x64"] },
-        { "target": "AppImage", "arch": ["x64"] }
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
       "category": "Utility",
       "icon": "assets/icon-linux.png"
