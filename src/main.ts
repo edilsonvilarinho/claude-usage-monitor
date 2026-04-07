@@ -434,7 +434,7 @@ app.whenReady().then(() => {
   const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt, launchAtStartup } = getSettings();
   if (saved > Date.now()) {
     currentRateLimitUntil = saved;
-    pollingService.restoreRateLimit(saved, savedCount || 1);
+    pollingService.restoreRateLimit(saved, savedCount || 1, savedResetAt || undefined);
   }
 
   // Sync registry state: re-apply stored preference if it differs from actual registry value

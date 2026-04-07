@@ -26,11 +26,12 @@ export class PollingService extends EventEmitter {
 
   get nextPollAt(): number { return this._nextPollAt; }
 
-  restoreRateLimit(until: number, count = 1): void {
+  restoreRateLimit(until: number, count = 1, resetAt?: number): void {
     if (until > Date.now()) {
       this.rateLimited = true;
       this.rateLimitedUntil = until;
       this.rateLimitCount = count;
+      this.emit('rate-limited', until, count, resetAt);
     }
   }
 
