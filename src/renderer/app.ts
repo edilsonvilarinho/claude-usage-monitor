@@ -145,7 +145,7 @@ const translations = {
     editDateLabel: 'Day',
     editSessionLabel: 'Session peak (%)',
     editAccumLabel: 'Accumulated (%)',
-    editResetsLabel: 'No. windows',
+    editResetsLabel: 'No. resets',
     editWeeklyLabel: 'Weekly max. (%)',
     editCancelBtn: 'Cancel',
     editSaveBtn: 'Save',
@@ -213,7 +213,7 @@ const translations = {
     editDateLabel: 'Dia',
     editSessionLabel: 'Sessão pico (%)',
     editAccumLabel: 'Acumulado (%)',
-    editResetsLabel: 'Nº janelas',
+    editResetsLabel: 'Nº resets',
     editWeeklyLabel: 'Semanal máx. (%)',
     editCancelBtn: 'Cancelar',
     editSaveBtn: 'Salvar',
@@ -878,6 +878,7 @@ function init(): void {
       const found = currentDailyHistory.find(d => d.date === dateStr);
       (document.getElementById('edit-maxSession') as HTMLInputElement).value = String(found?.maxSession ?? 0);
       (document.getElementById('edit-sessionAccum') as HTMLInputElement).value = String(found?.sessionAccum ?? 0);
+      (document.getElementById('edit-sessionResets') as HTMLInputElement).value = String(found?.sessionResets ?? 1);
       (document.getElementById('edit-maxWeekly') as HTMLInputElement).value = String(found?.maxWeekly ?? 0);
     }
 
@@ -893,13 +894,11 @@ function init(): void {
 
   document.getElementById('edit-snapshot-save')!.addEventListener('click', async () => {
     const dateSelect = document.getElementById('edit-date-select') as HTMLSelectElement;
-    const accumVal = parseInt((document.getElementById('edit-sessionAccum') as HTMLInputElement).value, 10) || 0;
-    const existingEntry = currentDailyHistory.find(d => d.date === dateSelect.value);
     const snapshot = {
       date: dateSelect.value,
       maxSession: parseInt((document.getElementById('edit-maxSession') as HTMLInputElement).value, 10) || 0,
-      sessionAccum: accumVal,
-      sessionResets: accumVal > 0 ? Math.max(existingEntry?.sessionResets ?? 1, 2) : (existingEntry?.sessionResets ?? 1),
+      sessionAccum: parseInt((document.getElementById('edit-sessionAccum') as HTMLInputElement).value, 10) || 0,
+      sessionResets: Math.max(1, parseInt((document.getElementById('edit-sessionResets') as HTMLInputElement).value, 10) || 1),
       maxWeekly: parseInt((document.getElementById('edit-maxWeekly') as HTMLInputElement).value, 10) || 0,
     };
     await window.claudeUsage.updateDailySnapshot(snapshot);
