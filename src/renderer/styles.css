@@ -923,10 +923,6 @@ body {
   font-weight: 600;
 }
 
-.daily-pct {
-  font-size: 9px;
-  color: var(--text-secondary);
-}
 
 .history-label {
   font-size: 11px;

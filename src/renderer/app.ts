@@ -548,7 +548,6 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
         ${creditsBar}
       </div>
       <span class="daily-day">${s.label}</span>
-      <span class="daily-pct">${s.weeklyPct !== null ? `${s.weeklyPct}%` : '—'}</span>
     </div>`;
   }).join('');
   fitWindow();
