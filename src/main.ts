@@ -513,12 +513,14 @@ app.whenReady().then(() => {
     const dailyHistory: DailySnapshot[] = getAccountData().dailyHistory ?? [];
     const existingDay = dailyHistory.find(d => d.date === today);
 
-    // Detectar reset de sessão: resets_at avançou desde o último poll
+    // Detectar reset de sessão: resets_at avançou pelo menos 30min (evita falsos positivos
+    // por variações mínimas no timestamp retornado pela API)
     let sessionResetOccurred = false;
     if (prevData) {
       const prevResetsAt = new Date(prevData.five_hour.resets_at).getTime();
       const currResetsAt = new Date(data.five_hour.resets_at).getTime();
-      if (currResetsAt > prevResetsAt) {
+      const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+      if (currResetsAt - prevResetsAt >= THIRTY_MINUTES_MS) {
         sessionResetOccurred = true;
       }
     }
