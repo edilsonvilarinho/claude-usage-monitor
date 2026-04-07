@@ -56,7 +56,8 @@ Ao receber o pedido, avalio automaticamente:
 1. Ler os arquivos relevantes diretamente
 2. Aplicar a mudança
 3. npm run build (confirmar exit 0)
-4. git add + commit + push para master (automático)
+4. Atualizar ARCHITECTURE.md se fluxo de dados, serviços ou build pipeline mudaram
+5. git add + commit + push para master (automático)
 ```
 Sem issue, sem branch, sem PR — a menos que você peça.
 
@@ -69,7 +70,8 @@ Sem issue, sem branch, sem PR — a menos que você peça.
 5. @implementer executa
 6. npm run build (confirmar exit 0)
 7. @tester (só se mudança for arriscada)
-8. commit + PR
+8. Atualizar ARCHITECTURE.md se fluxo de dados, serviços ou build pipeline mudaram
+9. commit + PR
 ```
 
 ### REFACTOR
