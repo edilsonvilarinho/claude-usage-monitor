@@ -878,7 +878,8 @@ function init(): void {
       const found = currentDailyHistory.find(d => d.date === dateStr);
       (document.getElementById('edit-maxSession') as HTMLInputElement).value = String(found?.maxSession ?? 0);
       (document.getElementById('edit-sessionAccum') as HTMLInputElement).value = String(found?.sessionAccum ?? 0);
-      (document.getElementById('edit-sessionResets') as HTMLInputElement).value = String(found?.sessionResets ?? 1);
+      // sessionResets is stored as "windows count" (starts at 1), display as "resets count" (0-based)
+      (document.getElementById('edit-sessionResets') as HTMLInputElement).value = String(Math.max(0, (found?.sessionResets ?? 1) - 1));
       (document.getElementById('edit-maxWeekly') as HTMLInputElement).value = String(found?.maxWeekly ?? 0);
     }
 
@@ -898,7 +899,8 @@ function init(): void {
       date: dateSelect.value,
       maxSession: parseInt((document.getElementById('edit-maxSession') as HTMLInputElement).value, 10) || 0,
       sessionAccum: parseInt((document.getElementById('edit-sessionAccum') as HTMLInputElement).value, 10) || 0,
-      sessionResets: Math.max(1, parseInt((document.getElementById('edit-sessionResets') as HTMLInputElement).value, 10) || 1),
+      // convert back: user inputs resets count, store as windows count (resets + 1)
+      sessionResets: (parseInt((document.getElementById('edit-sessionResets') as HTMLInputElement).value, 10) || 0) + 1,
       maxWeekly: parseInt((document.getElementById('edit-maxWeekly') as HTMLInputElement).value, 10) || 0,
     };
     await window.claudeUsage.updateDailySnapshot(snapshot);
