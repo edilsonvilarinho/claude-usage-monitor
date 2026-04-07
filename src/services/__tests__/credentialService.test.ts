@@ -269,6 +269,53 @@ describe('getAccessToken', () => {
     expect(token).toBe('refreshed-token')
   })
 
+  it('falls back to existing token when refresh response contains invalid JSON', async () => {
+    const creds = buildCreds({ expiresAt: Date.now() + 4 * 60 * 1000 })
+    mockSingleCredFile(creds)
+
+    const req = { on: vi.fn(), end: vi.fn(), setTimeout: vi.fn(), destroy: vi.fn(), write: vi.fn() }
+    const res = { on: vi.fn() }
+    vi.mocked(res.on).mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
+      if (event === 'data') cb('not valid json {{{')
+      if (event === 'end') cb()
+      return res
+    })
+    vi.mocked(https.request).mockImplementation((_opts: unknown, cb: unknown) => {
+      ;(cb as (r: typeof res) => void)(res)
+      return req as unknown as ReturnType<typeof https.request>
+    })
+
+    const token = await getAccessToken()
+
+    expect(token).toBe('valid-token')
+  })
+
+  it('falls back to existing token when refresh request times out', async () => {
+    const creds = buildCreds({ expiresAt: Date.now() + 4 * 60 * 1000 })
+    mockSingleCredFile(creds)
+
+    let errorHandler: ((e: Error) => void) | null = null
+    const req = {
+      on: vi.fn((event: string, cb: (e: Error) => void) => {
+        if (event === 'error') errorHandler = cb
+        return req
+      }),
+      end: vi.fn(),
+      setTimeout: vi.fn((_ms: number, cb: () => void) => {
+        cb() // fire timeout callback immediately
+      }),
+      destroy: vi.fn((err: Error) => {
+        errorHandler?.(err) // propagate to error handler, triggering rejection
+      }),
+      write: vi.fn(),
+    }
+    vi.mocked(https.request).mockImplementation(() => req as unknown as ReturnType<typeof https.request>)
+
+    const token = await getAccessToken()
+
+    expect(token).toBe('valid-token')
+  })
+
   it('does not check WSL paths when wslBase does not exist', async () => {
     const creds = buildCreds()
 

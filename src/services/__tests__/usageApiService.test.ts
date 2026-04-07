@@ -340,4 +340,62 @@ describe('usageApiService', () => {
 
     expect(capturedHeaders['User-Agent']).toBe('claude-code/3.5.1')
   })
+
+  // 13. Unexpected non-retryable status (e.g. 403) → throws immediately
+  it('403 throws Unexpected status immediately without retrying', async () => {
+    setupHttpsResponse(403, 'forbidden')
+
+    const fetchUsageData = await importFetchUsageData()
+    const promise = fetchUsageData()
+    const assertion = expect(promise).rejects.toThrow('Unexpected status 403')
+    await exhaustRetries()
+    await assertion
+  })
+})
+
+describe('fetchProfileData', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.resetModules()
+    mockRequest.mockReset()
+    mockExecSync.mockReset()
+    mockGetAccessToken.mockReset()
+    mockGetAccessToken.mockResolvedValue('test-token')
+    mockExecSync.mockReturnValue('claude 2.1.0')
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function importFetchProfileData() {
+    const mod = await import('../../services/usageApiService')
+    return mod.fetchProfileData
+  }
+
+  // 14. fetchProfileData 200 → returns account data
+  it('200 returns parsed profile data', async () => {
+    const profile = {
+      account: {
+        display_name: 'Test User',
+        email: 'test@example.com',
+        has_claude_pro: true,
+        has_claude_max: false,
+      },
+    }
+    setupHttpsResponse(200, JSON.stringify(profile))
+
+    const fetchProfileData = await importFetchProfileData()
+    const result = await fetchProfileData()
+
+    expect(result).toEqual(profile)
+  })
+
+  // 15. fetchProfileData non-200 → throws with status code
+  it('non-200 throws Profile API returned error', async () => {
+    setupHttpsResponse(403, 'forbidden')
+
+    const fetchProfileData = await importFetchProfileData()
+    await expect(fetchProfileData()).rejects.toThrow('Profile API returned 403')
+  })
 })

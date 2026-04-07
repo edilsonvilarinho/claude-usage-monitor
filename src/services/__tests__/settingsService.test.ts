@@ -144,4 +144,19 @@ describe('saveSettings()', () => {
 
     expect(getSettings().rateLimitResetAt).toBe(tsMs)
   })
+
+  it('saves alwaysVisible, windowSize, autoRefresh, and autoRefreshInterval', () => {
+    saveSettings({
+      alwaysVisible: true,
+      windowSize: 'medium',
+      autoRefresh: true,
+      autoRefreshInterval: 60,
+    })
+
+    const settings = getSettings()
+    expect(settings.alwaysVisible).toBe(true)
+    expect(settings.windowSize).toBe('medium')
+    expect(settings.autoRefresh).toBe(true)
+    expect(settings.autoRefreshInterval).toBe(60)
+  })
 })

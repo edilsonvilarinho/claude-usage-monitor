@@ -424,6 +424,21 @@ describe('PollingService', () => {
     expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
   })
 
+  // 19b. nextPollAt is 0 initially and set after first poll
+  it('nextPollAt is 0 before polling and set to a future timestamp after the first poll', async () => {
+    mockGetSystemIdleTime.mockReturnValue(0) // ensure not idle so POLL_NORMAL_MS is used
+    mockFetch.mockResolvedValue(makeData())
+
+    expect(service.nextPollAt).toBe(0)
+
+    service.start()
+    await Promise.resolve() // first poll completes
+
+    // After normal poll, nextPollAt should be ~10min from now
+    expect(service.nextPollAt).toBeGreaterThan(Date.now() + SEVEN_MIN_MS)
+    expect(service.nextPollAt).toBeLessThanOrEqual(Date.now() + TEN_MIN_MS + 100)
+  })
+
   // 20. isIdle() with exception → returns false, no propagation
   it('isIdle() returns false when getSystemIdleTime throws', async () => {
     mockGetSystemIdleTime.mockImplementation(() => { throw new Error('not supported') })

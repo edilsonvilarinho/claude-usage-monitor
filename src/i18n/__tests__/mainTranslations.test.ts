@@ -42,6 +42,7 @@ describe('getMainTranslations', () => {
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Session: 55% | Weekly: 33%')
     expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sess: 4h 30m | Wkly: 2d 10h')
     expect(t.trayTooltipLine3('6:00 AM • BRT', 'Mon 9:00 AM • BRT')).toBe('Sess at: 6:00 AM • BRT | 7d at: Mon 9:00 AM • BRT')
+    expect(t.trayTooltipNextUpdate('5 min')).toBe('Next poll: 5 min')
   })
 
   it('pt-BR function strings interpolate correctly', () => {
@@ -53,6 +54,7 @@ describe('getMainTranslations', () => {
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Sessão: 55% | Semanal: 33%')
     expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sess: 4h 30m | Sem.: 2d 10h')
     expect(t.trayTooltipLine3('6:00 • BRT', 'Mon 9:00 • BRT')).toBe('Sess às: 6:00 • BRT | 7d às: Mon 9:00 • BRT')
+    expect(t.trayTooltipNextUpdate('5 min')).toBe('Próxima: 5 min')
   })
 
   it('has all required keys for "en"', () => {

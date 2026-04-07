@@ -214,6 +214,53 @@ describe('checkAndNotify', () => {
     expect(titles.some((t) => t.includes('Window Reset'))).toBe(false)
   })
 
+  it('sends weekly window reset notification when weekly resets_at advances by more than 24h, notifyOnWindowReset=true', async () => {
+    mockGetSettings.mockReturnValue(defaultSettings({ notifyOnWindowReset: true }))
+
+    // First call establishes prevWeeklyResetsAt
+    checkAndNotify(makeData(50, 50, 'S1', '2026-03-26T12:00:00Z'))
+    mockNotificationShow.mockReset()
+    MockNotification.mockClear()
+
+    // Second call with weeklyResetsAt advanced by 25 hours (genuine weekly window reset)
+    checkAndNotify(makeData(50, 50, 'S1', '2026-03-27T13:00:00Z'))
+
+    const titles = MockNotification.mock.calls.map((c) => (c[0] as { title: string }).title)
+    expect(titles.some((t) => t.includes('Weekly Window Reset'))).toBe(true)
+  })
+
+  it('resets weeklyNotified flag after weekly window reset so threshold warning can re-fire', async () => {
+    mockGetSettings.mockReturnValue(defaultSettings({ notifyOnWindowReset: true }))
+
+    // Cross weekly threshold so weeklyNotified = true
+    checkAndNotify(makeData(50, 82, 'S1', '2026-03-26T12:00:00Z'))
+
+    // Weekly window resets — weeklyNotified should be cleared
+    mockNotificationShow.mockReset()
+    MockNotification.mockClear()
+    checkAndNotify(makeData(50, 50, 'S1', '2026-03-27T13:00:00Z'))
+
+    // Now cross threshold again — should fire because weeklyNotified was reset to false
+    mockNotificationShow.mockReset()
+    MockNotification.mockClear()
+    checkAndNotify(makeData(50, 82, 'S1', '2026-03-27T13:00:00Z'))
+
+    const titles = MockNotification.mock.calls.map((c) => (c[0] as { title: string }).title)
+    expect(titles.some((t) => t.includes('Weekly Limit Warning'))).toBe(true)
+  })
+
+  it('does NOT send weekly window reset notification when notifyOnWindowReset=false', async () => {
+    mockGetSettings.mockReturnValue(defaultSettings({ notifyOnWindowReset: false }))
+
+    checkAndNotify(makeData(50, 50, 'S1', '2026-03-26T12:00:00Z'))
+    mockNotificationShow.mockReset()
+    MockNotification.mockClear()
+
+    checkAndNotify(makeData(50, 50, 'S1', '2026-03-27T13:00:00Z'))
+
+    expect(mockNotificationShow).not.toHaveBeenCalled()
+  })
+
   it('syncWindowState prevents window reset notification when resets_at matches synced value', async () => {
     mockGetSettings.mockReturnValue(defaultSettings({ notifyOnWindowReset: true }))
 
