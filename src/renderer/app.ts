@@ -3,7 +3,7 @@ import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 Chart.register(DoughnutController, ArcElement, Tooltip);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number }
+interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number; sessionResets?: number; sessionAccum?: number }
 
 interface UsageWindow {
   utilization: number;
@@ -130,6 +130,11 @@ const translations = {
     dailyHistoryLabel: 'Weekly cycle',
     clearHistoryBtn: 'Clear',
     clearHistoryConfirm: 'Clear usage history?',
+    tooltipSession: 'Session',
+    tooltipWeekly: 'Weekly',
+    tooltipCredits: 'Credits',
+    tooltipResets: (n: number) => `${n} resets`,
+    tooltipAccum: (n: number) => `${n}% accumulated`,
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -182,6 +187,11 @@ const translations = {
     dailyHistoryLabel: 'Ciclo semanal',
     clearHistoryBtn: 'Limpar',
     clearHistoryConfirm: 'Limpar histórico de uso?',
+    tooltipSession: 'Sessão',
+    tooltipWeekly: 'Semanal',
+    tooltipCredits: 'Créditos',
+    tooltipResets: (n: number) => `${n} resets`,
+    tooltipAccum: (n: number) => `${n}% acumulado`,
   },
 } as const;
 
@@ -508,7 +518,11 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
   }
 
   // Build 7 day slots
-  const slots: { date: string; label: string; isToday: boolean; isFuture: boolean; weeklyPct: number | null; sessionPct: number | null; creditsPct: number | null }[] = [];
+  const slots: {
+    date: string; label: string; isToday: boolean; isFuture: boolean;
+    weeklyPct: number | null; sessionPct: number | null; creditsPct: number | null;
+    sessionResets: number; sessionAccum: number;
+  }[] = [];
   const now = new Date();
   const todayStr = now.toLocaleDateString('sv');
   const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
@@ -518,16 +532,19 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     const dateStr = d.toLocaleDateString('sv');
     const label = d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '');
     const isFuture = dateStr > todayStr;
-    const isToday = dateStr === todayStr;
+    const isToday  = dateStr === todayStr;
     const found = dailyData.find(s => s.date === dateStr);
     slots.push({
       date: dateStr, label, isToday, isFuture,
-      weeklyPct:  found ? Math.min(found.maxWeekly, 100) : null,
-      sessionPct: found ? Math.min(found.maxSession ?? 0, 100) : null,
-      creditsPct: (found && found.maxCredits !== undefined) ? Math.min(found.maxCredits, 100) : null,
+      weeklyPct:    found ? Math.min(found.maxWeekly, 100) : null,
+      sessionPct:   found ? Math.min(found.maxSession ?? 0, 100) : null,
+      creditsPct:   (found && found.maxCredits !== undefined) ? Math.min(found.maxCredits, 100) : null,
+      sessionResets: found?.sessionResets ?? 1,
+      sessionAccum:  found?.sessionAccum  ?? 0,
     });
   }
 
+  const t   = tr();
   const BAR_MAX_PX = 40;
   container.innerHTML = slots.map(s => {
     const wPx = s.weeklyPct  !== null ? Math.max(3, Math.round((s.weeklyPct  / 100) * BAR_MAX_PX)) : 0;
@@ -541,7 +558,26 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     const creditsBar  = hasCredits
       ? `<div class="daily-bar credits ${cClass}" style="height:${cPx}px"></div>`
       : '';
+
+    // Tooltip
+    let tooltipHtml = '';
+    if (s.weeklyPct !== null) {
+      const accumTotal = s.sessionAccum + (s.sessionPct ?? 0);
+      const sessionLine = s.sessionPct !== null
+        ? `<div><span class="tip-dot session"></span>${t.tooltipSession}: <b>${s.sessionPct}%</b></div>`
+        : '';
+      const resetLine = s.sessionResets > 1
+        ? `<div class="tip-resets">${t.tooltipResets(s.sessionResets)} · ${t.tooltipAccum(accumTotal)}</div>`
+        : '';
+      const weeklyLine = `<div><span class="tip-dot weekly"></span>${t.tooltipWeekly}: <b>${s.weeklyPct}%</b></div>`;
+      const creditsLine = s.creditsPct !== null
+        ? `<div><span class="tip-dot credits"></span>${t.tooltipCredits}: <b>${s.creditsPct}%</b></div>`
+        : '';
+      tooltipHtml = `<div class="daily-tooltip">${sessionLine}${resetLine}${weeklyLine}${creditsLine}</div>`;
+    }
+
     return `<div class="daily-col${todayClass}${futureClass}">
+      ${tooltipHtml}
       <div class="daily-bar-wrap">
         <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
         <div class="daily-bar weekly ${wClass}" style="height:${wPx}px"></div>

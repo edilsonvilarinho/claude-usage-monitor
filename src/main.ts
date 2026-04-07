@@ -482,6 +482,7 @@ app.whenReady().then(() => {
 
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {
+    const prevData = lastUsageData; // captura antes de sobrescrever
     lastUsageData = data;
     credentialMissing = false;
     if (currentRateLimitUntil > 0) {
@@ -510,14 +511,31 @@ app.whenReady().then(() => {
       : undefined;
     const dailyHistory: DailySnapshot[] = getSettings().dailyHistory ?? [];
     const existingDay = dailyHistory.find(d => d.date === today);
+
+    // Detectar reset de sessão: resets_at avançou desde o último poll
+    let sessionResetOccurred = false;
+    if (prevData) {
+      const prevResetsAt = new Date(prevData.five_hour.resets_at).getTime();
+      const currResetsAt = new Date(data.five_hour.resets_at).getTime();
+      if (currResetsAt > prevResetsAt) {
+        sessionResetOccurred = true;
+      }
+    }
+
     if (existingDay) {
+      // Se houve reset, acumula o pico da janela que acabou
+      if (sessionResetOccurred) {
+        const peakOfCompletedWindow = Math.round(prevData!.five_hour.utilization);
+        existingDay.sessionAccum  = (existingDay.sessionAccum  ?? 0) + peakOfCompletedWindow;
+        existingDay.sessionResets = (existingDay.sessionResets ?? 1) + 1;
+      }
       existingDay.maxWeekly  = Math.max(existingDay.maxWeekly, weeklyPctInt);
       existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
       if (creditsPctInt !== undefined) {
         existingDay.maxCredits = Math.max(existingDay.maxCredits ?? 0, creditsPctInt);
       }
     } else {
-      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt, maxSession: sessionPctInt, maxCredits: creditsPctInt });
+      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt, maxSession: sessionPctInt, maxCredits: creditsPctInt, sessionResets: 1, sessionAccum: 0 });
     }
     dailyHistory.sort((a, b) => a.date.localeCompare(b.date));
     if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
