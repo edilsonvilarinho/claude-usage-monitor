@@ -364,12 +364,14 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('refresh-now', async () => {
-    suppressNextNotification = true;
+    // Only suppress notifications when the popup is visible (user is actively watching).
+    // If the popup is hidden, auto-refresh runs in the background and must not block alerts.
+    if (popup?.isVisible()) suppressNextNotification = true;
     await pollingService.triggerNow();
   });
 
   ipcMain.handle('force-refresh-now', async () => {
-    suppressNextNotification = true;
+    if (popup?.isVisible()) suppressNextNotification = true;
     await pollingService.forceNow();
   });
 
