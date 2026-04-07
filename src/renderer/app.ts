@@ -389,9 +389,13 @@ function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
   const size = 32;
   ctx.clearRect(0, 0, size, size);
 
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const bgColor = isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(230, 230, 230, 0.92)';
+  const textColor = isDark ? '#ffffff' : '#111111';
+
   ctx.beginPath();
   ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(30, 30, 30, 0.85)';
+  ctx.fillStyle = bgColor;
   ctx.fill();
 
   const maxPct = Math.max(sessionPct, weeklyPct);
@@ -405,12 +409,14 @@ function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = textColor;
   const label = maxPct > 100 ? '!!!' : `${maxPct}`;
   ctx.font = `bold ${maxPct > 99 ? 7 : 9}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, size / 2, size / 2);
+
+  lastRenderedData = { session: sessionPct, weekly: weeklyPct };
 
   canvas.toBlob((blob) => {
     if (!blob) return;
@@ -468,6 +474,7 @@ function barClass(pct: number): string {
 let sessionChart: Chart | null = null;
 let weeklyChart:  Chart | null = null;
 let historyChart: Chart | null = null;
+let lastRenderedData: { session: number; weekly: number } | null = null;
 
 function createHistoryChart(): Chart {
   const canvas = document.getElementById('history-canvas') as HTMLCanvasElement;
@@ -623,6 +630,13 @@ async function loadSettings(): Promise<void> {
     String(s.notifications.sessionThreshold);
   (document.getElementById('setting-weekly-threshold') as HTMLInputElement).value =
     String(s.notifications.weeklyThreshold);
+
+  const lblSession = document.getElementById('lbl-session-threshold');
+  const lblWeekly = document.getElementById('lbl-weekly-threshold');
+  const lblReset = document.getElementById('lbl-reset-threshold');
+  if (lblSession) lblSession.textContent = `${s.notifications.sessionThreshold}%`;
+  if (lblWeekly) lblWeekly.textContent = `${s.notifications.weeklyThreshold}%`;
+  if (lblReset) lblReset.textContent = `${s.notifications.resetThreshold}%`;
 
   const size = s.windowSize ?? 'normal';
   (document.getElementById('setting-window-size') as HTMLSelectElement).value = size;
@@ -871,6 +885,25 @@ function init(): void {
 
   document.getElementById('btn-test-notif')!.addEventListener('click', () => {
     void window.claudeUsage.testNotification();
+  });
+
+  document.getElementById('setting-session-threshold')!.addEventListener('input', (e) => {
+    const lbl = document.getElementById('lbl-session-threshold');
+    if (lbl) lbl.textContent = `${(e.target as HTMLInputElement).value}%`;
+  });
+  document.getElementById('setting-weekly-threshold')!.addEventListener('input', (e) => {
+    const lbl = document.getElementById('lbl-weekly-threshold');
+    if (lbl) lbl.textContent = `${(e.target as HTMLInputElement).value}%`;
+  });
+  document.getElementById('setting-reset-threshold')!.addEventListener('input', (e) => {
+    const lbl = document.getElementById('lbl-reset-threshold');
+    if (lbl) lbl.textContent = `${(e.target as HTMLInputElement).value}%`;
+  });
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (lastRenderedData) {
+      updateTrayIcon(lastRenderedData.session, lastRenderedData.weekly);
+    }
   });
 }
 
