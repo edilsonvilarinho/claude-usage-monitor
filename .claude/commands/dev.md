@@ -31,6 +31,7 @@ Ao receber o pedido, avalio automaticamente:
 | "refatora", "renomeia", "reorganiza", "simplifica" | REFACTOR |
 | "release", "versão", "publica", "lança" | RELEASE |
 | "analisa", "explica", "por que", "como funciona" | ANALYSIS |
+| "verifica", "testa", "mostra", "lista", "quanto", "o que é" | ANALYSIS |
 
 ### 2. Complexidade
 
@@ -50,25 +51,30 @@ Ao receber o pedido, avalio automaticamente:
 
 ## Caminhos de execução
 
-### SIMPLES (BUG FIX ou FEATURE ou REFACTOR)
+### SIMPLES (BUG FIX, FEATURE ou REFACTOR)
 ```
 1. Ler os arquivos relevantes diretamente
 2. Aplicar a mudança
 3. npm run build (confirmar exit 0)
-4. git add + commit + push para master
+4. git add + commit + push para master (automático)
 ```
 Sem issue, sem branch, sem PR — a menos que você peça.
 
-### COMPLEXA (BUG FIX ou FEATURE)
+### COMPLEXA (BUG FIX, FEATURE ou REFACTOR)
 ```
 1. Plan Mode (1 Explore agent se necessário)
 2. Aguardar aprovação do plano
 3. gh issue create
 4. git checkout -b <tipo>/<slug>#<issue>
 5. @implementer executa
-6. @tester (só se mudança for arriscada)
-7. commit + PR
+6. npm run build (confirmar exit 0)
+7. @tester (só se mudança for arriscada)
+8. commit + PR
 ```
+
+### REFACTOR
+- **SIMPLES** se: renomeia, extrai função, move arquivo, sem mudança de contrato
+- **COMPLEXA** se: reestrutura módulos, altera interfaces, afeta múltiplos serviços
 
 ### RELEASE
 ```
