@@ -191,6 +191,20 @@
           </label>
         </div>
         <div class="settings-row">
+          <label data-i18n="notifyOnDropLabel">Notify when usage drops</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-notify-on-reset" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row" id="row-reset-threshold">
+          <label data-i18n="resetThresholdLabel">Reset threshold (%)</label>
+          <div class="spinner-row">
+            <input type="number" class="spinner-input" id="setting-reset-threshold" min="1" max="99" step="1" value="50" />
+            <span class="spinner-unit">%</span>
+          </div>
+        </div>
+        <div class="settings-row">
           <label data-i18n="sessionThreshold">Session limit</label>
           <div class="spinner-row">
             <input type="number" class="spinner-input" id="setting-session-threshold" min="1" max="100" step="1" />

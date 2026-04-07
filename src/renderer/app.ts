@@ -102,12 +102,14 @@ const translations = {
     autoRefreshLabel:          'Auto refresh',
     autoRefreshIntervalLabel:  'Interval (s)',
     autoRefreshHint:           'Min 60s — recommended: 300s',
-    enable:           'Enable',
-    sound:            'Sound',
-    notifyOnReset:    'Notify when usage resets to 0%',
-    sessionThreshold: 'Session limit',
-    weeklyThreshold:  'Weekly limit',
-    test:             'Test',
+    enable:              'Enable',
+    sound:               'Sound',
+    notifyOnReset:       'Notify when usage resets to 0%',
+    notifyOnDropLabel:   'Notify when usage drops',
+    resetThresholdLabel: 'Reset threshold (%)',
+    sessionThreshold:    'Session limit',
+    weeklyThreshold:     'Weekly limit',
+    test:                'Test',
     rateLimitMsg:    'Rate limited',
     rateLimitRetry:  (t: string) => `Retry in ${t}`,
     rateLimitAt:     (time: string) => `(at ${time})`,
@@ -148,12 +150,14 @@ const translations = {
     autoRefreshLabel:          'Atualizar automaticamente',
     autoRefreshIntervalLabel:  'Intervalo (s)',
     autoRefreshHint:           'Mín 60s — recomendado: 300s',
-    enable:           'Ativar',
-    sound:            'Som',
-    notifyOnReset:    'Avisar quando uso zerar',
-    sessionThreshold: 'Limite da sessão',
-    weeklyThreshold:  'Limite semanal',
-    test:             'Testar',
+    enable:              'Ativar',
+    sound:               'Som',
+    notifyOnReset:       'Avisar quando uso zerar',
+    notifyOnDropLabel:   'Avisar quando uso cair',
+    resetThresholdLabel: 'Limiar de reset (%)',
+    sessionThreshold:    'Limite da sessão',
+    weeklyThreshold:     'Limite semanal',
+    test:                'Testar',
     rateLimitMsg:    'Limite de requisições',
     rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
     rateLimitAt:     (time: string) => `(às ${time})`,
@@ -542,6 +546,8 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-notif-enabled') as HTMLInputElement).checked = s.notifications.enabled;
   (document.getElementById('setting-sound-enabled') as HTMLInputElement).checked = s.notifications.soundEnabled;
   (document.getElementById('setting-notify-on-window-reset') as HTMLInputElement).checked = s.notifications.notifyOnWindowReset;
+  (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked = s.notifications.notifyOnReset;
+  (document.getElementById('setting-reset-threshold') as HTMLInputElement).value = String(s.notifications.resetThreshold);
   (document.getElementById('setting-theme') as HTMLSelectElement).value = s.theme;
 
   const lang = s.language ?? 'en';
@@ -565,6 +571,8 @@ async function loadSettings(): Promise<void> {
   applyTranslations();
   applySize(size);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
+  const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
+  (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
 }
 
 async function saveSettingsFromUI(): Promise<void> {
@@ -580,12 +588,15 @@ async function saveSettingsFromUI(): Promise<void> {
   const autoRefreshInterval = Math.max(60, Number((document.getElementById('setting-auto-refresh-interval') as HTMLInputElement).value));
   const sessionTh        = Math.min(100, Math.max(1, Number((document.getElementById('setting-session-threshold') as HTMLInputElement).value)));
   const weeklyTh         = Math.min(100, Math.max(1, Number((document.getElementById('setting-weekly-threshold') as HTMLInputElement).value)));
+  const notifyOnReset    = (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked;
+  const resetThreshold   = Math.min(99, Math.max(1, Number((document.getElementById('setting-reset-threshold') as HTMLInputElement).value)));
 
   currentLang = lang;
   applyTranslations();
   applyTheme(theme);
   applySize(windowSize);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
+  (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnReset ? '1' : '0.4';
 
   await window.claudeUsage.saveSettings({
     launchAtStartup: startup,
@@ -601,8 +612,8 @@ async function saveSettingsFromUI(): Promise<void> {
       notifyOnWindowReset: notifyOnWinReset,
       sessionThreshold: sessionTh,
       weeklyThreshold: weeklyTh,
-      resetThreshold: 50,
-      notifyOnReset: false,
+      notifyOnReset,
+      resetThreshold,
     },
   });
 
@@ -747,6 +758,7 @@ function init(): void {
     'setting-startup', 'setting-always-visible',
     'setting-notif-enabled', 'setting-sound-enabled',
     'setting-notify-on-window-reset',
+    'setting-notify-on-reset', 'setting-reset-threshold',
     'setting-theme', 'setting-language',
     'setting-window-size',
     'setting-auto-refresh', 'setting-auto-refresh-interval',

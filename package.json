@@ -70,7 +70,7 @@
     "directories": {
       "output": "dist-build"
     },
-    "asar": false,
+    "asar": true,
     "compression": "maximum",
     "nsis": {
       "oneClick": false,

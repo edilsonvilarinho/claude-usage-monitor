@@ -36,6 +36,7 @@ let currentRateLimitUntil = 0; // restored from disk on startup
 let credentialMissing = false;
 let credentialPath = '';
 let cachedProfile: ProfileData | null = null;
+let cachedProfileAt = 0;
 
 const POPUP_WIDTH  = 340;
 const POPUP_HEIGHT = 210;
@@ -392,12 +393,14 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('get-profile', async () => {
-    if (cachedProfile) return cachedProfile;
+    const ONE_HOUR = 3_600_000;
+    if (cachedProfile && Date.now() - cachedProfileAt < ONE_HOUR) return cachedProfile;
     try {
       cachedProfile = await fetchProfileData();
+      cachedProfileAt = Date.now();
       return cachedProfile;
     } catch {
-      return null;
+      return cachedProfile; // retorna cache stale em caso de erro
     }
   });
 
@@ -445,7 +448,7 @@ app.whenReady().then(() => {
   tray = createTray();
   popup = createPopup();
 
-  void fetchProfileData().then(p => { cachedProfile = p; }).catch(() => {});
+  void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); }).catch(() => {});
 
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {
@@ -471,6 +474,10 @@ app.whenReady().then(() => {
     // Send to renderer to draw the canvas icon
     if (popup) {
       popup.webContents.send('usage-updated', data);
+    }
+
+    if (Date.now() - cachedProfileAt > 3_600_000) {
+      void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
     }
   });
 
