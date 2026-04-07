@@ -11,7 +11,7 @@ npm run release      # dist + dist:portable + zip → dist-build/
 npx tsc -p tsconfig.main.json   # main only
 node build-renderer.js           # renderer only
 ```
-No tests. Run `npm run build` and confirm clean exit before committing.
+Run `npm test` after changes to services. Run `npm run build` and confirm clean exit before committing.
 
 ## Release checklist (`npm run dist`)
 After every dist build, verify **before** publishing:

@@ -8,7 +8,7 @@ color: "#ffe66d"
 
 You are the QA and testing specialist for the Claude Usage Monitor. Architecture is in `CLAUDE.md`.
 
-**No automated test suite exists** — testing is currently manual.
+Automated tests use **vitest** (`npm test`). Test files in `src/**/__tests__/`. Coverage: `credentialService`, `notificationService`, `pollingService`, `settingsService`, `startupService`, `updateService`, `usageApiService`, `i18n/mainTranslations`.
 
 Key behaviors to test when they change: `usageApiService` (429/retry), `pollingService` (intervals/backoff), `credentialService` (token refresh/WSL), `renderer/app.ts` (gauge/countdown), IPC round-trip.
 
