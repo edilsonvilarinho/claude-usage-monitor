@@ -368,28 +368,8 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
 
     for (const snap of snapshots) {
       if (!snap.date || typeof snap.date !== 'string') continue;
-      const cur = existing.get(snap.date);
-      if (!cur) {
-        existing.set(snap.date, snap);
-        mergedCount++;
-      } else {
-        const merged: DailySnapshot = {
-          date: snap.date,
-          maxWeekly: Math.max(cur.maxWeekly ?? 0, snap.maxWeekly ?? 0),
-          maxSession: Math.max(cur.maxSession ?? 0, snap.maxSession ?? 0),
-        };
-        if (cur.maxCredits !== undefined || snap.maxCredits !== undefined) {
-          merged.maxCredits = Math.max(cur.maxCredits ?? 0, snap.maxCredits ?? 0);
-        }
-        if (cur.sessionResets !== undefined || snap.sessionResets !== undefined) {
-          merged.sessionResets = Math.max(cur.sessionResets ?? 1, snap.sessionResets ?? 1);
-        }
-        if (cur.sessionAccum !== undefined || snap.sessionAccum !== undefined) {
-          merged.sessionAccum = Math.max(cur.sessionAccum ?? 0, snap.sessionAccum ?? 0);
-        }
-        existing.set(snap.date, merged);
-        mergedCount++;
-      }
+      existing.set(snap.date, snap);
+      mergedCount++;
     }
   }
 
