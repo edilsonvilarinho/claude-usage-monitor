@@ -818,7 +818,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 12px 4px;
+  padding: 4px 12px 2px;
 }
 
 .legend-dot {
