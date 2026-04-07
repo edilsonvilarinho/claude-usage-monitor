@@ -5,7 +5,7 @@ import { getSettings, saveSettings } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
-import { UsageData, ProfileData } from './models/usageData';
+import { UsageData, ProfileData, UsageSnapshot } from './models/usageData';
 import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 
@@ -425,6 +425,8 @@ function registerIpcHandlers(): void {
     void shell.openExternal(url);
   });
 
+  ipcMain.handle('get-usage-history', () => getSettings().usageHistory ?? []);
+
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
     pollingService.setCustomInterval(ms);
   });
@@ -480,6 +482,18 @@ app.whenReady().then(() => {
       currentRateLimitUntil = 0;
       saveSettings({ rateLimitedUntil: 0, rateLimitCount: 0 });
     }
+    // Snapshot de histórico (máx 200 pontos ≈ 24h a cada 7min)
+    const MAX_HISTORY = 200;
+    const snapshot: UsageSnapshot = {
+      ts: Date.now(),
+      session: Math.round(data.five_hour.utilization),
+      weekly: Math.round(data.seven_day.utilization),
+    };
+    const history = getSettings().usageHistory ?? [];
+    history.push(snapshot);
+    if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
+    saveSettings({ usageHistory: history });
+
     updateTrayTooltip(data);
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
     tooltipRefreshTimer = setInterval(() => {

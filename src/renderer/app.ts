@@ -1,8 +1,10 @@
-import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
+import { Chart, DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, CategoryScale, LinearScale, Filler } from 'chart.js';
 
-Chart.register(DoughnutController, ArcElement, Tooltip);
+Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, CategoryScale, LinearScale, Filler);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+interface UsageSnapshot { ts: number; session: number; weekly: number }
+
 interface UsageWindow {
   utilization: number;
   resets_at: string;
@@ -42,6 +44,7 @@ interface AppSettings {
   windowSize: 'normal' | 'medium' | 'large' | 'xlarge';
   autoRefresh: boolean;
   autoRefreshInterval: number;
+  showHistory: boolean;
 }
 
 declare global {
@@ -65,6 +68,7 @@ declare global {
       getAppVersion: () => Promise<string>;
       getProfile: () => Promise<ProfileData | null>;
       setPollInterval: (ms: number | null) => Promise<void>;
+      getUsageHistory: () => Promise<UsageSnapshot[]>;
     };
   }
 }
@@ -121,6 +125,7 @@ const translations = {
       d > 0 ? `Resets in ${d}d ${h}h` : h > 0 ? `Resets in ${h}h ${m}m` : `Resets in ${m}m`,
     resetsAt:   (timeStr: string) => `at ${timeStr}`,
     nextPollIn: (t: string) => `Next update in ${t}`,
+    historyLabel: 'Usage history (24h)',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -169,6 +174,7 @@ const translations = {
       d > 0 ? `Reinicia em ${d}d ${h}h` : h > 0 ? `Reinicia em ${h}h ${m}m` : `Reinicia em ${m}m`,
     resetsAt:   (timeStr: string) => `às ${timeStr}`,
     nextPollIn: (t: string) => `Próxima atualização em ${t}`,
+    historyLabel: 'Histórico de uso (24h)',
   },
 } as const;
 
@@ -461,6 +467,67 @@ function barClass(pct: number): string {
 
 let sessionChart: Chart | null = null;
 let weeklyChart:  Chart | null = null;
+let historyChart: Chart | null = null;
+
+function createHistoryChart(): Chart {
+  const canvas = document.getElementById('history-canvas') as HTMLCanvasElement;
+  return new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Session',
+          data: [],
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.08)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+        },
+        {
+          label: 'Weekly',
+          data: [],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      scales: {
+        x: {
+          display: false,
+        },
+        y: {
+          min: 0,
+          max: 100,
+          display: false,
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+      },
+    },
+  });
+}
+
+function updateHistoryChart(snapshots: UsageSnapshot[]): void {
+  if (!historyChart) return;
+  const labels = snapshots.map(s => new Date(s.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  historyChart.data.labels = labels;
+  historyChart.data.datasets[0]!.data = snapshots.map(s => Math.min(100, s.session));
+  historyChart.data.datasets[1]!.data = snapshots.map(s => Math.min(100, s.weekly));
+  historyChart.update('none');
+}
 
 function updateUI(data: UsageData): void {
   const sessionPct = Math.round(data.five_hour.utilization);
@@ -571,6 +638,19 @@ async function loadSettings(): Promise<void> {
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
+
+  const showHistory = s.showHistory ?? false;
+  const historyToggle = document.getElementById('history-toggle') as HTMLInputElement;
+  const historySection = document.getElementById('history-section') as HTMLElement;
+  historyToggle.checked = showHistory;
+  historySection.style.display = showHistory ? 'block' : 'none';
+  if (showHistory) {
+    void window.claudeUsage.getUsageHistory().then(h => {
+      if (!historyChart) historyChart = createHistoryChart();
+      updateHistoryChart(h);
+      fitWindow();
+    });
+  }
 }
 
 async function saveSettingsFromUI(): Promise<void> {
@@ -677,6 +757,29 @@ function init(): void {
   window.claudeUsage.onUsageUpdated((data) => {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
     updateUI(data);
+  });
+
+  // Atualizar sparkline quando receber dados novos
+  window.claudeUsage.onUsageUpdated(() => {
+    const section = document.getElementById('history-section') as HTMLElement;
+    if (section.style.display === 'none') return;
+    void window.claudeUsage.getUsageHistory().then(h => {
+      if (!historyChart) historyChart = createHistoryChart();
+      updateHistoryChart(h);
+    });
+  });
+
+  document.getElementById('history-toggle')!.addEventListener('change', async () => {
+    const checked = (document.getElementById('history-toggle') as HTMLInputElement).checked;
+    const section = document.getElementById('history-section') as HTMLElement;
+    section.style.display = checked ? 'block' : 'none';
+    await window.claudeUsage.saveSettings({ showHistory: checked });
+    if (checked) {
+      if (!historyChart) historyChart = createHistoryChart();
+      const h = await window.claudeUsage.getUsageHistory();
+      updateHistoryChart(h);
+    }
+    fitWindow();
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {
