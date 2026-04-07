@@ -572,7 +572,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
         ? `<div><span class="tip-dot session"></span>${t.tooltipSession}: <b>${s.sessionPct}%</b></div>`
         : '';
       const resetLine = s.sessionResets > 1
-        ? `<div class="tip-resets">${t.tooltipResets(s.sessionResets)} · ${t.tooltipAccum(accumTotal)}</div>`
+        ? `<div class="tip-resets">${t.tooltipResets(s.sessionResets - 1)} · ${t.tooltipAccum(accumTotal)}</div>`
         : '';
       const weeklyLine = `<div><span class="tip-dot weekly"></span>${t.tooltipWeekly}: <b>${s.weeklyPct}%</b></div>`;
       const creditsLine = s.creditsPct !== null
