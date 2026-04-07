@@ -3,7 +3,7 @@ import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 Chart.register(DoughnutController, ArcElement, Tooltip);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface DailySnapshot { date: string; maxWeekly: number }
+interface DailySnapshot { date: string; maxWeekly: number; maxSession: number }
 
 interface UsageWindow {
   utilization: number;
@@ -494,7 +494,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
   const cycleStartMs = resetDate.getTime() - 7 * 24 * 60 * 60 * 1000;
 
   // Build 7 day slots
-  const slots: { date: string; label: string; isToday: boolean; isFuture: boolean; pct: number | null }[] = [];
+  const slots: { date: string; label: string; isToday: boolean; isFuture: boolean; weeklyPct: number | null; sessionPct: number | null }[] = [];
   const now = new Date();
   const todayStr = now.toLocaleDateString('sv');
   const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
@@ -506,24 +506,30 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     const isFuture = dateStr > todayStr;
     const isToday = dateStr === todayStr;
     const found = dailyData.find(s => s.date === dateStr);
-    slots.push({ date: dateStr, label, isToday, isFuture, pct: found ? Math.min(found.maxWeekly, 100) : null });
+    slots.push({
+      date: dateStr, label, isToday, isFuture,
+      weeklyPct:  found ? Math.min(found.maxWeekly, 100) : null,
+      sessionPct: found ? Math.min(found.maxSession ?? 0, 100) : null,
+    });
   }
 
-  const BAR_MAX_PX = 40; // altura máxima da barra em px
-  // Render bars
+  const BAR_MAX_PX = 40;
   container.innerHTML = slots.map(s => {
-    const pctDisplay = s.pct !== null ? `${s.pct}%` : '—';
-    // Escala linear: 100% → BAR_MAX_PX, mínimo 3px para barras > 0
-    const barPx = s.pct !== null ? Math.max(3, Math.round((s.pct / 100) * BAR_MAX_PX)) : 0;
-    const colorClass = s.pct !== null ? (s.pct >= 80 ? 'crit' : s.pct >= 60 ? 'warn' : 'ok') : '';
+    const wPct = s.weeklyPct;
+    const sPct = s.sessionPct;
+    const wPx = wPct !== null ? Math.max(3, Math.round((wPct / 100) * BAR_MAX_PX)) : 0;
+    const sPx = sPct !== null ? Math.max(3, Math.round((sPct / 100) * BAR_MAX_PX)) : 0;
+    const wClass = wPct !== null ? (wPct >= 80 ? 'crit' : wPct >= 60 ? 'warn' : 'ok') : '';
+    const sClass = sPct !== null ? (sPct >= 80 ? 'crit' : sPct >= 60 ? 'warn' : 'ok') : '';
     const todayClass = s.isToday ? ' today' : '';
     const futureClass = s.isFuture ? ' future' : '';
     return `<div class="daily-col${todayClass}${futureClass}">
       <div class="daily-bar-wrap">
-        <div class="daily-bar ${colorClass}" style="height:${barPx}px"></div>
+        <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
+        <div class="daily-bar weekly ${wClass}" style="height:${wPx}px"></div>
       </div>
       <span class="daily-day">${s.label}</span>
-      <span class="daily-pct">${pctDisplay}</span>
+      <span class="daily-pct">${wPct !== null ? `${wPct}%` : '—'}</span>
     </div>`;
   }).join('');
   fitWindow();
@@ -650,16 +656,10 @@ async function loadSettings(): Promise<void> {
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
 
-  const showHistory = s.showHistory ?? false;
-  const historyToggle = document.getElementById('history-toggle') as HTMLInputElement;
-  const historySection = document.getElementById('history-section') as HTMLElement;
-  historyToggle.checked = showHistory;
-  historySection.style.display = showHistory ? 'block' : 'none';
-  if (showHistory) {
-    void window.claudeUsage.getDailyHistory().then(d => {
-      if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt);
-    });
-  }
+  // Daily chart sempre visível — carrega se já temos o resets_at
+  void window.claudeUsage.getDailyHistory().then(d => {
+    if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt);
+  });
 }
 
 async function saveSettingsFromUI(): Promise<void> {
@@ -768,10 +768,8 @@ function init(): void {
     updateUI(data);
   });
 
-  // Atualizar gráficos quando receber dados novos
+  // Atualizar gráfico quando receber dados novos
   window.claudeUsage.onUsageUpdated(() => {
-    const section = document.getElementById('history-section') as HTMLElement;
-    if (section.style.display === 'none') return;
     if (lastWeeklyResetsAt) {
       void window.claudeUsage.getDailyHistory().then(d => {
         renderDailyChart(d, lastWeeklyResetsAt!);
@@ -779,24 +777,10 @@ function init(): void {
     }
   });
 
-  document.getElementById('history-toggle')!.addEventListener('change', async () => {
-    const checked = (document.getElementById('history-toggle') as HTMLInputElement).checked;
-    const section = document.getElementById('history-section') as HTMLElement;
-    section.style.display = checked ? 'block' : 'none';
-    await window.claudeUsage.saveSettings({ showHistory: checked });
-    if (checked && lastWeeklyResetsAt) {
-      const d = await window.claudeUsage.getDailyHistory();
-      renderDailyChart(d, lastWeeklyResetsAt);
-    }
-    fitWindow();
-  });
-
   document.getElementById('btn-clear-history')!.addEventListener('click', async () => {
     if (!confirm(tr().clearHistoryConfirm)) return;
     await window.claudeUsage.clearDailyHistory();
-    if (lastWeeklyResetsAt) {
-      renderDailyChart([], lastWeeklyResetsAt);
-    }
+    if (lastWeeklyResetsAt) renderDailyChart([], lastWeeklyResetsAt);
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {

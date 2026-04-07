@@ -78,16 +78,16 @@
 
     <!-- Usage history -->
     <div class="history-header">
-      <span class="history-label" data-i18n="dailyHistoryLabel">Ciclo semanal</span>
-      <div class="history-header-actions">
-        <button class="clear-history-btn" id="btn-clear-history" data-i18n="clearHistoryBtn">Limpar</button>
-        <label class="toggle history-toggle-label">
-          <input type="checkbox" id="history-toggle">
-          <span class="toggle-slider"></span>
-        </label>
+      <div class="history-title-group">
+        <span class="history-label" data-i18n="dailyHistoryLabel">Ciclo semanal</span>
+        <div class="daily-legend">
+          <span class="legend-dot session"></span><span class="legend-text" data-i18n="sessionLabel">Sessão</span>
+          <span class="legend-dot weekly"></span><span class="legend-text" data-i18n="weeklyLabel">Semanal</span>
+        </div>
       </div>
+      <button class="clear-history-btn" id="btn-clear-history" data-i18n="clearHistoryBtn">Limpar</button>
     </div>
-    <div id="history-section" style="display:none">
+    <div id="history-section">
       <div id="daily-chart" class="daily-chart"></div>
     </div>
 

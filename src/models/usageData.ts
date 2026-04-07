@@ -5,8 +5,9 @@ export interface UsageSnapshot {
 }
 
 export interface DailySnapshot {
-  date: string;       // 'YYYY-MM-DD' (local timezone)
-  maxWeekly: number;  // max weekly % seen that day (integer 0-999)
+  date: string;        // 'YYYY-MM-DD' (local timezone)
+  maxWeekly: number;   // max weekly % seen that day (integer 0-999)
+  maxSession: number;  // max session % seen that day (integer 0-999)
 }
 
 export interface UsageWindow {

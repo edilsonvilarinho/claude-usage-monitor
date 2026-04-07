@@ -503,12 +503,14 @@ app.whenReady().then(() => {
     // Usa 'sv' locale para obter formato YYYY-MM-DD na timezone local
     const today = new Date().toLocaleDateString('sv');
     const weeklyPctInt = Math.round(data.seven_day.utilization);
+    const sessionPctInt = Math.round(data.five_hour.utilization);
     const dailyHistory: DailySnapshot[] = getSettings().dailyHistory ?? [];
     const existingDay = dailyHistory.find(d => d.date === today);
     if (existingDay) {
-      existingDay.maxWeekly = Math.max(existingDay.maxWeekly, weeklyPctInt);
+      existingDay.maxWeekly  = Math.max(existingDay.maxWeekly, weeklyPctInt);
+      existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
     } else {
-      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt });
+      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt, maxSession: sessionPctInt });
     }
     dailyHistory.sort((a, b) => a.date.localeCompare(b.date));
     if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
