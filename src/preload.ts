@@ -75,6 +75,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
 
   clearDailyHistory: (): Promise<void> => ipcRenderer.invoke('clear-daily-history'),
 
+  backupWeeklyData: (): Promise<string> => ipcRenderer.invoke('backup-weekly-data'),
+
   onNextPollAt: (cb: (nextPollAt: number) => void): void => {
     ipcRenderer.on('next-poll-at', (_event, nextPollAt: number) => cb(nextPollAt));
   },

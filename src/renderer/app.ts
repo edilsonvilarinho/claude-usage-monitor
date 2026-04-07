@@ -71,6 +71,7 @@ declare global {
       setPollInterval: (ms: number | null) => Promise<void>;
       getDailyHistory: () => Promise<DailySnapshot[]>;
       clearDailyHistory: () => Promise<void>;
+      backupWeeklyData: () => Promise<string>;
     };
   }
 }
@@ -130,6 +131,8 @@ const translations = {
     historyLabel: 'Usage history (24h)',
     dailyHistoryLabel: 'Weekly cycle',
     clearHistoryBtn: 'Clear',
+    backupHistoryBtn: 'Backup',
+    backupSuccess: (p: string) => `Saved: ${p}`,
     clearHistoryConfirm: 'Clear usage history?',
     tooltipSession: 'Session',
     tooltipWeekly: 'Weekly',
@@ -187,6 +190,8 @@ const translations = {
     historyLabel: 'Histórico de uso (24h)',
     dailyHistoryLabel: 'Ciclo semanal',
     clearHistoryBtn: 'Limpar',
+    backupHistoryBtn: 'Backup',
+    backupSuccess: (p: string) => `Salvo: ${p}`,
     clearHistoryConfirm: 'Limpar histórico de uso?',
     tooltipSession: 'Sessão',
     tooltipWeekly: 'Semanal',
@@ -832,6 +837,11 @@ function init(): void {
     if (!confirm(tr().clearHistoryConfirm)) return;
     await window.claudeUsage.clearDailyHistory();
     if (lastWeeklyResetsAt) renderDailyChart([], lastWeeklyResetsAt);
+  });
+
+  document.getElementById('btn-backup-history')!.addEventListener('click', async () => {
+    const filepath = await window.claudeUsage.backupWeeklyData();
+    alert(tr().backupSuccess(filepath));
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { pollingService } from './services/pollingService';
 import { getSettings, saveSettings, setActiveAccount, getAccountData, saveAccountData } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
@@ -300,6 +301,47 @@ function showUpdateAvailableToast(version: string, url: string): void {
   notif.show();
 }
 
+// ─── Weekly backup ───────────────────────────────────────────────────────────
+
+async function backupWeeklyData(): Promise<string> {
+  const accountData = getAccountData();
+  const dailyHistory = accountData.dailyHistory ?? [];
+
+  // Calcular semana ISO atual (YYYY-Www)
+  const now = new Date();
+  const jan4 = new Date(now.getFullYear(), 0, 4);
+  const weekNum = Math.ceil(((now.getTime() - jan4.getTime()) / 86400000 + jan4.getDay() + 1) / 7);
+  const weekLabel = `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+
+  const backupDir = path.join(app.getPath('userData'), 'backups');
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+  }
+
+  const filename = `backup-${weekLabel}.json`;
+  const filepath = path.join(backupDir, filename);
+
+  const payload = {
+    week: weekLabel,
+    exportedAt: new Date().toISOString(),
+    dailyHistory,
+  };
+
+  fs.writeFileSync(filepath, JSON.stringify(payload, null, 2), 'utf-8');
+
+  // Manter apenas os últimos 8 backups
+  const files = fs.readdirSync(backupDir)
+    .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
+    .sort();
+  if (files.length > 8) {
+    for (const old of files.slice(0, files.length - 8)) {
+      fs.unlinkSync(path.join(backupDir, old));
+    }
+  }
+
+  return filepath;
+}
+
 function buildContextMenu(): Menu {
   const settings = getSettings();
   const t = getMainTranslations(settings.language);
@@ -324,6 +366,14 @@ function buildContextMenu(): Menu {
       },
     },
     { label: 'Check for Updates', click: () => void runUpdateCheck(true) },
+    { label: 'Export weekly data', click: () => {
+        void backupWeeklyData().then(filepath => {
+          new Notification({ title: 'Backup saved', body: filepath }).show();
+        }).catch(err => {
+          new Notification({ title: 'Backup failed', body: String(err) }).show();
+        });
+      }
+    },
     { type: 'separator' },
     {
       label: t.trayLaunchAtStartup,
@@ -436,6 +486,10 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('clear-daily-history', () => {
     saveAccountData({ dailyHistory: [] });
+  });
+
+  ipcMain.handle('backup-weekly-data', async () => {
+    return backupWeeklyData();
   });
 
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
@@ -555,6 +609,20 @@ app.whenReady().then(() => {
     tooltipRefreshTimer = setInterval(() => {
       if (lastUsageData) updateTrayTooltip(lastUsageData);
     }, 60_000);
+    // Backup automático ao detectar reset semanal
+    if (prevData) {
+      const prevResetsAt = new Date(prevData.seven_day.resets_at).getTime();
+      const currResetsAt = new Date(data.seven_day.resets_at).getTime();
+      const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+      if (currResetsAt - prevResetsAt >= TWENTY_FOUR_HOURS_MS) {
+        void backupWeeklyData().then(filepath => {
+          new Notification({ title: 'Weekly backup saved', body: filepath }).show();
+        }).catch(err => {
+          console.error('[Main] Auto-backup failed:', err);
+        });
+      }
+    }
+
     if (suppressNextNotification) {
       syncWindowState(data);
       suppressNextNotification = false;
