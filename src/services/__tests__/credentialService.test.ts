@@ -316,6 +316,122 @@ describe('getAccessToken', () => {
     expect(token).toBe('valid-token')
   })
 
+  // ─── pickMostRecentFile — second file is NOT newer (false branch of mtime comparison) ───
+
+  it('selects the windows path when it is more recent than the WSL path', async () => {
+    const newerCreds = buildCreds({ accessToken: 'windows-token' })
+    const olderCreds = buildCreds({ accessToken: 'wsl-token' })
+
+    const newerMtime = 9000
+    const olderMtime = 1000
+
+    vi.mocked(fs.existsSync).mockImplementation((p: fs.PathLike) => {
+      const str = String(p)
+      if (str === '\\\\wsl.localhost') return true
+      if (str.includes('home') && !str.includes('.credentials.json')) return true
+      if (str.includes('.credentials.json')) return true
+      return false
+    })
+
+    vi.mocked(fs.readdirSync).mockImplementation((p: fs.PathLike) => {
+      const str = String(p)
+      if (str === '\\\\wsl.localhost') return ['Ubuntu' as unknown as fs.Dirent]
+      if (str.includes('home')) return ['wsluser' as unknown as fs.Dirent]
+      return []
+    })
+
+    // Windows path is newer, WSL path is older
+    vi.mocked(fs.statSync).mockImplementation((p: fs.PathLike) => {
+      const str = String(p)
+      if (str.includes('wsluser')) return { mtimeMs: olderMtime } as ReturnType<typeof fs.statSync>
+      return { mtimeMs: newerMtime } as ReturnType<typeof fs.statSync>
+    })
+
+    vi.mocked(fs.readFileSync).mockImplementation((p: fs.PathLike | fs.promises.FileHandle) => {
+      const str = String(p)
+      if (str.includes('wsluser')) return JSON.stringify(olderCreds)
+      return JSON.stringify(newerCreds)
+    })
+
+    const token = await getAccessToken()
+
+    // Windows path has higher mtime — should be selected
+    expect(token).toBe('windows-token')
+  })
+
+  // ─── refreshToken — optional response fields ──────────────────────────────
+
+  it('refresh response without refresh_token does not update refreshToken in file', async () => {
+    const creds = buildCreds({ expiresAt: Date.now() + 4 * 60 * 1000 })
+    mockSingleCredFile(creds)
+
+    // Response has access_token and expires_in but NO refresh_token
+    mockHttpsRefreshResponse({
+      access_token: 'new-token',
+      expires_in: 3600,
+    })
+
+    const written: string[] = []
+    vi.mocked(fs.writeFileSync).mockImplementation((_p, data) => {
+      written.push(String(data))
+    })
+
+    const token = await getAccessToken()
+
+    expect(token).toBe('new-token')
+    // The written JSON should still have the original refreshToken
+    expect(written).toHaveLength(1)
+    const saved = JSON.parse(written[0]) as { claudeAiOauth: { refreshToken: string } }
+    expect(saved.claudeAiOauth.refreshToken).toBe('refresh-token')
+  })
+
+  it('refresh response without expires_in does not update expiresAt in file', async () => {
+    const originalExpiresAt = Date.now() + 4 * 60 * 1000
+    const creds = buildCreds({ expiresAt: originalExpiresAt })
+    mockSingleCredFile(creds)
+
+    // Response has access_token and refresh_token but NO expires_in
+    mockHttpsRefreshResponse({
+      access_token: 'new-token',
+      refresh_token: 'new-refresh',
+    })
+
+    const written: string[] = []
+    vi.mocked(fs.writeFileSync).mockImplementation((_p, data) => {
+      written.push(String(data))
+    })
+
+    const token = await getAccessToken()
+
+    expect(token).toBe('new-token')
+    // expiresAt should remain unchanged (original value)
+    const saved = JSON.parse(written[0]) as { claudeAiOauth: { expiresAt: number } }
+    expect(saved.claudeAiOauth.expiresAt).toBe(originalExpiresAt)
+  })
+
+  it('refresh response without refresh_token and without expires_in leaves both unchanged', async () => {
+    const originalExpiresAt = Date.now() + 4 * 60 * 1000
+    const creds = buildCreds({ expiresAt: originalExpiresAt })
+    mockSingleCredFile(creds)
+
+    // Response has only access_token
+    mockHttpsRefreshResponse({
+      access_token: 'new-token',
+    })
+
+    const written: string[] = []
+    vi.mocked(fs.writeFileSync).mockImplementation((_p, data) => {
+      written.push(String(data))
+    })
+
+    const token = await getAccessToken()
+
+    expect(token).toBe('new-token')
+    const saved = JSON.parse(written[0]) as { claudeAiOauth: { refreshToken: string; expiresAt: number } }
+    expect(saved.claudeAiOauth.refreshToken).toBe('refresh-token')
+    expect(saved.claudeAiOauth.expiresAt).toBe(originalExpiresAt)
+  })
+
   it('does not check WSL paths when wslBase does not exist', async () => {
     const creds = buildCreds()
 

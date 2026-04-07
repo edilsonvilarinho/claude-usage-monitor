@@ -453,4 +453,141 @@ describe('PollingService', () => {
     await Promise.resolve()
     expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
   })
+
+  // ─── pause() / resume() ───────────────────────────────────────────────────
+
+  it('pause() cancels the timer so next poll does not fire', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.start()
+    await Promise.resolve() // first poll
+
+    service.pause()
+
+    const callsAfterPause = mockFetch.mock.calls.length
+    await vi.advanceTimersByTimeAsync(TEN_MIN_MS + 1000)
+    await flushPromises()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterPause)
+  })
+
+  it('isPaused getter reflects pause/resume state', () => {
+    expect(service.isPaused).toBe(false)
+    service.pause()
+    expect(service.isPaused).toBe(true)
+    service.resume()
+    expect(service.isPaused).toBe(false)
+  })
+
+  it('resume() after pause triggers an immediate poll', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.start()
+    await Promise.resolve() // first poll
+    service.pause()
+
+    const callsAfterPause = mockFetch.mock.calls.length
+    service.resume()
+    await Promise.resolve()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterPause + 1)
+  })
+
+  it('pause() called twice is idempotent — second call is a no-op', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.start()
+    await Promise.resolve()
+
+    service.pause()
+    service.pause() // second call — should not throw or break anything
+    expect(service.isPaused).toBe(true)
+
+    service.resume()
+    await Promise.resolve()
+    expect(service.isPaused).toBe(false)
+  })
+
+  it('resume() without prior pause is a no-op', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.start()
+    await Promise.resolve()
+
+    const callsBefore = mockFetch.mock.calls.length
+    service.resume() // paused=false → should return immediately
+    await Promise.resolve()
+    // No extra poll was triggered
+    expect(mockFetch).toHaveBeenCalledTimes(callsBefore)
+  })
+
+  // ─── setCustomInterval() ──────────────────────────────────────────────────
+
+  it('setCustomInterval() makes nextInterval() return the custom value (≥60s)', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.setCustomInterval(2 * 60 * 1000) // 2 min
+
+    service.start()
+    await Promise.resolve() // first poll at t=0
+
+    const callsAfterFirst = mockFetch.mock.calls.length
+    // Should NOT poll before 2 min
+    await vi.advanceTimersByTimeAsync(ONE_MIN_MS + 100)
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst)
+
+    // Should poll after 2 min
+    await vi.advanceTimersByTimeAsync(ONE_MIN_MS)
+    await Promise.resolve()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
+  })
+
+  it('setCustomInterval() clamps values below 60s to 60s', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.setCustomInterval(10_000) // 10s — should be clamped to 60s
+
+    service.start()
+    await Promise.resolve()
+
+    const callsAfterFirst = mockFetch.mock.calls.length
+    // Should NOT poll at 30s (before 60s min)
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst)
+
+    // Should poll after 60s
+    await vi.advanceTimersByTimeAsync(30_000 + 100)
+    await Promise.resolve()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
+  })
+
+  it('setCustomInterval(null) restores default interval', async () => {
+    mockFetch.mockResolvedValue(makeData())
+    service.setCustomInterval(2 * 60 * 1000)
+    service.setCustomInterval(null) // restore
+
+    service.start()
+    await Promise.resolve()
+
+    const callsAfterFirst = mockFetch.mock.calls.length
+    // Default NORMAL interval is 10min — should not poll at 5min
+    await vi.advanceTimersByTimeAsync(FIVE_MIN_MS + 100)
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst)
+
+    // Should poll after 10min total
+    await vi.advanceTimersByTimeAsync(FIVE_MIN_MS)
+    await Promise.resolve()
+    expect(mockFetch).toHaveBeenCalledTimes(callsAfterFirst + 1)
+  })
+
+  // ─── nextInterval() with rateLimited=true but elapsed — timer fires after expiry ─────
+
+  it('after rate limit expires, subsequent poll fetches normally', async () => {
+    // Set a short rate limit (5 minutes)
+    const until = Date.now() + FIVE_MIN_MS
+    service.restoreRateLimit(until, 1)
+
+    mockFetch.mockResolvedValue(makeData())
+    service.start()
+    await Promise.resolve() // first poll — rate limited, schedules timer for ~5min, returns
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    // Advance past the rate limit window
+    await vi.advanceTimersByTimeAsync(FIVE_MIN_MS + 100)
+    await flushPromises()
+    // Rate limit expired — fetch should now run
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 })
