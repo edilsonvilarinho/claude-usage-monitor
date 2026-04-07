@@ -51,7 +51,7 @@ describe('getMainTranslations', () => {
     expect(t.notifSessionWarnBody(85, 80)).toBe('Uso da sessão em 85% (limite de 80% atingido)')
     expect(t.notifWeeklyWarnBody(90, 80)).toBe('Uso semanal em 90% (limite de 80% atingido)')
     expect(t.trayTooltipLine1('55', '33')).toBe('Claude Usage — Sessão: 55% | Semanal: 33%')
-    expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sess: 4h 30m | Semanal: 2d 10h')
+    expect(t.trayTooltipLine2('4h 30m', '2d 10h')).toBe('Sess: 4h 30m | Sem.: 2d 10h')
     expect(t.trayTooltipLine3('6:00 • BRT', 'Mon 9:00 • BRT')).toBe('Sess às: 6:00 • BRT | 7d às: Mon 9:00 • BRT')
   })
 

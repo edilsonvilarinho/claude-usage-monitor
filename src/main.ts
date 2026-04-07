@@ -249,13 +249,14 @@ function updateTrayTooltip(data: UsageData): void {
   const weeklyAt      = formatResetAt(data.seven_day.resets_at, locale);
   const npAt = pollingService.nextPollAt;
   const nextLine = npAt > 0 ? t.trayTooltipNextUpdate(formatNextPoll(npAt)) : '';
-  tray.setToolTip(
-    t.trayTooltipLine1(sessionPct, weeklyPct) + '\n' +
-    t.trayTooltipLine2(sessionResets, weeklyResets) + '\n' +
-    t.trayTooltipLine3(sessionAt, weeklyAt) + '\n' +
-    (nextLine ? nextLine + '\n' : '') +
-    `v${app.getVersion()}`
-  );
+  const parts = [
+    t.trayTooltipLine1(sessionPct, weeklyPct),
+    t.trayTooltipLine2(sessionResets, weeklyResets),
+    t.trayTooltipLine3(sessionAt, weeklyAt),
+  ];
+  if (nextLine) parts.push(nextLine);
+  const tooltip = parts.join('\n');
+  tray.setToolTip(tooltip.length > 127 ? tooltip.slice(0, 127) : tooltip);
 }
 
 // ─── Update check ────────────────────────────────────────────────────────────
