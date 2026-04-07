@@ -1,7 +1,7 @@
 import * as https from 'https';
 import { execSync } from 'child_process';
 import { getAccessToken } from './credentialService';
-import { UsageData } from '../models/usageData';
+import { UsageData, ProfileData } from '../models/usageData';
 
 const API_HOST = 'api.anthropic.com';
 const API_PATH = '/api/oauth/usage';
@@ -140,4 +140,20 @@ export async function fetchUsageData(forceTokenRefresh = false): Promise<UsageDa
   }
 
   throw lastError ?? new Error('Failed to fetch usage data after max retries');
+}
+
+export async function fetchProfileData(): Promise<ProfileData> {
+  const token = await getAccessToken();
+  const version = getClaudeVersion();
+  const { statusCode, body } = await httpsGet(API_HOST, '/api/oauth/profile', {
+    'Authorization': `Bearer ${token}`,
+    'User-Agent': `claude-code/${version}`,
+    'anthropic-beta': 'oauth-2025-04-20',
+    'Accept': 'application/json',
+  });
+  if (statusCode !== 200) {
+    throw new Error(`Profile API returned ${statusCode}: ${body.slice(0, 200)}`);
+  }
+  const raw = JSON.parse(body) as { account: ProfileData['account'] };
+  return { account: raw.account };
 }

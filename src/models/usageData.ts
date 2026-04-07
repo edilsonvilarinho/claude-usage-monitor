@@ -17,6 +17,15 @@ export interface UsageData {
   extra_usage?: ExtraUsage;
 }
 
+export interface ProfileData {
+  account: {
+    display_name: string;
+    email: string;
+    has_claude_pro: boolean;
+    has_claude_max: boolean;
+  };
+}
+
 export interface CredentialsFile {
   claudeAiOauth: {
     accessToken: string;

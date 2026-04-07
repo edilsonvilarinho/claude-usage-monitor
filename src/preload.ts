@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { UsageData } from './models/usageData';
+import { UsageData, ProfileData } from './models/usageData';
 import { AppSettings } from './services/settingsService';
 
 contextBridge.exposeInMainWorld('claudeUsage', {
@@ -64,4 +64,6 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   },
 
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
+
+  getProfile: (): Promise<ProfileData | null> => ipcRenderer.invoke('get-profile'),
 });

@@ -5,7 +5,8 @@ import { getSettings, saveSettings } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
-import { UsageData } from './models/usageData';
+import { UsageData, ProfileData } from './models/usageData';
+import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 
 // Enable StatusNotifierItem on Linux for better tray compatibility (GNOME, Pantheon, KDE)
@@ -34,6 +35,7 @@ let programmaticMoveTimer: ReturnType<typeof setTimeout> | null = null;
 let currentRateLimitUntil = 0; // restored from disk on startup
 let credentialMissing = false;
 let credentialPath = '';
+let cachedProfile: ProfileData | null = null;
 
 const POPUP_WIDTH  = 340;
 const POPUP_HEIGHT = 210;
@@ -386,6 +388,16 @@ function registerIpcHandlers(): void {
     sendTestNotification();
   });
 
+  ipcMain.handle('get-profile', async () => {
+    if (cachedProfile) return cachedProfile;
+    try {
+      cachedProfile = await fetchProfileData();
+      return cachedProfile;
+    } catch {
+      return null;
+    }
+  });
+
   ipcMain.on('close-popup', () => {
     popup?.hide();
   });
@@ -429,6 +441,8 @@ app.whenReady().then(() => {
 
   tray = createTray();
   popup = createPopup();
+
+  void fetchProfileData().then(p => { cachedProfile = p; }).catch(() => {});
 
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {

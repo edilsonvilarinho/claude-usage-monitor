@@ -15,6 +15,15 @@ interface UsageData {
   extra_usage?: { is_enabled: boolean; monthly_limit: number; used_credits: number };
 }
 
+interface ProfileData {
+  account: {
+    display_name: string;
+    email: string;
+    has_claude_pro: boolean;
+    has_claude_max: boolean;
+  };
+}
+
 interface AppSettings {
   launchAtStartup: boolean;
   alwaysVisible: boolean;
@@ -54,6 +63,7 @@ declare global {
       openReleaseUrl: (url: string) => void;
       onCredentialMissing: (cb: (credPath: string) => void) => void;
       getAppVersion: () => Promise<string>;
+      getProfile: () => Promise<ProfileData | null>;
     };
   }
 }
@@ -619,6 +629,34 @@ function init(): void {
   weeklyChart  = createGauge('gauge-weekly');
 
   void loadSettings();
+
+  void window.claudeUsage.getProfile().then((profile) => {
+    if (!profile) return;
+    const bar     = document.getElementById('account-bar') as HTMLElement;
+    const avatar  = document.getElementById('account-avatar') as HTMLElement;
+    const nameEl  = document.getElementById('account-name') as HTMLElement;
+    const emailEl = document.getElementById('account-email') as HTMLElement;
+    const planEl  = document.getElementById('account-plan') as HTMLElement;
+
+    const name = profile.account.display_name || profile.account.email.split('@')[0];
+    avatar.textContent = name.charAt(0).toUpperCase();
+    nameEl.textContent = name;
+    emailEl.textContent = profile.account.email;
+
+    if (profile.account.has_claude_max) {
+      planEl.textContent = 'Max';
+      planEl.className = 'account-plan plan-max';
+    } else if (profile.account.has_claude_pro) {
+      planEl.textContent = 'Pro';
+      planEl.className = 'account-plan plan-pro';
+    } else {
+      planEl.textContent = 'Free';
+      planEl.className = 'account-plan plan-free';
+    }
+
+    bar.style.display = 'flex';
+    fitWindow();
+  });
 
   void window.claudeUsage.getAppVersion().then((version) => {
     const el = document.getElementById('app-version');
