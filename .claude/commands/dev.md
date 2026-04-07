@@ -1,5 +1,7 @@
 # /dev — Unified Development Command
 
+> **Token cost notice:** Este skill adiciona ~2.000 tokens de contexto ao carregar. Use `/dev` apenas para tarefas que envolvem execução de código (bug fix, feature, refactor, release). Para perguntas de análise, investigação ou explicação — pergunte diretamente sem o `/dev`.
+
 Comando único para qualquer tarefa de desenvolvimento. Você descreve o que quer — eu decido como executar da forma mais eficiente possível.
 
 ---
@@ -90,7 +92,8 @@ Sem Plan Mode.
 
 ### ANALYSIS
 ```
-Responder diretamente. Sem código, sem agents, sem Plan Mode.
+1. Avisar: "Esta pergunta não precisava do /dev — para análises, pergunte diretamente (economiza ~2k tokens)"
+2. Responder diretamente. Sem código, sem agents, sem Plan Mode.
 ```
 
 ---
