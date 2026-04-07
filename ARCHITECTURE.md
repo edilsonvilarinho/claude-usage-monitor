@@ -20,7 +20,8 @@ claude-usage-monitor/
 │   │   ├── notificationService.ts # System toast notifications
 │   │   ├── settingsService.ts     # electron-store persistence
 │   │   ├── startupService.ts      # Windows registry auto-launch
-│   │   └── updateService.ts       # GitHub releases update check
+│   │   ├── updateService.ts       # GitHub releases update check
+│   │   └── dailySnapshotService.ts# Daily snapshot aggregation logic
 │   ├── renderer/
 │   │   ├── app.ts                 # Renderer UI logic (built by esbuild)
 │   │   ├── index.html
@@ -43,13 +44,18 @@ UsageData         { five_hour, seven_day, seven_day_sonnet?, sonnet_only?,
                     extra_usage? }
 UsageSnapshot     { ts: number, session: number, weekly: number }
                   — snapshot persistido a cada poll para o histórico 24h
+DailySnapshot     { date: string, maxWeekly: number, maxSession?: number,
+                    maxCredits?: number, sessionResets?: number,
+                    sessionAccum?: number }
+                  — snapshot diário para o gráfico de ciclo semanal (máx 8 dias)
 ProfileData       { account: { display_name, email, has_claude_pro,
                                 has_claude_max } }
 CredentialsFile   { claudeAiOauth: { accessToken, refreshToken, expiresAt,
                                      scopes?, subscriptionType? } }
 AppSettings       (settingsService.ts) — all user preferences (global)
 AccountData       (settingsService.ts) — per-account data keyed by email:
-                  usageHistory: UsageSnapshot[] (máx 200), dailyHistory: DailySnapshot[],
+                  usageHistory: UsageSnapshot[] (máx 200),
+                  dailyHistory: DailySnapshot[] (máx 8),
                   rateLimitedUntil, rateLimitCount, rateLimitResetAt
 ```
 
@@ -77,11 +83,17 @@ pollingService (EventEmitter)
         │  emits 'rate-limited'   → main.ts sends IPC to renderer
         │  emits 'error'          → main.ts handles credential errors
         ▼
+main.ts
+        │  updateDailySnapshot() — atualiza DailySnapshot do dia com pico e resets
+        │  checkAndNotify()      — notificações debounced
+        ▼
 BrowserWindow (popup)
         │  IPC: usage-updated, rate-limited, usage-error, credential-missing
         ▼
 renderer/app.ts
         │  Chart.js doughnut gauge (180° half-circle)
+        │  Sparkline 24h (Chart.js Line — colapsável)
+        │  Gráfico de barras semanal (últimos 8 dias, sem Chart.js — DOM puro)
         │  draws tray icon on hidden <canvas> → sends PNG via sendTrayIcon()
         ▼
 Tray icon (main process)
@@ -151,6 +163,24 @@ Key methods:
 - Checks at most once per 24 hours (tracked in `lastUpdateCheck` setting).
 - On update: shows a system toast and sends `update-available` IPC to renderer.
 
+### `dailySnapshotService.ts`
+- `updateDailySnapshot(dailyHistory, today, data, prevData)` — pure function, no side effects.
+- Detecta reset de sessão quando `resets_at` avança ≥ 30min em relação ao poll anterior.
+- Quando um reset é detectado: acumula o pico da janela encerrada em `sessionAccum`, incrementa `sessionResets`.
+- Mantém `maxSession`, `maxWeekly`, `maxCredits` como pico de cada dia.
+- Histórico limitado a 8 dias (FIFO).
+
+---
+
+## Backup e importação (`main.ts`)
+
+- `backupWeeklyData()` — serializa `dailyHistory` da conta ativa em JSON com `exportedAt`. Salva em `%APPDATA%\Claude Usage Monitor\backups\bk_DD_MM_YYYY_HH_MM.json`. Mantém apenas os 8 arquivos mais recentes.
+- `importBackupData()` — abre `dialog.showOpenDialog` para selecionar arquivo(s). Mescla snapshots importados com os existentes, preservando os dados locais quando já há entrada para o mesmo dia (`date` como chave). Retorna `{ imported, merged }`.
+- Disponível via:
+  - Menu da bandeja do sistema: "Backup semanal" / "Import backup..."
+  - IPC `backup-weekly-data` / `import-backup` (renderer → main)
+  - Botões "Backup" e "Import" na seção de histórico do popup
+
 ---
 
 ## Main process (`src/main.ts`)
@@ -162,7 +192,7 @@ Key methods:
 - `positionedByUser` flag — when `true`, `set-window-height` IPC only resizes without repositioning.
 - Single-instance lock via `app.requestSingleInstanceLock()`.
 - **Global hotkey:** `Ctrl+Shift+U` registrado via `globalShortcut` chama `togglePopup()`; desregistrado em `before-quit`.
-- **Tray menu:** inclui toggle Pausar/Retomar monitoramento (chama `pollingService.pause()`/`resume()`) e label informativo do hotkey.
+- **Tray menu:** inclui toggle Pausar/Retomar monitoramento (chama `pollingService.pause()`/`resume()`), Backup semanal, Import backup e label informativo do hotkey.
 
 ### IPC channels
 
@@ -176,8 +206,12 @@ Key methods:
 | `get-app-version` | invoke | Returns app version string |
 | `get-profile` | invoke | Returns ProfileData (cached, TTL 1h; re-busca silenciosamente) |
 | `get-usage-history` | invoke | Returns `UsageSnapshot[]` das últimas 24h |
+| `get-daily-history` | invoke | Returns `DailySnapshot[]` (últimos 8 dias) |
+| `save-daily-history` | invoke | Persiste edição manual de DailySnapshot[] |
 | `set-poll-interval` | invoke | Define intervalo customizado no pollingService (ms ou null) |
 | `test-notification` | invoke | Sends test toast |
+| `backup-weekly-data` | invoke | Gera arquivo de backup e retorna o filepath |
+| `import-backup` | invoke | Abre file dialog, mescla backup, retorna `{ imported, merged }` |
 | `tray-icon-data` | send (renderer→main) | PNG dataURL for tray icon |
 | `close-popup` | send (renderer→main) | Hides the popup |
 | `set-window-height` | send (renderer→main) | Resizes popup height |
@@ -196,6 +230,7 @@ Key methods:
 - Registers on `window.claudeUsage.*` (exposed via preload `contextBridge`).
 - Chart.js doughnut with `circumference: Math.PI` (180° half-circle gauge).
 - **Sparkline (histórico 24h):** Chart.js Line chart colapsável abaixo dos gauges. Duas linhas: Sessão (verde) e Semanal (azul). Dados buscados via `get-usage-history` IPC. Toggle persiste em `showHistory`.
+- **Gráfico de ciclo semanal:** DOM puro (sem Chart.js). Barras verticais por dia — Sessão (verde), Semanal (azul), Créditos (azul extra opcional). Tooltip nativo HTML em cada coluna com percentuais e resets. Legenda dentro da seção. **Edição manual** via clique duplo na coluna: abre modal inline com campos `maxSession`, `maxWeekly`, `maxCredits`, `sessionResets`; salva via `save-daily-history` IPC.
 - Draws the tray icon on a hidden `<canvas>` and sends the PNG to main via `sendTrayIcon()`.
 - **Tray icon adaptativo:** detecta `prefers-color-scheme` — fundo escuro/claro + texto correspondente. Re-renderiza via `matchMedia change` event.
 - Theme: CSS vars `--bg`, `--text`, etc. Dark/light via `prefers-color-scheme` or forced via `body[data-theme]`.
@@ -243,13 +278,13 @@ Linux builds run via GitHub Actions on tag push (`v*`); never build locally on W
 ## Tests
 
 ```
-npm test           # vitest run (all 114 tests)
+npm test           # vitest run (all tests)
 npm run test:watch # watch mode
 npm run test:coverage
 ```
 
 Test files: `src/**/__tests__/*.test.ts`
 
-Coverage: `credentialService`, `notificationService`, `pollingService`, `settingsService`, `startupService`, `updateService`, `usageApiService`, `i18n/mainTranslations`.
+Coverage: `credentialService`, `notificationService`, `pollingService`, `settingsService`, `startupService`, `updateService`, `usageApiService`, `dailySnapshotService`, `i18n/mainTranslations`.
 
 Rules: deterministic only — no real network calls, no real timers without mocking. Cover failure paths, not just happy path.

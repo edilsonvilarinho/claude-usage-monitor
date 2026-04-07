@@ -20,13 +20,20 @@ Aplicativo Windows para a bandeja do sistema que monitora seus limites de uso da
 - Anel de progresso circular ao vivo na bandeja do sistema, refletindo o maior valor entre os dois medidores
 - Exibe o número percentual dentro do ícone
 - Mostra `!!!` quando o uso ultrapassa 100%
-- Tooltip ao passar o mouse exibe os percentuais de sessão e semanal, além da versão instalada
+- Ícone **adaptativo**: fundo escuro ou claro conforme o tema do sistema (detectado via `prefers-color-scheme`)
+- Tooltip ao passar o mouse exibe os percentuais de sessão e semanal, horário do próximo poll e versão instalada
 
 ### Atualização Automática
-- Polling automático da API em intervalos configuráveis
-- Intervalo padrão: 7 minutos
-- Modo rápido (5 min): ativado automaticamente quando detecta um pico de uso superior a 1%
-- Modo ocioso (20 min): ativado automaticamente quando o sistema está inativo por mais de 10 minutos
+- Polling automático da API com intervalos adaptativos:
+  - **Normal:** 10 minutos
+  - **Modo rápido (7 min):** ativado por 1 ciclo quando detecta pico de uso superior a 1%
+  - **Modo ocioso (30 min):** ativado quando o sistema está inativo por mais de 10 minutos
+  - **Erro de rede:** backoff de 1min × 2ⁿ, máximo 20 min
+- **Auto-refresh configurável:** intervalo customizado via slider nas configurações (mín. 60s; recomendado 300s)
+- **Pause/Resume:** pausar e retomar o monitoramento via menu da bandeja do sistema
+
+### Hotkey Global
+- `Ctrl+Shift+U` abre/fecha o popup de qualquer lugar da área de trabalho
 
 ### Gerenciamento de Rate Limit
 - Quando a API retorna erro 429, o app para as tentativas imediatamente e exibe um banner de contagem regressiva
@@ -40,7 +47,31 @@ Aplicativo Windows para a bandeja do sistema que monitora seus limites de uso da
 - Alerta sonoro opcional
 - Notificação quando uma janela de uso é reiniciada
 - Botão de teste para visualizar a notificação antes de configurar
-- Debounce inteligente — não notifica novamente até o uso cair abaixo de 50%
+- Debounce inteligente — não notifica novamente até o uso cair abaixo do threshold de reset
+- **Thresholds configuráveis via slider:** sessão (%), semanal (%) e threshold de reset (%)
+
+### Histórico de Uso (24h)
+- Sparkline colapsável com duas linhas: Sessão (verde) e Semanal (azul)
+- Dados das últimas 24h, buscados via IPC a cada abertura
+
+### Gráfico de Ciclo Semanal
+- Gráfico de barras mostrando os **últimos 8 dias** do ciclo semanal atual
+- **Duas barras por dia:** Sessão (verde) e Semanal (azul), sempre visíveis
+- **Terceira barra opcional:** Créditos extras (azul adicional), exibida quando a conta tem créditos
+- Código de cores progressivo por barra (ok / warn / crit) independente
+- Tooltip em cada coluna com percentuais de sessão, semanal, créditos e número de resets de sessão acumulados
+- Legenda de cores dentro da seção do gráfico
+- **Edição manual de snapshots:** clique duplo em qualquer coluna para corrigir dados registrados
+
+### Backup e Importação de Dados
+- **Backup manual:** botão "Backup" na tela de histórico gera um arquivo `bk_DD_MM_YYYY_HH_MM.json` na pasta `%APPDATA%\Claude Usage Monitor\backups\`
+- **Backup automático:** via menu da bandeja do sistema — cria backup sob demanda
+- **Importação:** botão "Import" abre file dialog para selecionar um backup anterior e mesclar com os dados atuais (dados existentes são preservados e mesclados)
+- Retenção automática: mantém apenas os 8 backups mais recentes
+
+### Dados por Conta
+- Histórico de uso, rate limit e dados do ciclo semanal são **isolados por conta** (chaveados pelo e-mail da conta Anthropic)
+- Trocar de conta não mistura dados históricos
 
 ### Tamanhos de Janela Configuráveis
 Quatro tamanhos disponíveis — escala os gráficos dos medidores:
