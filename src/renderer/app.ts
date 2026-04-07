@@ -72,6 +72,7 @@ declare global {
       getDailyHistory: () => Promise<DailySnapshot[]>;
       clearDailyHistory: () => Promise<void>;
       backupWeeklyData: () => Promise<string>;
+      updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }) => Promise<void>;
     };
   }
 }
@@ -139,6 +140,15 @@ const translations = {
     tooltipCredits: 'Credits',
     tooltipResets: (n: number) => `${n} resets`,
     tooltipAccum: (n: number) => `${n}% accumulated`,
+    editHistoryBtn: '✎',
+    editSnapshotTitle: 'Edit day data',
+    editDateLabel: 'Day',
+    editSessionLabel: 'Session peak (%)',
+    editAccumLabel: 'Accumulated (%)',
+    editResetsLabel: 'No. windows',
+    editWeeklyLabel: 'Weekly max. (%)',
+    editCancelBtn: 'Cancel',
+    editSaveBtn: 'Save',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -198,6 +208,15 @@ const translations = {
     tooltipCredits: 'Créditos',
     tooltipResets: (n: number) => `${n} resets`,
     tooltipAccum: (n: number) => `${n}% acumulado`,
+    editHistoryBtn: '✎',
+    editSnapshotTitle: 'Editar dados do dia',
+    editDateLabel: 'Dia',
+    editSessionLabel: 'Sessão pico (%)',
+    editAccumLabel: 'Acumulado (%)',
+    editResetsLabel: 'Nº janelas',
+    editWeeklyLabel: 'Semanal máx. (%)',
+    editCancelBtn: 'Cancelar',
+    editSaveBtn: 'Salvar',
   },
 } as const;
 
@@ -500,10 +519,12 @@ let lastRenderedData: { session: number; weekly: number } | null = null;
 // ── Daily cycle chart ─────────────────────────────────────────────────────────
 
 let lastWeeklyResetsAt: string | null = null;
+let currentDailyHistory: DailySnapshot[] = [];
 
 function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): void {
   const container = document.getElementById('daily-chart');
   if (!container) return;
+  currentDailyHistory = dailyData;
 
   const resetDate = new Date(weeklyResetsAt);
   const cycleStartMs = resetDate.getTime() - 7 * 24 * 60 * 60 * 1000;
@@ -572,8 +593,8 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
       const sessionLine = s.sessionPct !== null
         ? `<div><span class="tip-dot session"></span>${t.tooltipSession}: <b>${s.sessionPct}%</b></div>`
         : '';
-      const resetLine = s.sessionResets > 1
-        ? `<div class="tip-resets">${t.tooltipResets(s.sessionResets - 1)} · ${t.tooltipAccum(accumTotal)}</div>`
+      const resetLine = (s.sessionAccum > 0 || s.sessionResets > 1)
+        ? `<div class="tip-resets">${t.tooltipResets(Math.max(0, s.sessionResets - 1))} · ${t.tooltipAccum(accumTotal)}</div>`
         : '';
       const weeklyLine = `<div><span class="tip-dot weekly"></span>${t.tooltipWeekly}: <b>${s.weeklyPct}%</b></div>`;
       const creditsLine = s.creditsPct !== null
@@ -843,6 +864,48 @@ function init(): void {
   document.getElementById('btn-backup-history')!.addEventListener('click', async () => {
     const filepath = await window.claudeUsage.backupWeeklyData();
     alert(tr().backupSuccess(filepath));
+  });
+
+  document.getElementById('btn-edit-history')!.addEventListener('click', () => {
+    const modal = document.getElementById('edit-snapshot-modal') as HTMLElement;
+    const dateSelect = document.getElementById('edit-date-select') as HTMLSelectElement;
+
+    const todayStr = new Date().toLocaleDateString('sv');
+    const dates = [...new Set([...currentDailyHistory.map(d => d.date), todayStr])].sort().reverse();
+    dateSelect.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+    function populateFields(dateStr: string): void {
+      const found = currentDailyHistory.find(d => d.date === dateStr);
+      (document.getElementById('edit-maxSession') as HTMLInputElement).value = String(found?.maxSession ?? 0);
+      (document.getElementById('edit-sessionAccum') as HTMLInputElement).value = String(found?.sessionAccum ?? 0);
+      (document.getElementById('edit-maxWeekly') as HTMLInputElement).value = String(found?.maxWeekly ?? 0);
+    }
+
+    populateFields(dateSelect.value);
+    dateSelect.onchange = () => populateFields(dateSelect.value);
+
+    modal.classList.remove('hidden');
+  });
+
+  document.getElementById('edit-snapshot-cancel')!.addEventListener('click', () => {
+    (document.getElementById('edit-snapshot-modal') as HTMLElement).classList.add('hidden');
+  });
+
+  document.getElementById('edit-snapshot-save')!.addEventListener('click', async () => {
+    const dateSelect = document.getElementById('edit-date-select') as HTMLSelectElement;
+    const accumVal = parseInt((document.getElementById('edit-sessionAccum') as HTMLInputElement).value, 10) || 0;
+    const existingEntry = currentDailyHistory.find(d => d.date === dateSelect.value);
+    const snapshot = {
+      date: dateSelect.value,
+      maxSession: parseInt((document.getElementById('edit-maxSession') as HTMLInputElement).value, 10) || 0,
+      sessionAccum: accumVal,
+      sessionResets: accumVal > 0 ? Math.max(existingEntry?.sessionResets ?? 1, 2) : (existingEntry?.sessionResets ?? 1),
+      maxWeekly: parseInt((document.getElementById('edit-maxWeekly') as HTMLInputElement).value, 10) || 0,
+    };
+    await window.claudeUsage.updateDailySnapshot(snapshot);
+    const updated = await window.claudeUsage.getDailyHistory();
+    if (lastWeeklyResetsAt) renderDailyChart(updated, lastWeeklyResetsAt);
+    (document.getElementById('edit-snapshot-modal') as HTMLElement).classList.add('hidden');
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {
