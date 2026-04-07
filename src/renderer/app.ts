@@ -544,6 +544,21 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     });
   }
 
+  // Atualizar cor dos dots da legenda conforme status do dia de hoje
+  if (legendEl) {
+    const today = slots.find(s => s.isToday);
+    const sessionDot = legendEl.querySelector('.legend-dot.session') as HTMLElement | null;
+    const weeklyDot  = legendEl.querySelector('.legend-dot.weekly')  as HTMLElement | null;
+    if (sessionDot && today?.sessionPct !== null && today?.sessionPct !== undefined) {
+      const sc = today.sessionPct >= 80 ? 'crit' : today.sessionPct >= 60 ? 'warn' : '';
+      sessionDot.className = `legend-dot session${sc ? ' ' + sc : ''}`;
+    }
+    if (weeklyDot && today?.weeklyPct !== null && today?.weeklyPct !== undefined) {
+      const wc = today.weeklyPct >= 80 ? 'crit' : today.weeklyPct >= 60 ? 'warn' : '';
+      weeklyDot.className = `legend-dot weekly${wc ? ' ' + wc : ''}`;
+    }
+  }
+
   const t   = tr();
   const BAR_MAX_PX = 40;
   container.innerHTML = slots.map(s => {
