@@ -64,6 +64,7 @@ declare global {
       onCredentialMissing: (cb: (credPath: string) => void) => void;
       getAppVersion: () => Promise<string>;
       getProfile: () => Promise<ProfileData | null>;
+      setPollInterval: (ms: number | null) => Promise<void>;
     };
   }
 }
@@ -239,22 +240,19 @@ function applySize(size: AppSettings['windowSize']): void {
 
 // ── Auto-refresh ──────────────────────────────────────────────────────────────
 
-let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
 let currentAutoRefreshIntervalMs = 300 * 1000;
+let autoRefreshEnabled = false;
 
 function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
-  stopNextPollCountdown();
-  if (autoRefreshTimer !== null) {
-    clearInterval(autoRefreshTimer);
-    autoRefreshTimer = null;
-  }
+  autoRefreshEnabled = enabled;
   if (enabled) {
     const ms = Math.max(60, intervalSeconds) * 1000;
     currentAutoRefreshIntervalMs = ms;
-    autoRefreshTimer = setInterval(() => {
-      void window.claudeUsage.refreshNow();
-    }, ms);
+    void window.claudeUsage.setPollInterval(ms);
     startNextPollCountdown(ms);
+  } else {
+    stopNextPollCountdown();
+    void window.claudeUsage.setPollInterval(null);
   }
   const intervalRow = document.getElementById('row-auto-refresh-interval') as HTMLElement;
   intervalRow.style.opacity = enabled ? '1' : '0.4';
@@ -531,7 +529,7 @@ function updateUI(data: UsageData): void {
 
   fitWindow();
 
-  if (autoRefreshTimer !== null) {
+  if (autoRefreshEnabled) {
     startNextPollCountdown(currentAutoRefreshIntervalMs);
   }
 }

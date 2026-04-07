@@ -23,8 +23,27 @@ export class PollingService extends EventEmitter {
   private fastCyclesLeft = 0;
   private running = false;
   private _nextPollAt = 0;
+  private customIntervalMs: number | null = null;
+  private paused = false;
 
   get nextPollAt(): number { return this._nextPollAt; }
+  get isPaused(): boolean { return this.paused; }
+
+  setCustomInterval(ms: number | null): void {
+    this.customIntervalMs = ms !== null ? Math.max(60_000, ms) : null;
+  }
+
+  pause(): void {
+    if (this.paused) return;
+    this.paused = true;
+    if (this.timer) { clearTimeout(this.timer); this.timer = null; }
+  }
+
+  resume(): void {
+    if (!this.paused) return;
+    this.paused = false;
+    void this.poll();
+  }
 
   restoreRateLimit(until: number, count = 1, resetAt?: number): void {
     if (until > Date.now()) {
@@ -87,6 +106,9 @@ export class PollingService extends EventEmitter {
     if (this.errorCount > 0) {
       return Math.min(POLL_ERROR_BASE * Math.pow(2, this.errorCount - 1), POLL_ERROR_MAX);
     }
+    if (this.customIntervalMs !== null) {
+      return this.customIntervalMs;
+    }
     if (this.isIdle()) {
       return POLL_IDLE_MS;
     }
@@ -98,6 +120,7 @@ export class PollingService extends EventEmitter {
 
   private async poll(): Promise<void> {
     if (!this.running) return;
+    if (this.paused) return;
 
     // Respect rate limit before making any request
     if (this.rateLimited && this.rateLimitedUntil > Date.now()) {

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut } from 'electron';
 import * as path from 'path';
 import { pollingService } from './services/pollingService';
 import { getSettings, saveSettings } from './services/settingsService';
@@ -256,6 +256,7 @@ function updateTrayTooltip(data: UsageData): void {
     t.trayTooltipLine3(sessionAt, weeklyAt),
   ];
   if (nextLine) parts.push(nextLine);
+  if (pollingService.isPaused) parts.push(t.trayPaused);
   const tooltip = parts.join('\n');
   tray.setToolTip(tooltip.length > 127 ? tooltip.slice(0, 127) : tooltip);
 }
@@ -306,6 +307,17 @@ function buildContextMenu(): Menu {
 
   template.push(
     { label: t.trayRefreshNow, click: () => void pollingService.triggerNow() },
+    {
+      label: pollingService.isPaused ? t.trayResume : t.trayPause,
+      click: () => {
+        if (pollingService.isPaused) {
+          pollingService.resume();
+        } else {
+          pollingService.pause();
+        }
+        tray?.setContextMenu(buildContextMenu());
+      },
+    },
     { label: 'Check for Updates', click: () => void runUpdateCheck(true) },
     { type: 'separator' },
     {
@@ -320,6 +332,7 @@ function buildContextMenu(): Menu {
       },
     },
     { type: 'separator' },
+    { label: 'Ctrl+Shift+U — Toggle window', enabled: false },
     { label: t.trayExit, click: () => app.quit() }
   );
 
@@ -412,6 +425,10 @@ function registerIpcHandlers(): void {
     void shell.openExternal(url);
   });
 
+  ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
+    pollingService.setCustomInterval(ms);
+  });
+
   ipcMain.on('set-window-height', (_event, height: number) => {
     if (!popup) return;
     const workArea = screen.getPrimaryDisplay().workArea;
@@ -447,6 +464,11 @@ app.whenReady().then(() => {
 
   tray = createTray();
   popup = createPopup();
+
+  const registered = globalShortcut.register('Ctrl+Shift+U', () => togglePopup());
+  if (!registered) {
+    console.warn('[Main] Failed to register global shortcut Ctrl+Shift+U — may be in use by another app');
+  }
 
   void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); }).catch(() => {});
 
@@ -543,4 +565,5 @@ app.on('before-quit', () => {
   if (popup) popup.removeAllListeners('close');
   pollingService.stop();
   if (tooltipRefreshTimer) { clearInterval(tooltipRefreshTimer); tooltipRefreshTimer = null; }
+  globalShortcut.unregisterAll();
 });
