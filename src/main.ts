@@ -585,14 +585,16 @@ app.whenReady().then(() => {
     }
 
     if (existingDay) {
-      // Se houve reset, acumula o pico da janela que acabou
+      // Se houve reset, acumula o pico da janela que acabou e reinicia maxSession
       if (sessionResetOccurred) {
         const peakOfCompletedWindow = Math.round(prevData!.five_hour.utilization);
         existingDay.sessionAccum  = (existingDay.sessionAccum  ?? 0) + peakOfCompletedWindow;
         existingDay.sessionResets = (existingDay.sessionResets ?? 1) + 1;
+        existingDay.maxSession = sessionPctInt; // nova janela — começa do valor atual
+      } else {
+        existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
       }
       existingDay.maxWeekly  = Math.max(existingDay.maxWeekly, weeklyPctInt);
-      existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
       if (creditsPctInt !== undefined) {
         existingDay.maxCredits = Math.max(existingDay.maxCredits ?? 0, creditsPctInt);
       }
