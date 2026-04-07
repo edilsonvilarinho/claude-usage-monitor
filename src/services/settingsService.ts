@@ -1,4 +1,5 @@
 import Store from 'electron-store';
+import { UsageSnapshot } from '../models/usageData';
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -25,6 +26,8 @@ export interface AppSettings {
   rateLimitResetAt: number;    // API-provided reset timestamp (unix ms), 0 if absent
   lastUpdateCheck: number;     // unix ms timestamp of last update check, 0 if never
   skippedVersion: string;      // version tag the user chose to skip
+  usageHistory: UsageSnapshot[];
+  showHistory: boolean;
 }
 
 const defaults: AppSettings = {
@@ -50,6 +53,8 @@ const defaults: AppSettings = {
   rateLimitResetAt: 0,
   lastUpdateCheck: 0,
   skippedVersion: '',
+  usageHistory: [],
+  showHistory: false,
 };
 
 const store = new Store<AppSettings>({
@@ -81,6 +86,8 @@ const store = new Store<AppSettings>({
     rateLimitResetAt: { type: 'number' },
     lastUpdateCheck: { type: 'number' },
     skippedVersion: { type: 'string' },
+    usageHistory: { type: 'array' },
+    showHistory: { type: 'boolean' },
   },
 });
 
@@ -100,6 +107,8 @@ export function getSettings(): AppSettings {
     rateLimitResetAt: store.get('rateLimitResetAt', defaults.rateLimitResetAt),
     lastUpdateCheck: store.get('lastUpdateCheck', defaults.lastUpdateCheck),
     skippedVersion: store.get('skippedVersion', defaults.skippedVersion),
+    usageHistory: store.get('usageHistory', defaults.usageHistory),
+    showHistory: store.get('showHistory', defaults.showHistory),
   };
 }
 
@@ -146,4 +155,6 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.skippedVersion !== undefined) {
     store.set('skippedVersion', settings.skippedVersion);
   }
+  if (settings.usageHistory !== undefined) store.set('usageHistory', settings.usageHistory);
+  if (settings.showHistory !== undefined) store.set('showHistory', settings.showHistory);
 }

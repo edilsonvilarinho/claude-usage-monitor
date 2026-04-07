@@ -1,8 +1,10 @@
-import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
+import { Chart, DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, CategoryScale, LinearScale, Filler } from 'chart.js';
 
-Chart.register(DoughnutController, ArcElement, Tooltip);
+Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, CategoryScale, LinearScale, Filler);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+interface UsageSnapshot { ts: number; session: number; weekly: number }
+
 interface UsageWindow {
   utilization: number;
   resets_at: string;
@@ -42,6 +44,7 @@ interface AppSettings {
   windowSize: 'normal' | 'medium' | 'large' | 'xlarge';
   autoRefresh: boolean;
   autoRefreshInterval: number;
+  showHistory: boolean;
 }
 
 declare global {
@@ -64,6 +67,8 @@ declare global {
       onCredentialMissing: (cb: (credPath: string) => void) => void;
       getAppVersion: () => Promise<string>;
       getProfile: () => Promise<ProfileData | null>;
+      setPollInterval: (ms: number | null) => Promise<void>;
+      getUsageHistory: () => Promise<UsageSnapshot[]>;
     };
   }
 }
@@ -102,12 +107,14 @@ const translations = {
     autoRefreshLabel:          'Auto refresh',
     autoRefreshIntervalLabel:  'Interval (s)',
     autoRefreshHint:           'Min 60s — recommended: 300s',
-    enable:           'Enable',
-    sound:            'Sound',
-    notifyOnReset:    'Notify when usage resets to 0%',
-    sessionThreshold: 'Session limit',
-    weeklyThreshold:  'Weekly limit',
-    test:             'Test',
+    enable:              'Enable',
+    sound:               'Sound',
+    notifyOnReset:       'Notify when usage resets to 0%',
+    notifyOnDropLabel:   'Notify when usage drops',
+    resetThresholdLabel: 'Reset threshold (%)',
+    sessionThreshold:    'Session limit',
+    weeklyThreshold:     'Weekly limit',
+    test:                'Test',
     rateLimitMsg:    'Rate limited',
     rateLimitRetry:  (t: string) => `Retry in ${t}`,
     rateLimitAt:     (time: string) => `(at ${time})`,
@@ -118,6 +125,7 @@ const translations = {
       d > 0 ? `Resets in ${d}d ${h}h` : h > 0 ? `Resets in ${h}h ${m}m` : `Resets in ${m}m`,
     resetsAt:   (timeStr: string) => `at ${timeStr}`,
     nextPollIn: (t: string) => `Next update in ${t}`,
+    historyLabel: 'Usage history (24h)',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -148,12 +156,14 @@ const translations = {
     autoRefreshLabel:          'Atualizar automaticamente',
     autoRefreshIntervalLabel:  'Intervalo (s)',
     autoRefreshHint:           'Mín 60s — recomendado: 300s',
-    enable:           'Ativar',
-    sound:            'Som',
-    notifyOnReset:    'Avisar quando uso zerar',
-    sessionThreshold: 'Limite da sessão',
-    weeklyThreshold:  'Limite semanal',
-    test:             'Testar',
+    enable:              'Ativar',
+    sound:               'Som',
+    notifyOnReset:       'Avisar quando uso zerar',
+    notifyOnDropLabel:   'Avisar quando uso cair',
+    resetThresholdLabel: 'Limiar de reset (%)',
+    sessionThreshold:    'Limite da sessão',
+    weeklyThreshold:     'Limite semanal',
+    test:                'Testar',
     rateLimitMsg:    'Limite de requisições',
     rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
     rateLimitAt:     (time: string) => `(às ${time})`,
@@ -164,6 +174,7 @@ const translations = {
       d > 0 ? `Reinicia em ${d}d ${h}h` : h > 0 ? `Reinicia em ${h}h ${m}m` : `Reinicia em ${m}m`,
     resetsAt:   (timeStr: string) => `às ${timeStr}`,
     nextPollIn: (t: string) => `Próxima atualização em ${t}`,
+    historyLabel: 'Histórico de uso (24h)',
   },
 } as const;
 
@@ -235,22 +246,19 @@ function applySize(size: AppSettings['windowSize']): void {
 
 // ── Auto-refresh ──────────────────────────────────────────────────────────────
 
-let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
 let currentAutoRefreshIntervalMs = 300 * 1000;
+let autoRefreshEnabled = false;
 
 function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
-  stopNextPollCountdown();
-  if (autoRefreshTimer !== null) {
-    clearInterval(autoRefreshTimer);
-    autoRefreshTimer = null;
-  }
+  autoRefreshEnabled = enabled;
   if (enabled) {
     const ms = Math.max(60, intervalSeconds) * 1000;
     currentAutoRefreshIntervalMs = ms;
-    autoRefreshTimer = setInterval(() => {
-      void window.claudeUsage.refreshNow();
-    }, ms);
+    void window.claudeUsage.setPollInterval(ms);
     startNextPollCountdown(ms);
+  } else {
+    stopNextPollCountdown();
+    void window.claudeUsage.setPollInterval(null);
   }
   const intervalRow = document.getElementById('row-auto-refresh-interval') as HTMLElement;
   intervalRow.style.opacity = enabled ? '1' : '0.4';
@@ -381,9 +389,13 @@ function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
   const size = 32;
   ctx.clearRect(0, 0, size, size);
 
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const bgColor = isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(230, 230, 230, 0.92)';
+  const textColor = isDark ? '#ffffff' : '#111111';
+
   ctx.beginPath();
   ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(30, 30, 30, 0.85)';
+  ctx.fillStyle = bgColor;
   ctx.fill();
 
   const maxPct = Math.max(sessionPct, weeklyPct);
@@ -397,12 +409,14 @@ function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = textColor;
   const label = maxPct > 100 ? '!!!' : `${maxPct}`;
   ctx.font = `bold ${maxPct > 99 ? 7 : 9}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, size / 2, size / 2);
+
+  lastRenderedData = { session: sessionPct, weekly: weeklyPct };
 
   canvas.toBlob((blob) => {
     if (!blob) return;
@@ -459,6 +473,68 @@ function barClass(pct: number): string {
 
 let sessionChart: Chart | null = null;
 let weeklyChart:  Chart | null = null;
+let historyChart: Chart | null = null;
+let lastRenderedData: { session: number; weekly: number } | null = null;
+
+function createHistoryChart(): Chart {
+  const canvas = document.getElementById('history-canvas') as HTMLCanvasElement;
+  return new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'Session',
+          data: [],
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.08)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+        },
+        {
+          label: 'Weekly',
+          data: [],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      scales: {
+        x: {
+          display: false,
+        },
+        y: {
+          min: 0,
+          max: 100,
+          display: false,
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+      },
+    },
+  });
+}
+
+function updateHistoryChart(snapshots: UsageSnapshot[]): void {
+  if (!historyChart) return;
+  const labels = snapshots.map(s => new Date(s.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  historyChart.data.labels = labels;
+  historyChart.data.datasets[0]!.data = snapshots.map(s => Math.min(100, s.session));
+  historyChart.data.datasets[1]!.data = snapshots.map(s => Math.min(100, s.weekly));
+  historyChart.update('none');
+}
 
 function updateUI(data: UsageData): void {
   const sessionPct = Math.round(data.five_hour.utilization);
@@ -527,7 +603,7 @@ function updateUI(data: UsageData): void {
 
   fitWindow();
 
-  if (autoRefreshTimer !== null) {
+  if (autoRefreshEnabled) {
     startNextPollCountdown(currentAutoRefreshIntervalMs);
   }
 }
@@ -542,6 +618,8 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-notif-enabled') as HTMLInputElement).checked = s.notifications.enabled;
   (document.getElementById('setting-sound-enabled') as HTMLInputElement).checked = s.notifications.soundEnabled;
   (document.getElementById('setting-notify-on-window-reset') as HTMLInputElement).checked = s.notifications.notifyOnWindowReset;
+  (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked = s.notifications.notifyOnReset;
+  (document.getElementById('setting-reset-threshold') as HTMLInputElement).value = String(s.notifications.resetThreshold);
   (document.getElementById('setting-theme') as HTMLSelectElement).value = s.theme;
 
   const lang = s.language ?? 'en';
@@ -552,6 +630,13 @@ async function loadSettings(): Promise<void> {
     String(s.notifications.sessionThreshold);
   (document.getElementById('setting-weekly-threshold') as HTMLInputElement).value =
     String(s.notifications.weeklyThreshold);
+
+  const lblSession = document.getElementById('lbl-session-threshold');
+  const lblWeekly = document.getElementById('lbl-weekly-threshold');
+  const lblReset = document.getElementById('lbl-reset-threshold');
+  if (lblSession) lblSession.textContent = `${s.notifications.sessionThreshold}%`;
+  if (lblWeekly) lblWeekly.textContent = `${s.notifications.weeklyThreshold}%`;
+  if (lblReset) lblReset.textContent = `${s.notifications.resetThreshold}%`;
 
   const size = s.windowSize ?? 'normal';
   (document.getElementById('setting-window-size') as HTMLSelectElement).value = size;
@@ -565,6 +650,21 @@ async function loadSettings(): Promise<void> {
   applyTranslations();
   applySize(size);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
+  const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
+  (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
+
+  const showHistory = s.showHistory ?? false;
+  const historyToggle = document.getElementById('history-toggle') as HTMLInputElement;
+  const historySection = document.getElementById('history-section') as HTMLElement;
+  historyToggle.checked = showHistory;
+  historySection.style.display = showHistory ? 'block' : 'none';
+  if (showHistory) {
+    void window.claudeUsage.getUsageHistory().then(h => {
+      if (!historyChart) historyChart = createHistoryChart();
+      updateHistoryChart(h);
+      fitWindow();
+    });
+  }
 }
 
 async function saveSettingsFromUI(): Promise<void> {
@@ -580,12 +680,15 @@ async function saveSettingsFromUI(): Promise<void> {
   const autoRefreshInterval = Math.max(60, Number((document.getElementById('setting-auto-refresh-interval') as HTMLInputElement).value));
   const sessionTh        = Math.min(100, Math.max(1, Number((document.getElementById('setting-session-threshold') as HTMLInputElement).value)));
   const weeklyTh         = Math.min(100, Math.max(1, Number((document.getElementById('setting-weekly-threshold') as HTMLInputElement).value)));
+  const notifyOnReset    = (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked;
+  const resetThreshold   = Math.min(99, Math.max(1, Number((document.getElementById('setting-reset-threshold') as HTMLInputElement).value)));
 
   currentLang = lang;
   applyTranslations();
   applyTheme(theme);
   applySize(windowSize);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
+  (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnReset ? '1' : '0.4';
 
   await window.claudeUsage.saveSettings({
     launchAtStartup: startup,
@@ -601,8 +704,8 @@ async function saveSettingsFromUI(): Promise<void> {
       notifyOnWindowReset: notifyOnWinReset,
       sessionThreshold: sessionTh,
       weeklyThreshold: weeklyTh,
-      resetThreshold: 50,
-      notifyOnReset: false,
+      notifyOnReset,
+      resetThreshold,
     },
   });
 
@@ -668,6 +771,29 @@ function init(): void {
   window.claudeUsage.onUsageUpdated((data) => {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
     updateUI(data);
+  });
+
+  // Atualizar sparkline quando receber dados novos
+  window.claudeUsage.onUsageUpdated(() => {
+    const section = document.getElementById('history-section') as HTMLElement;
+    if (section.style.display === 'none') return;
+    void window.claudeUsage.getUsageHistory().then(h => {
+      if (!historyChart) historyChart = createHistoryChart();
+      updateHistoryChart(h);
+    });
+  });
+
+  document.getElementById('history-toggle')!.addEventListener('change', async () => {
+    const checked = (document.getElementById('history-toggle') as HTMLInputElement).checked;
+    const section = document.getElementById('history-section') as HTMLElement;
+    section.style.display = checked ? 'block' : 'none';
+    await window.claudeUsage.saveSettings({ showHistory: checked });
+    if (checked) {
+      if (!historyChart) historyChart = createHistoryChart();
+      const h = await window.claudeUsage.getUsageHistory();
+      updateHistoryChart(h);
+    }
+    fitWindow();
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {
@@ -747,6 +873,7 @@ function init(): void {
     'setting-startup', 'setting-always-visible',
     'setting-notif-enabled', 'setting-sound-enabled',
     'setting-notify-on-window-reset',
+    'setting-notify-on-reset', 'setting-reset-threshold',
     'setting-theme', 'setting-language',
     'setting-window-size',
     'setting-auto-refresh', 'setting-auto-refresh-interval',
@@ -758,6 +885,25 @@ function init(): void {
 
   document.getElementById('btn-test-notif')!.addEventListener('click', () => {
     void window.claudeUsage.testNotification();
+  });
+
+  document.getElementById('setting-session-threshold')!.addEventListener('input', (e) => {
+    const lbl = document.getElementById('lbl-session-threshold');
+    if (lbl) lbl.textContent = `${(e.target as HTMLInputElement).value}%`;
+  });
+  document.getElementById('setting-weekly-threshold')!.addEventListener('input', (e) => {
+    const lbl = document.getElementById('lbl-weekly-threshold');
+    if (lbl) lbl.textContent = `${(e.target as HTMLInputElement).value}%`;
+  });
+  document.getElementById('setting-reset-threshold')!.addEventListener('input', (e) => {
+    const lbl = document.getElementById('lbl-reset-threshold');
+    if (lbl) lbl.textContent = `${(e.target as HTMLInputElement).value}%`;
+  });
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (lastRenderedData) {
+      updateTrayIcon(lastRenderedData.session, lastRenderedData.weekly);
+    }
   });
 }
 

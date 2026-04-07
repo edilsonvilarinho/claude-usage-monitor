@@ -21,6 +21,9 @@ export interface MainTranslations {
   trayRefreshNow: string;
   trayLaunchAtStartup: string;
   trayExit: string;
+  trayPause: string;
+  trayResume: string;
+  trayPaused: string;
 }
 
 const en: MainTranslations = {
@@ -46,6 +49,9 @@ const en: MainTranslations = {
   trayRefreshNow: 'Refresh Now',
   trayLaunchAtStartup: 'Launch at Startup',
   trayExit: 'Exit',
+  trayPause: 'Pause monitoring',
+  trayResume: 'Resume monitoring',
+  trayPaused: '⏸ Paused',
 };
 
 const ptBR: MainTranslations = {
@@ -71,6 +77,9 @@ const ptBR: MainTranslations = {
   trayRefreshNow: 'Atualizar Agora',
   trayLaunchAtStartup: 'Iniciar com o sistema',
   trayExit: 'Sair',
+  trayPause: 'Pausar monitoramento',
+  trayResume: 'Retomar monitoramento',
+  trayPaused: '⏸ Pausado',
 };
 
 export function getMainTranslations(lang?: string): MainTranslations {

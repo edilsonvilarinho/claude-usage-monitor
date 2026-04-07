@@ -804,3 +804,49 @@ body {
 #credential-retry-btn:hover {
   background: rgba(59, 130, 246, 0.8);
 }
+
+/* ── Usage history sparkline ───────────────────────────────────────── */
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 12px 2px;
+}
+
+.history-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#history-section {
+  padding: 0 12px 8px;
+}
+
+#history-canvas {
+  width: 100%;
+  height: 60px;
+  display: block;
+  border-radius: 4px;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.slider-value {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: right;
+}

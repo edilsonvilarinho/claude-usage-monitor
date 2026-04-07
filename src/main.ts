@@ -1,11 +1,11 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification } from 'electron';
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut } from 'electron';
 import * as path from 'path';
 import { pollingService } from './services/pollingService';
 import { getSettings, saveSettings } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
-import { UsageData, ProfileData } from './models/usageData';
+import { UsageData, ProfileData, UsageSnapshot } from './models/usageData';
 import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 
@@ -36,6 +36,7 @@ let currentRateLimitUntil = 0; // restored from disk on startup
 let credentialMissing = false;
 let credentialPath = '';
 let cachedProfile: ProfileData | null = null;
+let cachedProfileAt = 0;
 
 const POPUP_WIDTH  = 340;
 const POPUP_HEIGHT = 210;
@@ -255,6 +256,7 @@ function updateTrayTooltip(data: UsageData): void {
     t.trayTooltipLine3(sessionAt, weeklyAt),
   ];
   if (nextLine) parts.push(nextLine);
+  if (pollingService.isPaused) parts.push(t.trayPaused);
   const tooltip = parts.join('\n');
   tray.setToolTip(tooltip.length > 127 ? tooltip.slice(0, 127) : tooltip);
 }
@@ -305,6 +307,17 @@ function buildContextMenu(): Menu {
 
   template.push(
     { label: t.trayRefreshNow, click: () => void pollingService.triggerNow() },
+    {
+      label: pollingService.isPaused ? t.trayResume : t.trayPause,
+      click: () => {
+        if (pollingService.isPaused) {
+          pollingService.resume();
+        } else {
+          pollingService.pause();
+        }
+        tray?.setContextMenu(buildContextMenu());
+      },
+    },
     { label: 'Check for Updates', click: () => void runUpdateCheck(true) },
     { type: 'separator' },
     {
@@ -319,6 +332,7 @@ function buildContextMenu(): Menu {
       },
     },
     { type: 'separator' },
+    { label: 'Ctrl+Shift+U — Toggle window', enabled: false },
     { label: t.trayExit, click: () => app.quit() }
   );
 
@@ -392,12 +406,14 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('get-profile', async () => {
-    if (cachedProfile) return cachedProfile;
+    const ONE_HOUR = 3_600_000;
+    if (cachedProfile && Date.now() - cachedProfileAt < ONE_HOUR) return cachedProfile;
     try {
       cachedProfile = await fetchProfileData();
+      cachedProfileAt = Date.now();
       return cachedProfile;
     } catch {
-      return null;
+      return cachedProfile; // retorna cache stale em caso de erro
     }
   });
 
@@ -407,6 +423,12 @@ function registerIpcHandlers(): void {
 
   ipcMain.on('open-release-url', (_e, url: string) => {
     void shell.openExternal(url);
+  });
+
+  ipcMain.handle('get-usage-history', () => getSettings().usageHistory ?? []);
+
+  ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
+    pollingService.setCustomInterval(ms);
   });
 
   ipcMain.on('set-window-height', (_event, height: number) => {
@@ -445,7 +467,12 @@ app.whenReady().then(() => {
   tray = createTray();
   popup = createPopup();
 
-  void fetchProfileData().then(p => { cachedProfile = p; }).catch(() => {});
+  const registered = globalShortcut.register('Ctrl+Shift+U', () => togglePopup());
+  if (!registered) {
+    console.warn('[Main] Failed to register global shortcut Ctrl+Shift+U — may be in use by another app');
+  }
+
+  void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); }).catch(() => {});
 
   // Start polling and wire up events
   pollingService.on('usage-updated', (data: UsageData) => {
@@ -455,6 +482,18 @@ app.whenReady().then(() => {
       currentRateLimitUntil = 0;
       saveSettings({ rateLimitedUntil: 0, rateLimitCount: 0 });
     }
+    // Snapshot de histórico (máx 200 pontos ≈ 24h a cada 7min)
+    const MAX_HISTORY = 200;
+    const snapshot: UsageSnapshot = {
+      ts: Date.now(),
+      session: Math.round(data.five_hour.utilization),
+      weekly: Math.round(data.seven_day.utilization),
+    };
+    const history = getSettings().usageHistory ?? [];
+    history.push(snapshot);
+    if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
+    saveSettings({ usageHistory: history });
+
     updateTrayTooltip(data);
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
     tooltipRefreshTimer = setInterval(() => {
@@ -471,6 +510,10 @@ app.whenReady().then(() => {
     // Send to renderer to draw the canvas icon
     if (popup) {
       popup.webContents.send('usage-updated', data);
+    }
+
+    if (Date.now() - cachedProfileAt > 3_600_000) {
+      void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
     }
   });
 
@@ -536,4 +579,5 @@ app.on('before-quit', () => {
   if (popup) popup.removeAllListeners('close');
   pollingService.stop();
   if (tooltipRefreshTimer) { clearInterval(tooltipRefreshTimer); tooltipRefreshTimer = null; }
+  globalShortcut.unregisterAll();
 });

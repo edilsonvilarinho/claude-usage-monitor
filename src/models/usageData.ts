@@ -1,3 +1,9 @@
+export interface UsageSnapshot {
+  ts: number;      // unix ms
+  session: number; // percentual inteiro 0-999
+  weekly: number;  // percentual inteiro 0-999
+}
+
 export interface UsageWindow {
   utilization: number; // 0.0 to 100.0 (percentage)
   resets_at: string;   // ISO datetime string

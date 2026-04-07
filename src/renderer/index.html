@@ -76,6 +76,18 @@
       </div>
     </div>
 
+    <!-- Usage history sparkline -->
+    <div class="history-header">
+      <span class="history-label" data-i18n="historyLabel">Usage history (24h)</span>
+      <label class="toggle history-toggle-label">
+        <input type="checkbox" id="history-toggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div id="history-section" style="display:none">
+      <canvas id="history-canvas" width="300" height="60"></canvas>
+    </div>
+
     <!-- Sonnet / extra bars -->
     <div class="extra-section" id="extra-section">
       <div class="extra-row" id="sonnet-row" style="display:none">
@@ -191,17 +203,31 @@
           </label>
         </div>
         <div class="settings-row">
+          <label data-i18n="notifyOnDropLabel">Notify when usage drops</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-notify-on-reset" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="settings-row" id="row-reset-threshold">
+          <label data-i18n="resetThresholdLabel">Reset threshold (%)</label>
+          <div class="slider-row">
+            <input type="range" id="setting-reset-threshold" min="1" max="99" value="50">
+            <span id="lbl-reset-threshold" class="slider-value">50%</span>
+          </div>
+        </div>
+        <div class="settings-row">
           <label data-i18n="sessionThreshold">Session limit</label>
-          <div class="spinner-row">
-            <input type="number" class="spinner-input" id="setting-session-threshold" min="1" max="100" step="1" />
-            <span class="spinner-unit">%</span>
+          <div class="slider-row">
+            <input type="range" id="setting-session-threshold" min="1" max="100" value="80">
+            <span id="lbl-session-threshold" class="slider-value">80%</span>
           </div>
         </div>
         <div class="settings-row">
           <label data-i18n="weeklyThreshold">Weekly limit</label>
-          <div class="spinner-row">
-            <input type="number" class="spinner-input" id="setting-weekly-threshold" min="1" max="100" step="1" />
-            <span class="spinner-unit">%</span>
+          <div class="slider-row">
+            <input type="range" id="setting-weekly-threshold" min="1" max="100" value="80">
+            <span id="lbl-weekly-threshold" class="slider-value">80%</span>
           </div>
         </div>
         <div class="settings-row">
