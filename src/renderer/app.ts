@@ -72,6 +72,7 @@ declare global {
       getDailyHistory: () => Promise<DailySnapshot[]>;
       clearDailyHistory: () => Promise<void>;
       backupWeeklyData: () => Promise<string>;
+      importBackup: () => Promise<{ imported: number; merged: number }>;
       updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }) => Promise<void>;
     };
   }
@@ -133,6 +134,8 @@ const translations = {
     dailyHistoryLabel: 'Weekly cycle',
     clearHistoryBtn: 'Clear',
     backupHistoryBtn: 'Backup',
+    importHistoryBtn: 'Import',
+    importSuccess: (n: number) => `${n} day(s) imported`,
     backupSuccess: (p: string) => `Saved: ${p}`,
     clearHistoryConfirm: 'Clear usage history?',
     tooltipSession: 'Session',
@@ -201,6 +204,8 @@ const translations = {
     dailyHistoryLabel: 'Ciclo semanal',
     clearHistoryBtn: 'Limpar',
     backupHistoryBtn: 'Backup',
+    importHistoryBtn: 'Import',
+    importSuccess: (n: number) => `${n} dia(s) importado(s)`,
     backupSuccess: (p: string) => `Salvo: ${p}`,
     clearHistoryConfirm: 'Limpar histórico de uso?',
     tooltipSession: 'Sessão',
@@ -864,6 +869,14 @@ function init(): void {
   document.getElementById('btn-backup-history')!.addEventListener('click', async () => {
     const filepath = await window.claudeUsage.backupWeeklyData();
     alert(tr().backupSuccess(filepath));
+  });
+
+  document.getElementById('btn-import-history')!.addEventListener('click', async () => {
+    const { merged } = await window.claudeUsage.importBackup();
+    if (merged === 0) return;
+    alert(tr().importSuccess(merged));
+    const updated = await window.claudeUsage.getDailyHistory();
+    if (lastWeeklyResetsAt) renderDailyChart(updated, lastWeeklyResetsAt);
   });
 
   document.getElementById('btn-edit-history')!.addEventListener('click', () => {
