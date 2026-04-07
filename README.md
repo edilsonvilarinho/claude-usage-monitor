@@ -6,6 +6,7 @@ Aplicativo Windows para a bandeja do sistema que monitora seus limites de uso da
 ![Preview](img/2.png)
 ![Preview](img/3.png)
 
+
 ---
 
 ## Funcionalidades
