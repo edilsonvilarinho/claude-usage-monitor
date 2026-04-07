@@ -41,11 +41,14 @@ claude-usage-monitor/
 UsageWindow       { utilization: number, resets_at: string }
 UsageData         { five_hour, seven_day, seven_day_sonnet?, sonnet_only?,
                     extra_usage? }
+UsageSnapshot     { ts: number, session: number, weekly: number }
+                  — snapshot persistido a cada poll para o histórico 24h
 ProfileData       { account: { display_name, email, has_claude_pro,
                                 has_claude_max } }
 CredentialsFile   { claudeAiOauth: { accessToken, refreshToken, expiresAt,
                                      scopes?, subscriptionType? } }
 AppSettings       (settingsService.ts) — all user preferences + rate limit state
+                  inclui: usageHistory: UsageSnapshot[] (máx 200), showHistory: boolean
 ```
 
 `utilization` is a float (0.0–N). Values above 1.0 mean >100% usage. The UI caps the gauge at 100% and displays `>1600%` for extreme values. The tray shows `!!!` above 100%.
@@ -115,7 +118,10 @@ Key methods:
 - `triggerNow()` — skips current timer; no-op if rate limited
 - `forceNow()` — skips timer regardless of rate limit
 - `restoreRateLimit(until, count, resetAt?)` — called on startup to restore persisted state
+- `pause()` / `resume()` — suspende/retoma o polling (estado em memória apenas, não persiste)
+- `setCustomInterval(ms)` — sobrescreve POLL_NORMAL_MS para o intervalo dado (mín 60s); `null` restaura adaptativo
 - `nextPollAt` — getter returning the scheduled next poll timestamp (used in tray tooltip)
+- `isPaused` — getter booleano; usado pelo tray menu para toggle label
 
 ### `notificationService.ts`
 - `checkAndNotify(data)` — debounced: will not re-notify until usage drops below `resetThreshold` after a threshold alert.
@@ -130,9 +136,10 @@ Key methods:
   - Prod: `%APPDATA%\Claude Usage Monitor\config.json`
 - **Rule:** Never tighten `minimum`/`maximum` on existing schema fields without a migration — crashes app on startup with existing data.
 - Persists rate limit state (`rateLimitedUntil`, `rateLimitCount`, `rateLimitResetAt`) so it survives restarts.
+- Persists `usageHistory: UsageSnapshot[]` (máx 200 pontos ≈ 24h) e `showHistory: boolean` para o sparkline.
 
 ### `startupService.ts`
-- Manages Windows registry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` via `auto-launch`.
+- Usa `app.setLoginItemSettings()` nativo do Electron (sem dependência `auto-launch`).
 - On startup, `main.ts` re-applies stored preference if registry diverged.
 
 ### `updateService.ts`
@@ -150,6 +157,8 @@ Key methods:
 - `togglePopup()` — shows/hides popup on tray left-click. Restores last position when user moved the window.
 - `positionedByUser` flag — when `true`, `set-window-height` IPC only resizes without repositioning.
 - Single-instance lock via `app.requestSingleInstanceLock()`.
+- **Global hotkey:** `Ctrl+Shift+U` registrado via `globalShortcut` chama `togglePopup()`; desregistrado em `before-quit`.
+- **Tray menu:** inclui toggle Pausar/Retomar monitoramento (chama `pollingService.pause()`/`resume()`) e label informativo do hotkey.
 
 ### IPC channels
 
@@ -161,7 +170,9 @@ Key methods:
 | `refresh-now` | invoke | Trigger poll (suppresses notification if visible) |
 | `force-refresh-now` | invoke | Force poll regardless of rate limit |
 | `get-app-version` | invoke | Returns app version string |
-| `get-profile` | invoke | Returns ProfileData (cached) |
+| `get-profile` | invoke | Returns ProfileData (cached, TTL 1h; re-busca silenciosamente) |
+| `get-usage-history` | invoke | Returns `UsageSnapshot[]` das últimas 24h |
+| `set-poll-interval` | invoke | Define intervalo customizado no pollingService (ms ou null) |
 | `test-notification` | invoke | Sends test toast |
 | `tray-icon-data` | send (renderer→main) | PNG dataURL for tray icon |
 | `close-popup` | send (renderer→main) | Hides the popup |
@@ -180,9 +191,13 @@ Key methods:
 - Bundled by **esbuild** (not tsc). Output: `dist/renderer/app.js`.
 - Registers on `window.claudeUsage.*` (exposed via preload `contextBridge`).
 - Chart.js doughnut with `circumference: Math.PI` (180° half-circle gauge).
+- **Sparkline (histórico 24h):** Chart.js Line chart colapsável abaixo dos gauges. Duas linhas: Sessão (verde) e Semanal (azul). Dados buscados via `get-usage-history` IPC. Toggle persiste em `showHistory`.
 - Draws the tray icon on a hidden `<canvas>` and sends the PNG to main via `sendTrayIcon()`.
+- **Tray icon adaptativo:** detecta `prefers-color-scheme` — fundo escuro/claro + texto correspondente. Re-renderiza via `matchMedia change` event.
 - Theme: CSS vars `--bg`, `--text`, etc. Dark/light via `prefers-color-scheme` or forced via `body[data-theme]`.
 - Window size: `body[data-size]` attribute controls `--gauge-w/h/pct-size` CSS vars.
+- **Notification thresholds:** sliders `<input type="range">` com label dinâmico ao lado (sessão, semanal, reset).
+- **autoRefresh:** ao ativar, chama `set-poll-interval` IPC em vez de criar `setInterval` próprio — polling unificado no main process.
 - Win11 Acrylic effect: `backdrop-filter:blur(24px)` + `backgroundMaterial:'acrylic'` (main process, Windows only).
 
 ---

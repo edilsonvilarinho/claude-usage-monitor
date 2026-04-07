@@ -39,10 +39,10 @@ Anthropic API → usageApiService → pollingService → IPC:usage-updated → r
 |------|------|
 | `credentialService.ts` | Reads `~/.claude/.credentials.json`, refreshes OAuth token when <5min from expiry. Falls back to WSL paths. |
 | `usageApiService.ts` | `GET /api/oauth/usage` (`anthropic-beta: oauth-2025-04-20`). Retries on 5xx only. 429 → throws `{isRateLimit:true}` immediately, reads `Retry-After`. |
-| `pollingService.ts` | Normal=7min, Fast=5min (>1% spike), Idle=20min. Rate limit backoff: 5→10→20→40→60min. `triggerNow()` no-op while rate limited. |
+| `pollingService.ts` | Normal=10min, Fast=7min (>1% spike), Idle=30min. Rate limit backoff: 5→10→20→40→60min. `triggerNow()` no-op while rate limited. `pause()`/`resume()` para suspender polling. `setCustomInterval(ms)` sobrescreve intervalo normal. |
 | `settingsService.ts` | `electron-store`. Dev: `%APPDATA%\Electron\config.json`. Prod: `%APPDATA%\Claude Usage Monitor\config.json`. |
 | `notificationService.ts` | Debounced — won't re-notify until usage drops below 50%. |
-| `startupService.ts` | `auto-launch` via `HKCU\Run`. |
+| `startupService.ts` | `app.setLoginItemSettings()` nativo do Electron. |
 
 ## Renderer (`src/renderer/`)
 - `app.ts` — `esbuild` (not tsc). Chart.js doughnut `circumference:180°`. Draws tray icon on hidden `<canvas>`, sends PNG via `ipcRenderer.send('tray-icon-data',...)`.
