@@ -999,3 +999,51 @@ body {
   min-width: 32px;
   text-align: right;
 }
+
+/* ── Edit snapshot modal ───────────────────────────────────────────── */
+.edit-snapshot-box {
+  width: 280px;
+  text-align: left;
+}
+
+.edit-snapshot-form {
+  margin-bottom: 14px;
+}
+
+.edit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.edit-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.edit-input {
+  width: 70px;
+}
+
+#edit-snapshot-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+#edit-snapshot-cancel:hover {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+#edit-snapshot-save {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+#edit-snapshot-save:hover {
+  background: rgba(59, 130, 246, 0.8);
+}

@@ -489,6 +489,18 @@ function registerIpcHandlers(): void {
     saveAccountData({ dailyHistory: [] });
   });
 
+  ipcMain.handle('update-daily-snapshot', (_event, snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }) => {
+    const data = getAccountData();
+    const dailyHistory = data.dailyHistory ?? [];
+    const idx = dailyHistory.findIndex((d: { date: string }) => d.date === snapshot.date);
+    if (idx >= 0) {
+      dailyHistory[idx] = { ...dailyHistory[idx], ...snapshot };
+    } else {
+      dailyHistory.push(snapshot);
+    }
+    saveAccountData({ dailyHistory });
+  });
+
   ipcMain.handle('backup-weekly-data', async () => {
     return backupWeeklyData();
   });

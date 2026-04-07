@@ -77,6 +77,9 @@ contextBridge.exposeInMainWorld('claudeUsage', {
 
   backupWeeklyData: (): Promise<string> => ipcRenderer.invoke('backup-weekly-data'),
 
+  updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }): Promise<void> =>
+    ipcRenderer.invoke('update-daily-snapshot', snapshot),
+
   onNextPollAt: (cb: (nextPollAt: number) => void): void => {
     ipcRenderer.on('next-poll-at', (_event, nextPollAt: number) => cb(nextPollAt));
   },
