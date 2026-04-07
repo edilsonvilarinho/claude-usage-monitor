@@ -828,13 +828,9 @@ body {
   display: inline-block;
   flex-shrink: 0;
 }
-.legend-dot.session      { background: var(--accent-green);  opacity: 0.6; }
-.legend-dot.session.warn { background: var(--accent-yellow); opacity: 0.6; }
-.legend-dot.session.crit { background: var(--accent-red);    opacity: 0.6; }
-.legend-dot.weekly       { background: var(--accent-green); }
-.legend-dot.weekly.warn  { background: var(--accent-yellow); }
-.legend-dot.weekly.crit  { background: var(--accent-red); }
-.legend-dot.credits      { background: var(--accent-blue); }
+.legend-dot.session { background: var(--accent-green); opacity: 0.5; }
+.legend-dot.weekly  { background: var(--accent-green); }
+.legend-dot.credits { background: var(--accent-blue); }
 
 .legend-text {
   font-size: 9px;
