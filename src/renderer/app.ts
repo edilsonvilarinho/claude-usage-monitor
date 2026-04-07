@@ -3,7 +3,7 @@ import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 Chart.register(DoughnutController, ArcElement, Tooltip);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface DailySnapshot { date: string; maxWeekly: number; maxSession: number }
+interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number }
 
 interface UsageWindow {
   utilization: number;
@@ -493,8 +493,22 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
   const resetDate = new Date(weeklyResetsAt);
   const cycleStartMs = resetDate.getTime() - 7 * 24 * 60 * 60 * 1000;
 
+  // Detectar se créditos existem em algum dia do histórico
+  const hasCredits = dailyData.some(d => d.maxCredits !== undefined);
+
+  // Legenda dinâmica
+  const legendEl = document.getElementById('daily-legend');
+  if (legendEl) {
+    const t = tr();
+    legendEl.innerHTML = [
+      `<span class="legend-dot session"></span><span class="legend-text">${t.sessionLabel}</span>`,
+      `<span class="legend-dot weekly"></span><span class="legend-text">${t.weeklyLabel}</span>`,
+      ...(hasCredits ? [`<span class="legend-dot credits"></span><span class="legend-text">${t.creditsLabel}</span>`] : []),
+    ].join('');
+  }
+
   // Build 7 day slots
-  const slots: { date: string; label: string; isToday: boolean; isFuture: boolean; weeklyPct: number | null; sessionPct: number | null }[] = [];
+  const slots: { date: string; label: string; isToday: boolean; isFuture: boolean; weeklyPct: number | null; sessionPct: number | null; creditsPct: number | null }[] = [];
   const now = new Date();
   const todayStr = now.toLocaleDateString('sv');
   const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
@@ -510,26 +524,31 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
       date: dateStr, label, isToday, isFuture,
       weeklyPct:  found ? Math.min(found.maxWeekly, 100) : null,
       sessionPct: found ? Math.min(found.maxSession ?? 0, 100) : null,
+      creditsPct: (found && found.maxCredits !== undefined) ? Math.min(found.maxCredits, 100) : null,
     });
   }
 
   const BAR_MAX_PX = 40;
   container.innerHTML = slots.map(s => {
-    const wPct = s.weeklyPct;
-    const sPct = s.sessionPct;
-    const wPx = wPct !== null ? Math.max(3, Math.round((wPct / 100) * BAR_MAX_PX)) : 0;
-    const sPx = sPct !== null ? Math.max(3, Math.round((sPct / 100) * BAR_MAX_PX)) : 0;
-    const wClass = wPct !== null ? (wPct >= 80 ? 'crit' : wPct >= 60 ? 'warn' : 'ok') : '';
-    const sClass = sPct !== null ? (sPct >= 80 ? 'crit' : sPct >= 60 ? 'warn' : 'ok') : '';
-    const todayClass = s.isToday ? ' today' : '';
+    const wPx = s.weeklyPct  !== null ? Math.max(3, Math.round((s.weeklyPct  / 100) * BAR_MAX_PX)) : 0;
+    const sPx = s.sessionPct !== null ? Math.max(3, Math.round((s.sessionPct / 100) * BAR_MAX_PX)) : 0;
+    const cPx = s.creditsPct !== null ? Math.max(3, Math.round((s.creditsPct / 100) * BAR_MAX_PX)) : 0;
+    const wClass = s.weeklyPct  !== null ? (s.weeklyPct  >= 80 ? 'crit' : s.weeklyPct  >= 60 ? 'warn' : 'ok') : '';
+    const sClass = s.sessionPct !== null ? (s.sessionPct >= 80 ? 'crit' : s.sessionPct >= 60 ? 'warn' : 'ok') : '';
+    const cClass = s.creditsPct !== null ? (s.creditsPct >= 80 ? 'crit' : s.creditsPct >= 60 ? 'warn' : '') : '';
+    const todayClass  = s.isToday  ? ' today'  : '';
     const futureClass = s.isFuture ? ' future' : '';
+    const creditsBar  = hasCredits
+      ? `<div class="daily-bar credits ${cClass}" style="height:${cPx}px"></div>`
+      : '';
     return `<div class="daily-col${todayClass}${futureClass}">
       <div class="daily-bar-wrap">
         <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
         <div class="daily-bar weekly ${wClass}" style="height:${wPx}px"></div>
+        ${creditsBar}
       </div>
       <span class="daily-day">${s.label}</span>
-      <span class="daily-pct">${wPct !== null ? `${wPct}%` : '—'}</span>
+      <span class="daily-pct">${s.weeklyPct !== null ? `${s.weeklyPct}%` : '—'}</span>
     </div>`;
   }).join('');
   fitWindow();

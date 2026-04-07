@@ -814,16 +814,11 @@ body {
 }
 
 
-.history-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
 .daily-legend {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 2px 12px 4px;
 }
 
 .legend-dot {
@@ -831,9 +826,11 @@ body {
   height: 7px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 .legend-dot.session { background: var(--accent-green); opacity: 0.6; }
 .legend-dot.weekly  { background: var(--accent-green); }
+.legend-dot.credits { background: var(--accent-blue); }
 
 .legend-text {
   font-size: 9px;
@@ -901,6 +898,10 @@ body {
 .daily-bar.weekly.ok   { background: var(--accent-green); }
 .daily-bar.weekly.warn { background: var(--accent-yellow); }
 .daily-bar.weekly.crit { background: var(--accent-red); }
+/* credits: azul */
+.daily-bar.credits        { background: var(--accent-blue); opacity: 0.85; }
+.daily-bar.credits.warn   { background: var(--accent-yellow); opacity: 0.85; }
+.daily-bar.credits.crit   { background: var(--accent-red); opacity: 0.85; }
 
 .daily-col.today .daily-bar-wrap {
   background: rgba(128,128,128,0.18);

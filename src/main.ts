@@ -502,15 +502,22 @@ app.whenReady().then(() => {
     // Snapshot diário (sempre gravado, independente do toggle)
     // Usa 'sv' locale para obter formato YYYY-MM-DD na timezone local
     const today = new Date().toLocaleDateString('sv');
-    const weeklyPctInt = Math.round(data.seven_day.utilization);
+    const weeklyPctInt  = Math.round(data.seven_day.utilization);
     const sessionPctInt = Math.round(data.five_hour.utilization);
+    const extra = data.extra_usage;
+    const creditsPctInt = (extra?.is_enabled && extra.monthly_limit > 0)
+      ? Math.round((extra.used_credits / extra.monthly_limit) * 100)
+      : undefined;
     const dailyHistory: DailySnapshot[] = getSettings().dailyHistory ?? [];
     const existingDay = dailyHistory.find(d => d.date === today);
     if (existingDay) {
       existingDay.maxWeekly  = Math.max(existingDay.maxWeekly, weeklyPctInt);
       existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
+      if (creditsPctInt !== undefined) {
+        existingDay.maxCredits = Math.max(existingDay.maxCredits ?? 0, creditsPctInt);
+      }
     } else {
-      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt, maxSession: sessionPctInt });
+      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt, maxSession: sessionPctInt, maxCredits: creditsPctInt });
     }
     dailyHistory.sort((a, b) => a.date.localeCompare(b.date));
     if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
