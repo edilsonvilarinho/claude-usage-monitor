@@ -4,6 +4,7 @@ Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElem
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface UsageSnapshot { ts: number; session: number; weekly: number }
+interface DailySnapshot { date: string; maxWeekly: number }
 
 interface UsageWindow {
   utilization: number;
@@ -69,6 +70,8 @@ declare global {
       getProfile: () => Promise<ProfileData | null>;
       setPollInterval: (ms: number | null) => Promise<void>;
       getUsageHistory: () => Promise<UsageSnapshot[]>;
+      getDailyHistory: () => Promise<DailySnapshot[]>;
+      clearDailyHistory: () => Promise<void>;
     };
   }
 }
@@ -126,6 +129,9 @@ const translations = {
     resetsAt:   (timeStr: string) => `at ${timeStr}`,
     nextPollIn: (t: string) => `Next update in ${t}`,
     historyLabel: 'Usage history (24h)',
+    dailyHistoryLabel: 'Weekly cycle',
+    clearHistoryBtn: 'Clear',
+    clearHistoryConfirm: 'Clear usage history?',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -175,6 +181,9 @@ const translations = {
     resetsAt:   (timeStr: string) => `às ${timeStr}`,
     nextPollIn: (t: string) => `Próxima atualização em ${t}`,
     historyLabel: 'Histórico de uso (24h)',
+    dailyHistoryLabel: 'Ciclo semanal',
+    clearHistoryBtn: 'Limpar',
+    clearHistoryConfirm: 'Limpar histórico de uso?',
   },
 } as const;
 
@@ -527,6 +536,49 @@ function createHistoryChart(): Chart {
   });
 }
 
+// ── Daily cycle chart ─────────────────────────────────────────────────────────
+
+let lastWeeklyResetsAt: string | null = null;
+
+function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): void {
+  const container = document.getElementById('daily-chart');
+  if (!container) return;
+
+  const resetDate = new Date(weeklyResetsAt);
+  const cycleStartMs = resetDate.getTime() - 7 * 24 * 60 * 60 * 1000;
+
+  // Build 7 day slots
+  const slots: { date: string; label: string; isToday: boolean; isFuture: boolean; pct: number | null }[] = [];
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('sv');
+  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(cycleStartMs + i * 24 * 60 * 60 * 1000);
+    const dateStr = d.toLocaleDateString('sv');
+    const label = d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '');
+    const isFuture = dateStr > todayStr;
+    const isToday = dateStr === todayStr;
+    const found = dailyData.find(s => s.date === dateStr);
+    slots.push({ date: dateStr, label, isToday, isFuture, pct: found ? Math.min(found.maxWeekly, 100) : null });
+  }
+
+  container.innerHTML = slots.map(s => {
+    const pctDisplay = s.pct !== null ? `${s.pct}%` : '—';
+    const barHeight = s.pct !== null ? Math.max(4, s.pct) : 0;
+    const colorClass = s.pct !== null ? (s.pct >= 80 ? 'crit' : s.pct >= 60 ? 'warn' : 'ok') : '';
+    const todayClass = s.isToday ? ' today' : '';
+    const futureClass = s.isFuture ? ' future' : '';
+    return `<div class="daily-col${todayClass}${futureClass}">
+      <div class="daily-bar-wrap">
+        <div class="daily-bar ${colorClass}" style="height:${barHeight}%"></div>
+      </div>
+      <span class="daily-day">${s.label}</span>
+      <span class="daily-pct">${pctDisplay}</span>
+    </div>`;
+  }).join('');
+}
+
 function updateHistoryChart(snapshots: UsageSnapshot[]): void {
   if (!historyChart) return;
   const labels = snapshots.map(s => new Date(s.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -601,6 +653,9 @@ function updateUI(data: UsageData): void {
 
   updateTrayIcon(sessionPct, weeklyPct);
 
+  // Store resets_at for daily chart
+  lastWeeklyResetsAt = data.seven_day.resets_at;
+
   fitWindow();
 
   if (autoRefreshEnabled) {
@@ -663,6 +718,9 @@ async function loadSettings(): Promise<void> {
       if (!historyChart) historyChart = createHistoryChart();
       updateHistoryChart(h);
       fitWindow();
+    });
+    void window.claudeUsage.getDailyHistory().then(d => {
+      if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt);
     });
   }
 }
@@ -773,7 +831,7 @@ function init(): void {
     updateUI(data);
   });
 
-  // Atualizar sparkline quando receber dados novos
+  // Atualizar gráficos quando receber dados novos
   window.claudeUsage.onUsageUpdated(() => {
     const section = document.getElementById('history-section') as HTMLElement;
     if (section.style.display === 'none') return;
@@ -781,6 +839,11 @@ function init(): void {
       if (!historyChart) historyChart = createHistoryChart();
       updateHistoryChart(h);
     });
+    if (lastWeeklyResetsAt) {
+      void window.claudeUsage.getDailyHistory().then(d => {
+        renderDailyChart(d, lastWeeklyResetsAt!);
+      });
+    }
   });
 
   document.getElementById('history-toggle')!.addEventListener('change', async () => {
@@ -792,8 +855,23 @@ function init(): void {
       if (!historyChart) historyChart = createHistoryChart();
       const h = await window.claudeUsage.getUsageHistory();
       updateHistoryChart(h);
+      if (lastWeeklyResetsAt) {
+        const d = await window.claudeUsage.getDailyHistory();
+        renderDailyChart(d, lastWeeklyResetsAt);
+      }
     }
     fitWindow();
+  });
+
+  document.getElementById('btn-clear-history')!.addEventListener('click', async () => {
+    if (!confirm(tr().clearHistoryConfirm)) return;
+    await window.claudeUsage.clearDailyHistory();
+    if (lastWeeklyResetsAt) {
+      renderDailyChart([], lastWeeklyResetsAt);
+    }
+    if (historyChart) {
+      updateHistoryChart([]);
+    }
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {

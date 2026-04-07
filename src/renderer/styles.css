@@ -805,12 +805,96 @@ body {
   background: rgba(59, 130, 246, 0.8);
 }
 
-/* ── Usage history sparkline ───────────────────────────────────────── */
+/* ── Usage history ─────────────────────────────────────────────────── */
 .history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 4px 12px 2px;
+}
+
+.history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-history-btn {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.clear-history-btn:hover {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* Daily cycle bar chart */
+.daily-chart {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  padding: 4px 0 0;
+  height: 72px;
+}
+
+.daily-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.daily-bar-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(128,128,128,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  height: 44px;
+}
+
+.daily-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.3s ease;
+}
+.daily-bar.ok   { background: var(--accent-green); }
+.daily-bar.warn { background: var(--accent-yellow); }
+.daily-bar.crit { background: var(--accent-red); }
+
+.daily-col.today .daily-bar-wrap {
+  background: rgba(128,128,128,0.18);
+  outline: 1px solid rgba(255,255,255,0.15);
+}
+
+.daily-col.future .daily-bar-wrap {
+  opacity: 0.4;
+}
+
+.daily-day {
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.daily-col.today .daily-day {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.daily-pct {
+  font-size: 9px;
+  color: var(--text-secondary);
 }
 
 .history-label {

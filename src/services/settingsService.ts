@@ -1,5 +1,5 @@
 import Store from 'electron-store';
-import { UsageSnapshot } from '../models/usageData';
+import { UsageSnapshot, DailySnapshot } from '../models/usageData';
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -28,6 +28,7 @@ export interface AppSettings {
   skippedVersion: string;      // version tag the user chose to skip
   usageHistory: UsageSnapshot[];
   showHistory: boolean;
+  dailyHistory: DailySnapshot[];
 }
 
 const defaults: AppSettings = {
@@ -55,6 +56,7 @@ const defaults: AppSettings = {
   skippedVersion: '',
   usageHistory: [],
   showHistory: false,
+  dailyHistory: [],
 };
 
 const store = new Store<AppSettings>({
@@ -88,6 +90,7 @@ const store = new Store<AppSettings>({
     skippedVersion: { type: 'string' },
     usageHistory: { type: 'array' },
     showHistory: { type: 'boolean' },
+    dailyHistory: { type: 'array' },
   },
 });
 
@@ -109,6 +112,7 @@ export function getSettings(): AppSettings {
     skippedVersion: store.get('skippedVersion', defaults.skippedVersion),
     usageHistory: store.get('usageHistory', defaults.usageHistory),
     showHistory: store.get('showHistory', defaults.showHistory),
+    dailyHistory: store.get('dailyHistory', defaults.dailyHistory),
   };
 }
 
@@ -157,4 +161,5 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   }
   if (settings.usageHistory !== undefined) store.set('usageHistory', settings.usageHistory);
   if (settings.showHistory !== undefined) store.set('showHistory', settings.showHistory);
+  if (settings.dailyHistory !== undefined) store.set('dailyHistory', settings.dailyHistory);
 }

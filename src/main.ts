@@ -5,7 +5,7 @@ import { getSettings, saveSettings } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
-import { UsageData, ProfileData, UsageSnapshot } from './models/usageData';
+import { UsageData, ProfileData, UsageSnapshot, DailySnapshot } from './models/usageData';
 import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 
@@ -427,6 +427,12 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('get-usage-history', () => getSettings().usageHistory ?? []);
 
+  ipcMain.handle('get-daily-history', () => getSettings().dailyHistory ?? []);
+
+  ipcMain.handle('clear-daily-history', () => {
+    saveSettings({ dailyHistory: [] });
+  });
+
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
     pollingService.setCustomInterval(ms);
   });
@@ -492,7 +498,22 @@ app.whenReady().then(() => {
     const history = getSettings().usageHistory ?? [];
     history.push(snapshot);
     if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
-    saveSettings({ usageHistory: history });
+
+    // Snapshot diário (sempre gravado, independente do toggle)
+    // Usa 'sv' locale para obter formato YYYY-MM-DD na timezone local
+    const today = new Date().toLocaleDateString('sv');
+    const weeklyPctInt = Math.round(data.seven_day.utilization);
+    const dailyHistory: DailySnapshot[] = getSettings().dailyHistory ?? [];
+    const existingDay = dailyHistory.find(d => d.date === today);
+    if (existingDay) {
+      existingDay.maxWeekly = Math.max(existingDay.maxWeekly, weeklyPctInt);
+    } else {
+      dailyHistory.push({ date: today, maxWeekly: weeklyPctInt });
+    }
+    dailyHistory.sort((a, b) => a.date.localeCompare(b.date));
+    if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
+
+    saveSettings({ usageHistory: history, dailyHistory });
 
     updateTrayTooltip(data);
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);

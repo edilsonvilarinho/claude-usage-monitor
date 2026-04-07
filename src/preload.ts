@@ -70,4 +70,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   setPollInterval: (ms: number | null): Promise<void> => ipcRenderer.invoke('set-poll-interval', ms),
 
   getUsageHistory: (): Promise<import('./models/usageData').UsageSnapshot[]> => ipcRenderer.invoke('get-usage-history'),
+
+  getDailyHistory: (): Promise<import('./models/usageData').DailySnapshot[]> => ipcRenderer.invoke('get-daily-history'),
+
+  clearDailyHistory: (): Promise<void> => ipcRenderer.invoke('clear-daily-history'),
 });

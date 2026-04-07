@@ -76,16 +76,20 @@
       </div>
     </div>
 
-    <!-- Usage history sparkline -->
+    <!-- Usage history -->
     <div class="history-header">
-      <span class="history-label" data-i18n="historyLabel">Usage history (24h)</span>
-      <label class="toggle history-toggle-label">
-        <input type="checkbox" id="history-toggle">
-        <span class="toggle-slider"></span>
-      </label>
+      <span class="history-label" data-i18n="dailyHistoryLabel">Ciclo semanal</span>
+      <div class="history-header-actions">
+        <button class="clear-history-btn" id="btn-clear-history" data-i18n="clearHistoryBtn">Limpar</button>
+        <label class="toggle history-toggle-label">
+          <input type="checkbox" id="history-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
     </div>
     <div id="history-section" style="display:none">
-      <canvas id="history-canvas" width="300" height="60"></canvas>
+      <div id="daily-chart" class="daily-chart"></div>
+      <canvas id="history-canvas" width="300" height="40" style="margin-top:6px"></canvas>
     </div>
 
     <!-- Sonnet / extra bars -->
