@@ -188,6 +188,11 @@ function togglePopup(): void {
     if (credentialMissing) {
       popup.webContents.send('credential-missing', credentialPath);
     }
+    // Send actual next poll time so countdown shows correct remaining time
+    const npa = pollingService.nextPollAt;
+    if (npa > Date.now()) {
+      popup.webContents.send('next-poll-at', npa);
+    }
   }
 }
 
@@ -566,6 +571,10 @@ app.whenReady().then(() => {
     if (Date.now() - cachedProfileAt > 3_600_000) {
       void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); setActiveAccount(p.account.email); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
     }
+  });
+
+  pollingService.on('next-poll-scheduled', (nextPollAt: number) => {
+    popup?.webContents.send('next-poll-at', nextPollAt);
   });
 
   pollingService.on('rate-limited', (until: number, count: number, resetAt?: number) => {

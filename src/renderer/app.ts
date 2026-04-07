@@ -53,6 +53,7 @@ declare global {
       onUsageUpdated: (cb: (data: UsageData) => void) => void;
       onError: (cb: (msg: string) => void) => void;
       onRateLimited: (cb: (until: number, resetAt?: number) => void) => void;
+      onNextPollAt: (cb: (nextPollAt: number) => void) => void;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -272,7 +273,6 @@ function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
     const ms = Math.max(60, intervalSeconds) * 1000;
     currentAutoRefreshIntervalMs = ms;
     void window.claudeUsage.setPollInterval(ms);
-    startNextPollCountdown(ms);
   } else {
     stopNextPollCountdown();
     void window.claudeUsage.setPollInterval(null);
@@ -660,9 +660,6 @@ function updateUI(data: UsageData): void {
 
   fitWindow();
 
-  if (autoRefreshEnabled) {
-    startNextPollCountdown(currentAutoRefreshIntervalMs);
-  }
 }
 
 // ── Settings ──────────────────────────────────────────────────────────────────
@@ -840,6 +837,15 @@ function init(): void {
   window.claudeUsage.onRateLimited((until, resetAt) => {
     isRateLimited = true;
     startRateLimitCountdown(until, resetAt);
+  });
+
+  window.claudeUsage.onNextPollAt((nextPollAt: number) => {
+    if (autoRefreshEnabled) {
+      const remaining = nextPollAt - Date.now();
+      if (remaining > 0) {
+        startNextPollCountdown(remaining);
+      }
+    }
   });
 
   window.claudeUsage.onError((msg) => {

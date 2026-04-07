@@ -192,6 +192,7 @@ export class PollingService extends EventEmitter {
 
     const delay = this.nextInterval();
     this._nextPollAt = Date.now() + delay;
+    this.emit('next-poll-scheduled', this._nextPollAt);
     this.timer = setTimeout(() => void this.poll(), delay);
   }
 }
