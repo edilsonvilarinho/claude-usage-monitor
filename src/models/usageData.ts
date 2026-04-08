@@ -4,6 +4,26 @@ export interface UsageSnapshot {
   weekly: number;  // percentual inteiro 0-999
 }
 
+/** Um ponto de coleta da série temporal diária (um por poll bem-sucedido) */
+export interface TimeSeriesPoint {
+  ts: number;      // unix ms
+  session: number; // utilization bruta da API (inteiro, pode ser > 100)
+  weekly: number;  // utilization bruta da API (inteiro, pode ser > 100)
+}
+
+/** Janela de sessão de 5h completada — usada como marcador no gráfico e para sessionAccum */
+export interface SessionWindowRecord {
+  resetsAt: string; // ISO datetime — quando esta janela resetou
+  peak: number;     // pico de utilization observado (inteiro, pode ser > 100)
+  date: string;     // YYYY-MM-DD — dia ao qual esta janela pertence
+}
+
+/** Estado da janela de sessão corrente — persistido para detectar resets após restart */
+export interface CurrentSessionWindow {
+  resetsAt: string; // five_hour.resets_at atual da API
+  peak: number;     // maior utilization visto nesta janela até agora
+}
+
 export interface DailySnapshot {
   date: string;          // 'YYYY-MM-DD' (local timezone)
   maxWeekly: number;     // max weekly % seen that day (integer 0-999)

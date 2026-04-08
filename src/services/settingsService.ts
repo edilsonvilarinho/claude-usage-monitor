@@ -1,5 +1,5 @@
 import Store from 'electron-store';
-import { UsageSnapshot, DailySnapshot } from '../models/usageData';
+import { UsageSnapshot, DailySnapshot, TimeSeriesPoint, SessionWindowRecord, CurrentSessionWindow } from '../models/usageData';
 
 // ─── Per-account data (keyed by account email) ────────────────────────────────
 
@@ -9,6 +9,12 @@ export interface AccountData {
   rateLimitedUntil: number;
   rateLimitCount: number;
   rateLimitResetAt: number;
+  /** Série temporal de polls por dia — chave YYYY-MM-DD, mantido por 7 dias */
+  timeSeries: Record<string, TimeSeriesPoint[]>;
+  /** Janelas de sessão de 5h completadas — usadas como marcadores e para sessionAccum */
+  sessionWindows: SessionWindowRecord[];
+  /** Estado da janela de sessão corrente — persistido para detectar resets após restart */
+  currentSessionWindow: CurrentSessionWindow | null;
 }
 
 const accountDataDefaults: AccountData = {
@@ -17,6 +23,9 @@ const accountDataDefaults: AccountData = {
   rateLimitedUntil: 0,
   rateLimitCount: 0,
   rateLimitResetAt: 0,
+  timeSeries: {},
+  sessionWindows: [],
+  currentSessionWindow: null,
 };
 
 interface AccountStore {
@@ -53,6 +62,9 @@ export function setActiveAccount(email: string): void {
       rateLimitedUntil: legacyRLUntil || (defaultData?.rateLimitedUntil ?? 0),
       rateLimitCount: legacyRLCount || (defaultData?.rateLimitCount ?? 0),
       rateLimitResetAt: legacyRLResetAt || (defaultData?.rateLimitResetAt ?? 0),
+      timeSeries: defaultData?.timeSeries ?? {},
+      sessionWindows: defaultData?.sessionWindows ?? [],
+      currentSessionWindow: defaultData?.currentSessionWindow ?? null,
     };
 
     // Clear legacy top-level fields after migration
