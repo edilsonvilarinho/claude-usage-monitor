@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { updateDailySnapshot } from '../dailySnapshotService';
-import { DailySnapshot, UsageData } from '../../models/usageData';
+import { CurrentSessionWindow, DailySnapshot, UsageData } from '../../models/usageData';
 
 function makeUsageData(sessionPct: number, weeklyPct: number, sessionResetsAt: string): UsageData {
   return {
@@ -9,125 +9,177 @@ function makeUsageData(sessionPct: number, weeklyPct: number, sessionResetsAt: s
   };
 }
 
-const TODAY = '2026-04-07';
+function makeWindow(resetsAt: string, peak: number): CurrentSessionWindow {
+  return { resetsAt, peak };
+}
+
+const TODAY  = '2026-04-07';
 const RESET_A = '2026-04-07T10:00:00Z';
-const RESET_B = '2026-04-07T15:00:00Z'; // +5h from A — qualifies as reset
-const RESET_B_CLOSE = '2026-04-07T10:10:00Z'; // +10min from A — does NOT qualify
+const RESET_B = '2026-04-07T15:00:00Z'; // +5h — qualifica como reset
+const RESET_C = '2026-04-07T20:00:00Z'; // +5h — segundo reset
+const RESET_CLOSE = '2026-04-07T10:10:00Z'; // +10min — NÃO qualifica
 
 describe('updateDailySnapshot', () => {
-  it('cria snapshot para primeira entrada do dia', () => {
-    const history: DailySnapshot[] = [];
-    const data = makeUsageData(30, 50, RESET_A);
-    const result = updateDailySnapshot(history, TODAY, data, null);
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      date: TODAY,
-      maxSession: 30,
-      maxWeekly: 50,
-      sessionResets: 1,
-      sessionAccum: 0,
-    });
+
+  // ── Inicialização ────────────────────────────────────────────────────────────
+
+  it('cria snapshot e currentWindow quando não há histórico (primeiro run)', () => {
+    const { dailyHistory, currentWindow, completedWindow } =
+      updateDailySnapshot([], TODAY, makeUsageData(30, 50, RESET_A), null);
+
+    expect(dailyHistory).toHaveLength(1);
+    expect(dailyHistory[0]).toMatchObject({ date: TODAY, maxSession: 30, maxWeekly: 50, sessionResets: 1, sessionAccum: 0 });
+    expect(currentWindow).toEqual({ resetsAt: RESET_A, peak: 30 });
+    expect(completedWindow).toBeNull();
   });
 
-  it('atualização sem reset: maxSession cresce (max), sessionAccum não muda', () => {
+  it('cria currentWindow mesmo sem histórico prévio (null)', () => {
+    const { currentWindow } =
+      updateDailySnapshot([], TODAY, makeUsageData(45, 60, RESET_A), null);
+    expect(currentWindow.resetsAt).toBe(RESET_A);
+    expect(currentWindow.peak).toBe(45);
+  });
+
+  // ── Progressão sem reset ─────────────────────────────────────────────────────
+
+  it('sem reset: maxSession cresce (max), sessionAccum inalterado', () => {
     const history: DailySnapshot[] = [
       { date: TODAY, maxWeekly: 50, maxSession: 40, sessionResets: 1, sessionAccum: 0 },
     ];
-    const prev = makeUsageData(40, 50, RESET_A);
-    const curr = makeUsageData(60, 55, RESET_A); // mesmo resets_at → sem reset
-    const result = updateDailySnapshot(history, TODAY, curr, prev);
-    expect(result[0].maxSession).toBe(60);
-    expect(result[0].maxWeekly).toBe(55);
-    expect(result[0].sessionAccum).toBe(0);
-    expect(result[0].sessionResets).toBe(1);
+    const window = makeWindow(RESET_A, 40);
+    const { dailyHistory, currentWindow, completedWindow } =
+      updateDailySnapshot(history, TODAY, makeUsageData(60, 55, RESET_A), window);
+
+    expect(dailyHistory[0].maxSession).toBe(60);
+    expect(dailyHistory[0].maxWeekly).toBe(55);
+    expect(dailyHistory[0].sessionAccum).toBe(0);
+    expect(dailyHistory[0].sessionResets).toBe(1);
+    expect(currentWindow.peak).toBe(60); // pico atualizado
+    expect(currentWindow.resetsAt).toBe(RESET_A);
+    expect(completedWindow).toBeNull();
+  });
+
+  it('sem reset: peak do currentWindow acumula via Math.max', () => {
+    const window = makeWindow(RESET_A, 80); // pico anterior era 80
+    const { currentWindow } =
+      updateDailySnapshot([], TODAY, makeUsageData(20, 50, RESET_A), window);
+    expect(currentWindow.peak).toBe(80); // não regride
   });
 
   it('maxSession não decresce quando valor atual é menor', () => {
     const history: DailySnapshot[] = [
       { date: TODAY, maxWeekly: 50, maxSession: 80, sessionResets: 1, sessionAccum: 0 },
     ];
-    const prev = makeUsageData(80, 50, RESET_A);
-    const curr = makeUsageData(20, 50, RESET_A);
-    const result = updateDailySnapshot(history, TODAY, curr, prev);
-    expect(result[0].maxSession).toBe(80);
+    const { dailyHistory } =
+      updateDailySnapshot(history, TODAY, makeUsageData(20, 50, RESET_A), makeWindow(RESET_A, 80));
+    expect(dailyHistory[0].maxSession).toBe(80);
   });
 
-  it('detecção de reset (resets_at avançou ≥ 30min): acumula pico anterior, incrementa sessionResets, reinicia maxSession', () => {
-    const history: DailySnapshot[] = [
-      { date: TODAY, maxWeekly: 50, maxSession: 70, sessionResets: 1, sessionAccum: 0 },
-    ];
-    const prev = makeUsageData(70, 50, RESET_A);
-    const curr = makeUsageData(14, 52, RESET_B); // resets_at avançou 5h
-    const result = updateDailySnapshot(history, TODAY, curr, prev);
-    expect(result[0].sessionAccum).toBe(70);
-    expect(result[0].sessionResets).toBe(2);
-    expect(result[0].maxSession).toBe(14);
-  });
-
-  it('não-reset (resets_at avançou < 30min): não acumula, trata como normal', () => {
-    const history: DailySnapshot[] = [
-      { date: TODAY, maxWeekly: 50, maxSession: 70, sessionResets: 1, sessionAccum: 0 },
-    ];
-    const prev = makeUsageData(70, 50, RESET_A);
-    const curr = makeUsageData(75, 52, RESET_B_CLOSE); // só +10min — não é reset
-    const result = updateDailySnapshot(history, TODAY, curr, prev);
-    expect(result[0].sessionAccum).toBe(0);
-    expect(result[0].sessionResets).toBe(1);
-    expect(result[0].maxSession).toBe(75);
-  });
-
-  it('múltiplos resets no dia: acumulação correta após dois resets', () => {
-    const history: DailySnapshot[] = [
-      { date: TODAY, maxWeekly: 50, maxSession: 70, sessionResets: 1, sessionAccum: 0 },
-    ];
-    // Primeiro reset
-    const prev1 = makeUsageData(70, 50, RESET_A);
-    const curr1 = makeUsageData(14, 52, RESET_B);
-    updateDailySnapshot(history, TODAY, curr1, prev1);
-    expect(history[0].sessionAccum).toBe(70);
-    expect(history[0].sessionResets).toBe(2);
-    expect(history[0].maxSession).toBe(14);
-
-    // Cresce na segunda janela
-    const prev2 = makeUsageData(14, 52, RESET_B);
-    const curr2a = makeUsageData(50, 53, RESET_B);
-    updateDailySnapshot(history, TODAY, curr2a, prev2);
-    expect(history[0].maxSession).toBe(50);
-
-    // Segundo reset
-    const RESET_C = '2026-04-07T20:00:00Z';
-    const prev3 = makeUsageData(50, 53, RESET_B);
-    const curr3 = makeUsageData(5, 54, RESET_C);
-    updateDailySnapshot(history, TODAY, curr3, prev3);
-    expect(history[0].sessionAccum).toBe(120); // 70 + 50
-    expect(history[0].sessionResets).toBe(3);
-    expect(history[0].maxSession).toBe(5);
-  });
-
-  it('limite de 8 entradas: histórico é truncado a 8 dias', () => {
-    const history: DailySnapshot[] = Array.from({ length: 8 }, (_, i) => ({
-      date: `2026-03-${String(i + 1).padStart(2, '0')}`,
-      maxWeekly: 10,
-      maxSession: 10,
-      sessionResets: 1,
-      sessionAccum: 0,
-    }));
-    const data = makeUsageData(20, 20, RESET_A);
-    const result = updateDailySnapshot(history, TODAY, data, null);
-    expect(result).toHaveLength(8);
-    // A entrada mais recente deve estar presente
-    expect(result[result.length - 1].date).toBe(TODAY);
-    // A mais antiga deve ter sido removida
-    expect(result.find(d => d.date === '2026-03-01')).toBeUndefined();
-  });
-
-  it('maxWeekly só cresce: Math.max(existingDay.maxWeekly, novo)', () => {
+  it('maxWeekly só cresce: Math.max(existing, novo)', () => {
     const history: DailySnapshot[] = [
       { date: TODAY, maxWeekly: 70, maxSession: 30, sessionResets: 1, sessionAccum: 0 },
     ];
-    const prev = makeUsageData(30, 70, RESET_A);
-    const curr = makeUsageData(35, 40, RESET_A); // weeklyPct caiu para 40
-    const result = updateDailySnapshot(history, TODAY, curr, prev);
-    expect(result[0].maxWeekly).toBe(70);
+    const { dailyHistory } =
+      updateDailySnapshot(history, TODAY, makeUsageData(35, 40, RESET_A), makeWindow(RESET_A, 30));
+    expect(dailyHistory[0].maxWeekly).toBe(70);
+  });
+
+  // ── Detecção de reset ────────────────────────────────────────────────────────
+
+  it('reset detectado (resets_at avançou ≥ 30min): usa peak da janela completada', () => {
+    const history: DailySnapshot[] = [
+      { date: TODAY, maxWeekly: 50, maxSession: 70, sessionResets: 1, sessionAccum: 0 },
+    ];
+    // currentWindow.peak = 70, mas último valor polled seria 50 — nova lógica usa o peak
+    const window = makeWindow(RESET_A, 70);
+    const { dailyHistory, currentWindow, completedWindow } =
+      updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), window);
+
+    expect(dailyHistory[0].sessionAccum).toBe(70);  // usa peak, não último valor polled
+    expect(dailyHistory[0].sessionResets).toBe(2);
+    expect(dailyHistory[0].maxSession).toBe(14);    // reinicia com valor da nova janela
+    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 14 }); // nova janela iniciada
+    expect(completedWindow).toMatchObject({ resetsAt: RESET_A, peak: 70, date: TODAY });
+  });
+
+  it('FIX: acumulado usa pico rastreado, não o último valor polled antes do reset', () => {
+    // Cenário: janela atingiu 95% em algum momento mas o poll antes do reset capturou 60%
+    // Lógica antiga acumularia 60; nova acumula 95 (o pico real)
+    const history: DailySnapshot[] = [
+      { date: TODAY, maxWeekly: 50, maxSession: 95, sessionResets: 1, sessionAccum: 0 },
+    ];
+    const window = makeWindow(RESET_A, 95); // pico rastreado = 95
+    const { dailyHistory } =
+      updateDailySnapshot(history, TODAY, makeUsageData(10, 52, RESET_B), window);
+
+    expect(dailyHistory[0].sessionAccum).toBe(95); // pico correto, não 10 (valor ao resetar)
+  });
+
+  it('FIX: reset detectado mesmo após restart (currentWindow persistido, sem prevData)', () => {
+    // Simula: app reiniciou, prevData = null, mas currentWindow foi restaurado do disco
+    const history: DailySnapshot[] = [
+      { date: TODAY, maxWeekly: 50, maxSession: 80, sessionResets: 1, sessionAccum: 0 },
+    ];
+    // currentWindow armazenado tem o resetsAt antigo (RESET_A)
+    const storedWindow = makeWindow(RESET_A, 80);
+    // API retorna novo resetsAt (RESET_B) — significa que resetou enquanto app estava fechado
+    const { dailyHistory, completedWindow } =
+      updateDailySnapshot(history, TODAY, makeUsageData(5, 52, RESET_B), storedWindow);
+
+    expect(dailyHistory[0].sessionAccum).toBe(80); // reset detectado corretamente
+    expect(dailyHistory[0].sessionResets).toBe(2);
+    expect(completedWindow).not.toBeNull();
+  });
+
+  it('não-reset (resets_at avançou < 30min): não acumula, trata como update normal', () => {
+    const history: DailySnapshot[] = [
+      { date: TODAY, maxWeekly: 50, maxSession: 70, sessionResets: 1, sessionAccum: 0 },
+    ];
+    const { dailyHistory, completedWindow } =
+      updateDailySnapshot(history, TODAY, makeUsageData(75, 52, RESET_CLOSE), makeWindow(RESET_A, 70));
+
+    expect(dailyHistory[0].sessionAccum).toBe(0);
+    expect(dailyHistory[0].sessionResets).toBe(1);
+    expect(dailyHistory[0].maxSession).toBe(75);
+    expect(completedWindow).toBeNull();
+  });
+
+  // ── Múltiplos resets ─────────────────────────────────────────────────────────
+
+  it('múltiplos resets: acumulação correta após dois resets com picos diferentes', () => {
+    const history: DailySnapshot[] = [
+      { date: TODAY, maxWeekly: 50, maxSession: 70, sessionResets: 1, sessionAccum: 0 },
+    ];
+
+    // Primeiro reset — pico da janela 1 = 70
+    const r1 = updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), makeWindow(RESET_A, 70));
+    expect(r1.dailyHistory[0].sessionAccum).toBe(70);
+    expect(r1.dailyHistory[0].sessionResets).toBe(2);
+    expect(r1.dailyHistory[0].maxSession).toBe(14);
+
+    // Janela 2 cresce até 50
+    const r2 = updateDailySnapshot(r1.dailyHistory, TODAY, makeUsageData(50, 53, RESET_B), makeWindow(RESET_B, 50));
+    expect(r2.dailyHistory[0].maxSession).toBe(50);
+    expect(r2.currentWindow.peak).toBe(50);
+
+    // Segundo reset — pico da janela 2 = 50
+    const r3 = updateDailySnapshot(r2.dailyHistory, TODAY, makeUsageData(5, 54, RESET_C), makeWindow(RESET_B, 50));
+    expect(r3.dailyHistory[0].sessionAccum).toBe(120); // 70 + 50
+    expect(r3.dailyHistory[0].sessionResets).toBe(3);
+    expect(r3.dailyHistory[0].maxSession).toBe(5);
+    expect(r3.completedWindow).toMatchObject({ resetsAt: RESET_B, peak: 50 });
+  });
+
+  // ── Limite de dias ───────────────────────────────────────────────────────────
+
+  it('limite de 8 entradas: histórico é truncado', () => {
+    const history: DailySnapshot[] = Array.from({ length: 8 }, (_, i) => ({
+      date: `2026-03-${String(i + 1).padStart(2, '0')}`,
+      maxWeekly: 10, maxSession: 10, sessionResets: 1, sessionAccum: 0,
+    }));
+    const { dailyHistory } = updateDailySnapshot(history, TODAY, makeUsageData(20, 20, RESET_A), null);
+    expect(dailyHistory).toHaveLength(8);
+    expect(dailyHistory[dailyHistory.length - 1].date).toBe(TODAY);
+    expect(dailyHistory.find(d => d.date === '2026-03-01')).toBeUndefined();
   });
 });

@@ -640,10 +640,23 @@ app.whenReady().then(() => {
     // Snapshot diário (sempre gravado, independente do toggle)
     // Usa 'sv' locale para obter formato YYYY-MM-DD na timezone local
     const today = new Date().toLocaleDateString('sv');
-    const dailyHistory: DailySnapshot[] = getAccountData().dailyHistory ?? [];
-    const updatedDailyHistory = updateDailySnapshot(dailyHistory, today, data, prevData);
+    const accountData = getAccountData();
+    const { dailyHistory: updatedDailyHistory, currentWindow, completedWindow } =
+      updateDailySnapshot(accountData.dailyHistory ?? [], today, data, accountData.currentSessionWindow);
 
-    saveAccountData({ usageHistory: history, dailyHistory: updatedDailyHistory });
+    const updatedSessionWindows = accountData.sessionWindows ?? [];
+    if (completedWindow) {
+      updatedSessionWindows.push(completedWindow);
+      // Manter no máximo 40 janelas (≈ 7 dias × ~5 janelas/dia)
+      if (updatedSessionWindows.length > 40) updatedSessionWindows.splice(0, updatedSessionWindows.length - 40);
+    }
+
+    saveAccountData({
+      usageHistory: history,
+      dailyHistory: updatedDailyHistory,
+      currentSessionWindow: currentWindow,
+      sessionWindows: updatedSessionWindows,
+    });
 
     updateTrayTooltip(data);
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
