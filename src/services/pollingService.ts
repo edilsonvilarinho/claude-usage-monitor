@@ -13,6 +13,13 @@ const POLL_RATE_LIMIT_MAX    = 10 * 60 * 1000; // 10 min cap
 const IDLE_THRESHOLD         = 10 * 60;        // 10 min in seconds
 const FAST_CYCLES            = 1;              // how many fast polls after spike
 
+export interface LastResponseInfo {
+  ok: boolean;
+  code?: number;
+  message?: string;
+  time: number;
+}
+
 export class PollingService extends EventEmitter {
   private timer: NodeJS.Timeout | null = null;
   private lastData: UsageData | null = null;
@@ -155,6 +162,7 @@ export class PollingService extends EventEmitter {
 
       this.lastData = data;
       this.emit('usage-updated', data);
+      this.emit('last-response', { ok: true, time: Date.now() } satisfies LastResponseInfo);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       const isRateLimit = (err as { isRateLimit?: boolean }).isRateLimit === true;
@@ -189,6 +197,10 @@ export class PollingService extends EventEmitter {
         console.error('[PollingService] Error fetching usage:', error.message);
       }
 
+      const codeMatch = error.message.match(/\b([1-5]\d{2})\b/);
+      const code = isRateLimit ? 429 : (codeMatch ? parseInt(codeMatch[1], 10) : undefined);
+      const message = isRateLimit ? 'Rate Limited' : error.message.slice(0, 40);
+      this.emit('last-response', { ok: false, code, message, time: Date.now() } satisfies LastResponseInfo);
       this.emit('error', error);
     }
 

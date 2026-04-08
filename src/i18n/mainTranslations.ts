@@ -24,6 +24,8 @@ export interface MainTranslations {
   trayPause: string;
   trayResume: string;
   trayPaused: string;
+  trayLastRespOk: (time: string) => string;
+  trayLastRespErr: (detail: string, time: string) => string;
 }
 
 const en: MainTranslations = {
@@ -52,6 +54,8 @@ const en: MainTranslations = {
   trayPause: 'Pause monitoring',
   trayResume: 'Resume monitoring',
   trayPaused: '⏸ Paused',
+  trayLastRespOk:  (time) => `Last: ✓ OK · ${time}`,
+  trayLastRespErr: (detail, time) => `Last: ✗ ${detail} · ${time}`,
 };
 
 const ptBR: MainTranslations = {
@@ -80,6 +84,8 @@ const ptBR: MainTranslations = {
   trayPause: 'Pausar monitoramento',
   trayResume: 'Retomar monitoramento',
   trayPaused: '⏸ Pausado',
+  trayLastRespOk:  (time) => `Última: ✓ OK · ${time}`,
+  trayLastRespErr: (detail, time) => `Última: ✗ ${detail} · ${time}`,
 };
 
 export function getMainTranslations(lang?: string): MainTranslations {

@@ -85,4 +85,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   onNextPollAt: (cb: (nextPollAt: number) => void): void => {
     ipcRenderer.on('next-poll-at', (_event, nextPollAt: number) => cb(nextPollAt));
   },
+
+  onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void): void => {
+    ipcRenderer.on('last-response', (_event, info) => cb(info));
+  },
 });

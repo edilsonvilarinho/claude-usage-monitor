@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, powerMonitor, shell, Notification, globalShortcut, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { pollingService } from './services/pollingService';
+import { pollingService, LastResponseInfo } from './services/pollingService';
 import { getSettings, saveSettings, setActiveAccount, getAccountData, saveAccountData } from './services/settingsService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
@@ -35,6 +35,7 @@ let savedPopupPosition: { x: number; y: number } | null = null;
 let isProgrammaticMove = false;
 let programmaticMoveTimer: ReturnType<typeof setTimeout> | null = null;
 let currentRateLimitUntil = 0; // restored from disk on startup
+let lastResponseInfo: LastResponseInfo | null = null;
 let credentialMissing = false;
 let credentialPath = '';
 let cachedProfile: ProfileData | null = null;
@@ -186,6 +187,10 @@ function togglePopup(): void {
       const { rateLimitResetAt } = getAccountData();
       popup.webContents.send('rate-limited', currentRateLimitUntil, rateLimitResetAt || undefined);
     }
+    // Send last response info so footer shows current state
+    if (lastResponseInfo) {
+      popup.webContents.send('last-response', lastResponseInfo);
+    }
     // Re-surface credential error if still unresolved
     if (credentialMissing) {
       popup.webContents.send('credential-missing', credentialPath);
@@ -264,8 +269,17 @@ function updateTrayTooltip(data: UsageData): void {
   ];
   if (nextLine) parts.push(nextLine);
   if (pollingService.isPaused) parts.push(t.trayPaused);
+  if (lastResponseInfo) {
+    const respTime = new Date(lastResponseInfo.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (lastResponseInfo.ok) {
+      parts.push(t.trayLastRespOk(respTime));
+    } else {
+      const detail = lastResponseInfo.code ? String(lastResponseInfo.code) : (lastResponseInfo.message ?? 'Error');
+      parts.push(t.trayLastRespErr(detail, respTime));
+    }
+  }
   const tooltip = parts.join('\n');
-  tray.setToolTip(tooltip.length > 127 ? tooltip.slice(0, 127) : tooltip);
+  tray.setToolTip(tooltip.length > 255 ? tooltip.slice(0, 255) : tooltip);
 }
 
 // ─── Update check ────────────────────────────────────────────────────────────
@@ -665,6 +679,13 @@ app.whenReady().then(() => {
 
     if (Date.now() - cachedProfileAt > 3_600_000) {
       void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); setActiveAccount(p.account.email); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
+    }
+  });
+
+  pollingService.on('last-response', (info: LastResponseInfo) => {
+    lastResponseInfo = info;
+    if (popup?.isVisible()) {
+      popup.webContents.send('last-response', info);
     }
   });
 

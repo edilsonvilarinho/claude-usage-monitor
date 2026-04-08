@@ -54,6 +54,7 @@ declare global {
       onError: (cb: (msg: string) => void) => void;
       onRateLimited: (cb: (until: number, resetAt?: number) => void) => void;
       onNextPollAt: (cb: (nextPollAt: number) => void) => void;
+      onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void) => void;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -126,6 +127,8 @@ const translations = {
     rateLimitNow:    'Retrying...',
     updatedAt:  (time: string) => `Updated: ${time}`,
     failedAt:   (time: string) => `Failed: ${time}`,
+    lastRespOk:  (time: string) => `✓ OK · ${time}`,
+    lastRespErr: (detail: string, time: string) => `✗ ${detail} · ${time}`,
     resetsIn:   (d: number, h: number, m: number) =>
       d > 0 ? `Resets in ${d}d ${h}h` : h > 0 ? `Resets in ${h}h ${m}m` : `Resets in ${m}m`,
     resetsAt:   (timeStr: string) => `at ${timeStr}`,
@@ -196,6 +199,8 @@ const translations = {
     rateLimitNow:    'Tentando novamente...',
     updatedAt:  (time: string) => `Atualizado: ${time}`,
     failedAt:   (time: string) => `Falhou: ${time}`,
+    lastRespOk:  (time: string) => `✓ OK · ${time}`,
+    lastRespErr: (detail: string, time: string) => `✗ ${detail} · ${time}`,
     resetsIn:   (d: number, h: number, m: number) =>
       d > 0 ? `Reinicia em ${d}d ${h}h` : h > 0 ? `Reinicia em ${h}h ${m}m` : `Reinicia em ${m}m`,
     resetsAt:   (timeStr: string) => `às ${timeStr}`,
@@ -933,6 +938,19 @@ function init(): void {
       if (remaining > 0) {
         startNextPollCountdown(remaining);
       }
+    }
+  });
+
+  window.claudeUsage.onLastResponse((info) => {
+    const el = document.getElementById('last-resp-text') as HTMLElement;
+    const time = new Date(info.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (info.ok) {
+      el.textContent = tr().lastRespOk(time);
+      el.className = 'last-resp-text ok';
+    } else {
+      const detail = info.code ? String(info.code) : (info.message ?? 'Error');
+      el.textContent = tr().lastRespErr(detail, time);
+      el.className = 'last-resp-text err';
     }
   });
 
