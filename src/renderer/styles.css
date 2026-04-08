@@ -684,6 +684,10 @@ body {
   justify-content: center;
 }
 
+.hidden {
+  display: none !important;
+}
+
 .modal-overlay.hidden {
   display: none;
 }
