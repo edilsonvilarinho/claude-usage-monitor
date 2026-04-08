@@ -1,6 +1,9 @@
-import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
+import {
+  Chart, DoughnutController, ArcElement, Tooltip,
+  LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Legend,
+} from 'chart.js';
 
-Chart.register(DoughnutController, ArcElement, Tooltip);
+Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Legend);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number; sessionResets?: number; sessionAccum?: number }
@@ -55,6 +58,8 @@ declare global {
       onRateLimited: (cb: (until: number, resetAt?: number) => void) => void;
       onNextPollAt: (cb: (nextPollAt: number) => void) => void;
       onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void) => void;
+      getDayTimeSeries: (date: string) => Promise<{ ts: number; session: number; weekly: number }[]>;
+      getSessionWindows: () => Promise<{ resetsAt: string; peak: number; date: string }[]>;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -155,6 +160,10 @@ const translations = {
     editWeeklyLabel: 'Weekly max. (%)',
     editCancelBtn: 'Cancel',
     editSaveBtn: 'Save',
+    dayDetailTitle:   (d: string) => `Session history — ${d}`,
+    dayDetailEmpty:   'No data for this day yet',
+    dayDetailSession: 'Session (5h)',
+    dayDetailWeekly:  'Weekly (7d)',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -227,6 +236,10 @@ const translations = {
     editWeeklyLabel: 'Semanal máx. (%)',
     editCancelBtn: 'Cancelar',
     editSaveBtn: 'Salvar',
+    dayDetailTitle:   (d: string) => `Histórico de sessão — ${d}`,
+    dayDetailEmpty:   'Nenhum dado para este dia ainda',
+    dayDetailSession: 'Sessão (5h)',
+    dayDetailWeekly:  'Semanal (7d)',
   },
 } as const;
 
@@ -530,6 +543,131 @@ let lastRenderedData: { session: number; weekly: number } | null = null;
 
 let lastWeeklyResetsAt: string | null = null;
 let currentDailyHistory: DailySnapshot[] = [];
+let dayDetailChart: Chart | null = null;
+
+async function openDayDetailModal(date: string): Promise<void> {
+  const modal    = document.getElementById('day-detail-modal')!;
+  const titleEl  = document.getElementById('day-detail-title')!;
+  const emptyEl  = document.getElementById('day-detail-empty')!;
+  const canvas   = document.getElementById('day-detail-canvas') as HTMLCanvasElement;
+  const t = tr();
+
+  // Format display date
+  const d = new Date(date + 'T12:00:00');
+  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
+  titleEl.textContent = t.dayDetailTitle(d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'short' }));
+
+  // Destroy previous chart
+  if (dayDetailChart) { dayDetailChart.destroy(); dayDetailChart = null; }
+
+  modal.classList.remove('hidden');
+
+  const [points, windows] = await Promise.all([
+    window.claudeUsage.getDayTimeSeries(date),
+    window.claudeUsage.getSessionWindows(),
+  ]);
+
+  if (!points || points.length === 0) {
+    canvas.style.display = 'none';
+    emptyEl.textContent = t.dayDetailEmpty;
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+
+  canvas.style.display = '';
+  emptyEl.classList.add('hidden');
+
+  const labels  = points.map(p => new Date(p.ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }));
+  const session = points.map(p => Math.min(p.session, 100));
+  const weekly  = points.map(p => Math.min(p.weekly,  100));
+
+  // Reset markers: sessionWindows that belong to this date
+  const resets = (windows ?? []).filter(w => w.date === date);
+
+  // Vertical line plugin for reset markers
+  const resetPlugin = {
+    id: 'resetLines',
+    afterDraw(chart: Chart) {
+      const ctx  = chart.ctx;
+      const xAxis = chart.scales['x'];
+      const yAxis = chart.scales['y'];
+      resets.forEach(w => {
+        const resetTs = new Date(w.resetsAt).getTime();
+        // Find the closest label index
+        let closest = 0;
+        let minDiff = Infinity;
+        points.forEach((p, i) => {
+          const diff = Math.abs(p.ts - resetTs);
+          if (diff < minDiff) { minDiff = diff; closest = i; }
+        });
+        const x = xAxis.getPixelForValue(closest);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, yAxis.top);
+        ctx.lineTo(x, yAxis.bottom);
+        ctx.strokeStyle = 'rgba(249,115,22,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.restore();
+      });
+    },
+  };
+
+  dayDetailChart = new Chart(canvas, {
+    type: 'line',
+    plugins: [resetPlugin],
+    data: {
+      labels,
+      datasets: [
+        {
+          label: t.dayDetailSession,
+          data: session,
+          borderColor: 'var(--accent-purple, #a78bfa)',
+          backgroundColor: 'rgba(167,139,250,0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2,
+        },
+        {
+          label: t.dayDetailWeekly,
+          data: weekly,
+          borderColor: 'var(--accent-blue, #60a5fa)',
+          backgroundColor: 'rgba(96,165,250,0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 6, color: 'var(--text-secondary, #888)', font: { size: 10 } },
+          grid: { color: 'rgba(128,128,128,0.1)' },
+        },
+        y: {
+          min: 0,
+          max: 100,
+          ticks: { stepSize: 25, color: 'var(--text-secondary, #888)', font: { size: 10 }, callback: (v) => `${v}%` },
+          grid: { color: 'rgba(128,128,128,0.1)' },
+        },
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: 'var(--text-secondary, #888)', font: { size: 10 }, boxWidth: 10, padding: 8 },
+        },
+        tooltip: { mode: 'index', intersect: false },
+      },
+    },
+  });
+}
 
 function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): void {
   const container = document.getElementById('daily-chart');
@@ -613,7 +751,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
       tooltipHtml = `<div class="daily-tooltip">${sessionLine}${resetLine}${weeklyLine}${creditsLine}</div>`;
     }
 
-    return `<div class="daily-col${todayClass}${futureClass}">
+    return `<div class="daily-col${todayClass}${futureClass}" data-date="${s.date}">
       ${tooltipHtml}
       <div class="daily-bar-wrap">
         <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
@@ -623,6 +761,14 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
       <span class="daily-day">${s.label}</span>
     </div>`;
   }).join('');
+
+  container.querySelectorAll<HTMLElement>('.daily-col:not(.future)[data-date]').forEach(col => {
+    col.addEventListener('click', () => {
+      const date = col.dataset.date;
+      if (date) void openDayDetailModal(date);
+    });
+  });
+
   fitWindow();
 }
 
@@ -925,6 +1071,16 @@ function init(): void {
     const updated = await window.claudeUsage.getDailyHistory();
     if (lastWeeklyResetsAt) renderDailyChart(updated, lastWeeklyResetsAt);
     (document.getElementById('edit-snapshot-modal') as HTMLElement).classList.add('hidden');
+  });
+
+  // Day detail modal — close handlers
+  function closeDayDetailModal() {
+    document.getElementById('day-detail-modal')!.classList.add('hidden');
+    if (dayDetailChart) { dayDetailChart.destroy(); dayDetailChart = null; }
+  }
+  document.getElementById('day-detail-close')!.addEventListener('click', closeDayDetailModal);
+  document.getElementById('day-detail-modal')!.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('day-detail-modal')) closeDayDetailModal();
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {
