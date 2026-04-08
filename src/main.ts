@@ -341,6 +341,8 @@ async function backupWeeklyData(): Promise<string> {
   const payload = {
     exportedAt: new Date().toISOString(),
     dailyHistory,
+    timeSeries:     accountData.timeSeries     ?? {},
+    sessionWindows: accountData.sessionWindows ?? [],
   };
 
   fs.writeFileSync(filepath, JSON.stringify(payload, null, 2), 'utf-8');
@@ -370,26 +372,50 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
   }
 
   const accountData = getAccountData();
-  const existing = new Map<string, DailySnapshot>(
+  const existingDaily = new Map<string, DailySnapshot>(
     (accountData.dailyHistory ?? []).map(s => [s.date, s])
   );
+  const mergedTimeSeries = { ...(accountData.timeSeries ?? {}) };
+  const existingWindowKeys = new Set((accountData.sessionWindows ?? []).map(w => w.resetsAt));
+  const mergedWindows = [...(accountData.sessionWindows ?? [])];
 
   let mergedCount = 0;
 
   for (const filepath of result.filePaths) {
     const raw = fs.readFileSync(filepath, 'utf-8');
     const payload = JSON.parse(raw);
-    const snapshots: DailySnapshot[] = Array.isArray(payload.dailyHistory) ? payload.dailyHistory : [];
 
+    // dailyHistory — substitui por data (mesmo comportamento anterior)
+    const snapshots: DailySnapshot[] = Array.isArray(payload.dailyHistory) ? payload.dailyHistory : [];
     for (const snap of snapshots) {
       if (!snap.date || typeof snap.date !== 'string') continue;
-      existing.set(snap.date, snap);
+      existingDaily.set(snap.date, snap);
       mergedCount++;
+    }
+
+    // timeSeries — substitui por data
+    if (payload.timeSeries && typeof payload.timeSeries === 'object') {
+      for (const [date, points] of Object.entries(payload.timeSeries)) {
+        if (typeof date === 'string' && Array.isArray(points)) {
+          mergedTimeSeries[date] = points as typeof mergedTimeSeries[string];
+        }
+      }
+    }
+
+    // sessionWindows — merge deduplicado por resetsAt
+    if (Array.isArray(payload.sessionWindows)) {
+      for (const w of payload.sessionWindows) {
+        if (w.resetsAt && !existingWindowKeys.has(w.resetsAt)) {
+          mergedWindows.push(w);
+          existingWindowKeys.add(w.resetsAt);
+        }
+      }
     }
   }
 
-  const sorted = Array.from(existing.values()).sort((a, b) => a.date.localeCompare(b.date));
-  saveAccountData({ dailyHistory: sorted });
+  mergedWindows.sort((a, b) => a.resetsAt.localeCompare(b.resetsAt));
+  const sorted = Array.from(existingDaily.values()).sort((a, b) => a.date.localeCompare(b.date));
+  saveAccountData({ dailyHistory: sorted, timeSeries: mergedTimeSeries, sessionWindows: mergedWindows });
 
   return { imported: result.filePaths.length, merged: mergedCount };
 }
@@ -561,6 +587,14 @@ function registerIpcHandlers(): void {
     saveAccountData({ dailyHistory });
   });
 
+  ipcMain.handle('get-day-timeseries', (_event, date: string) => {
+    return getAccountData().timeSeries?.[date] ?? [];
+  });
+
+  ipcMain.handle('get-session-windows', () => {
+    return getAccountData().sessionWindows ?? [];
+  });
+
   ipcMain.handle('backup-weekly-data', async () => {
     return backupWeeklyData();
   });
@@ -626,25 +660,33 @@ app.whenReady().then(() => {
       currentRateLimitUntil = 0;
       saveAccountData({ rateLimitedUntil: 0, rateLimitCount: 0 });
     }
-    // Snapshot de histórico (máx 200 pontos ≈ 24h a cada 7min)
+    const now = Date.now();
+    const today = new Date().toLocaleDateString('sv'); // YYYY-MM-DD local
+    const accountData = getAccountData();
+
+    // ── Histórico resumido (máx 200 pontos ≈ 24h a cada 7min) ──────────────────
     const MAX_HISTORY = 200;
-    const snapshot: UsageSnapshot = {
-      ts: Date.now(),
-      session: Math.round(data.five_hour.utilization),
-      weekly: Math.round(data.seven_day.utilization),
-    };
-    const history = getAccountData().usageHistory ?? [];
-    history.push(snapshot);
+    const history = accountData.usageHistory ?? [];
+    history.push({ ts: now, session: Math.round(data.five_hour.utilization), weekly: Math.round(data.seven_day.utilization) });
     if (history.length > MAX_HISTORY) history.splice(0, history.length - MAX_HISTORY);
 
-    // Snapshot diário (sempre gravado, independente do toggle)
-    // Usa 'sv' locale para obter formato YYYY-MM-DD na timezone local
-    const today = new Date().toLocaleDateString('sv');
-    const accountData = getAccountData();
+    // ── Série temporal por dia (alinhada ao ciclo semanal de 7 dias) ────────────
+    const cycleStartDate = new Date(
+      new Date(data.seven_day.resets_at).getTime() - 7 * 24 * 60 * 60 * 1000
+    ).toLocaleDateString('sv');
+    const timeSeries = { ...(accountData.timeSeries ?? {}) };
+    if (!timeSeries[today]) timeSeries[today] = [];
+    timeSeries[today].push({ ts: now, session: Math.round(data.five_hour.utilization), weekly: Math.round(data.seven_day.utilization) });
+    // Remover dias fora do ciclo corrente
+    for (const date of Object.keys(timeSeries)) {
+      if (date < cycleStartDate) delete timeSeries[date];
+    }
+
+    // ── Snapshot diário + session window tracking ───────────────────────────────
     const { dailyHistory: updatedDailyHistory, currentWindow, completedWindow } =
       updateDailySnapshot(accountData.dailyHistory ?? [], today, data, accountData.currentSessionWindow);
 
-    const updatedSessionWindows = accountData.sessionWindows ?? [];
+    const updatedSessionWindows = [...(accountData.sessionWindows ?? [])];
     if (completedWindow) {
       updatedSessionWindows.push(completedWindow);
       // Manter no máximo 40 janelas (≈ 7 dias × ~5 janelas/dia)
@@ -653,6 +695,7 @@ app.whenReady().then(() => {
 
     saveAccountData({
       usageHistory: history,
+      timeSeries,
       dailyHistory: updatedDailyHistory,
       currentSessionWindow: currentWindow,
       sessionWindows: updatedSessionWindows,

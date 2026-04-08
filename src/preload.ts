@@ -89,4 +89,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void): void => {
     ipcRenderer.on('last-response', (_event, info) => cb(info));
   },
+
+  getDayTimeSeries: (date: string): Promise<import('./models/usageData').TimeSeriesPoint[]> =>
+    ipcRenderer.invoke('get-day-timeseries', date),
+
+  getSessionWindows: (): Promise<import('./models/usageData').SessionWindowRecord[]> =>
+    ipcRenderer.invoke('get-session-windows'),
 });
