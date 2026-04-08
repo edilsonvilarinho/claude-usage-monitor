@@ -148,7 +148,7 @@ const defaults: AppSettings = {
   pollIntervalMinutes: 7,
   windowSize: 'large',
   autoRefresh: false,
-  autoRefreshInterval: 300,
+  autoRefreshInterval: 600,
   rateLimitedUntil: 0,
   rateLimitCount: 0,
   rateLimitResetAt: 0,
