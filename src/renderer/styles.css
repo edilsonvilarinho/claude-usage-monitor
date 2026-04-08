@@ -881,8 +881,8 @@ body {
   bottom: calc(100% + 4px);
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(12, 12, 12, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 18, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
   padding: 6px 9px;
   font-size: 10px;
@@ -890,7 +890,7 @@ body {
   white-space: nowrap;
   z-index: 50;
   pointer-events: none;
-  color: var(--text-primary);
+  color: #e8e8e8;
 }
 .daily-col:hover .daily-tooltip { display: block; }
 
@@ -920,7 +920,7 @@ body {
 
 .tip-resets {
   font-size: 9px;
-  color: var(--text-secondary);
+  color: rgba(180, 180, 180, 0.9);
   padding-left: 10px;
   margin-bottom: 2px;
 }

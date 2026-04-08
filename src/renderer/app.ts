@@ -577,6 +577,8 @@ async function openDayDetailModal(date: string): Promise<void> {
   canvas.style.display = '';
   emptyEl.classList.add('hidden');
 
+  const tickColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#aaa';
+
   const labels  = points.map(p => new Date(p.ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }));
   const session = points.map(p => Math.min(p.session, 100));
   const weekly  = points.map(p => Math.min(p.weekly,  100));
@@ -648,20 +650,20 @@ async function openDayDetailModal(date: string): Promise<void> {
       animation: false,
       scales: {
         x: {
-          ticks: { maxTicksLimit: 6, color: 'var(--text-secondary, #888)', font: { size: 10 } },
+          ticks: { maxTicksLimit: 6, color: tickColor, font: { size: 10 } },
           grid: { color: 'rgba(128,128,128,0.2)' },
         },
         y: {
           min: 0,
           max: 100,
-          ticks: { stepSize: 25, color: 'var(--text-secondary, #888)', font: { size: 10 }, callback: (v) => `${v}%` },
+          ticks: { stepSize: 25, color: tickColor, font: { size: 10 }, callback: (v) => `${v}%` },
           grid: { color: 'rgba(128,128,128,0.2)' },
         },
       },
       plugins: {
         legend: {
           display: true,
-          labels: { color: 'var(--text-secondary, #888)', font: { size: 10 }, boxWidth: 10, padding: 8 },
+          labels: { color: tickColor, font: { size: 10 }, boxWidth: 10, padding: 8 },
         },
         tooltip: { mode: 'index', intersect: false },
       },
