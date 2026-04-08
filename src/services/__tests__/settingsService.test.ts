@@ -65,7 +65,7 @@ describe('getSettings()', () => {
     expect(settings.pollIntervalMinutes).toBe(7)
     expect(settings.windowSize).toBe('large')
     expect(settings.autoRefresh).toBe(false)
-    expect(settings.autoRefreshInterval).toBe(300)
+    expect(settings.autoRefreshInterval).toBe(600)
     expect(settings.rateLimitedUntil).toBe(0)
     expect(settings.rateLimitCount).toBe(0)
     expect(settings.rateLimitResetAt).toBe(0)
