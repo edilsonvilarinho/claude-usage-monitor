@@ -624,7 +624,7 @@ async function openDayDetailModal(date: string): Promise<void> {
           label: t.dayDetailSession,
           data: session,
           borderColor: 'var(--accent-purple, #a78bfa)',
-          backgroundColor: 'rgba(167,139,250,0.08)',
+          backgroundColor: 'rgba(167,139,250,0.20)',
           fill: true,
           tension: 0.3,
           pointRadius: 0,
@@ -634,7 +634,7 @@ async function openDayDetailModal(date: string): Promise<void> {
           label: t.dayDetailWeekly,
           data: weekly,
           borderColor: 'var(--accent-blue, #60a5fa)',
-          backgroundColor: 'rgba(96,165,250,0.06)',
+          backgroundColor: 'rgba(96,165,250,0.15)',
           fill: true,
           tension: 0.3,
           pointRadius: 0,
@@ -649,13 +649,13 @@ async function openDayDetailModal(date: string): Promise<void> {
       scales: {
         x: {
           ticks: { maxTicksLimit: 6, color: 'var(--text-secondary, #888)', font: { size: 10 } },
-          grid: { color: 'rgba(128,128,128,0.1)' },
+          grid: { color: 'rgba(128,128,128,0.2)' },
         },
         y: {
           min: 0,
           max: 100,
           ticks: { stepSize: 25, color: 'var(--text-secondary, #888)', font: { size: 10 }, callback: (v) => `${v}%` },
-          grid: { color: 'rgba(128,128,128,0.1)' },
+          grid: { color: 'rgba(128,128,128,0.2)' },
         },
       },
       plugins: {

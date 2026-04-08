@@ -1,7 +1,7 @@
 /* ── CSS Variables ─────────────────────────────────────────────────── */
 :root {
   --bg: rgba(20, 20, 20, 0.82);
-  --bg-solid: rgb(22, 22, 22);
+  --bg-solid: rgb(38, 38, 38);
   --surface: rgba(40, 40, 40, 0.7);
   --border: rgba(255, 255, 255, 0.08);
   --text-primary: #f0f0f0;
@@ -45,21 +45,21 @@ body[data-size="xlarge"] {
 /* ── Light theme ────────────────────────────────────────────────────── */
 [data-theme="light"] {
   --bg: rgba(245, 245, 245, 0.88);
-  --bg-solid: rgb(240, 240, 240);
+  --bg-solid: rgb(235, 235, 235);
   --surface: rgba(255, 255, 255, 0.75);
   --border: rgba(0, 0, 0, 0.08);
   --text-primary: #111111;
-  --text-secondary: rgba(60, 60, 60, 0.7);
+  --text-secondary: rgba(100, 100, 100, 0.85);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     --bg: rgba(245, 245, 245, 0.88);
-    --bg-solid: rgb(240, 240, 240);
+    --bg-solid: rgb(235, 235, 235);
     --surface: rgba(255, 255, 255, 0.75);
     --border: rgba(0, 0, 0, 0.08);
     --text-primary: #111111;
-    --text-secondary: rgba(60, 60, 60, 0.7);
+    --text-secondary: rgba(100, 100, 100, 0.85);
   }
 }
 
