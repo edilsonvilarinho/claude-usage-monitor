@@ -1085,6 +1085,11 @@ function init(): void {
     if (e.target === document.getElementById('day-detail-modal')) closeDayDetailModal();
   });
 
+  // Fecha modais abertos quando a janela é reexibida (popup hide → show não recria o DOM)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') closeDayDetailModal();
+  });
+
   window.claudeUsage.onRateLimited((until, resetAt) => {
     isRateLimited = true;
     startRateLimitCountdown(until, resetAt);
