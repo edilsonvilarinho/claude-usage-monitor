@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR" style="background:#0e0e10;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Usage Monitor — Infográfico</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:  #22c55e;
+    --amber:  #f59e0b;
+    --red:    #ef4444;
+    --blue:   #3b82f6;
+    --bg:     #0e0e10;
+    --card:   rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text:   #f0f0f0;
+    --muted:  rgba(200,200,200,0.55);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 48px 32px;
+    max-width: 960px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .header .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue);
+    border: 1px solid rgba(59,130,246,0.35);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #f0f0f0 40%, rgba(240,240,240,0.45));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  .header p {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* ── Section labels ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .section { margin-bottom: 28px; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.4);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ────────────────────────────────────────────────
+     BLOCO 1 — GAUGES
+  ──────────────────────────────────────────────── */
+  .gauges-block {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .gauge-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 140px;
+  }
+
+  /* SVG gauge */
+  .gauge-svg { width: 130px; height: 72px; }
+
+  .gauge-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+  }
+  .gauge-val {
+    font-size: 22px;
+    font-weight: 800;
+    margin-top: -4px;
+    text-align: center;
+  }
+  .gauge-reset {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .color-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 160px;
+    justify-content: center;
+  }
+  .color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+  }
+  .color-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .color-range {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+    font-weight: 500;
+  }
+
+  /* ────────────────────────────────────────────────
+     BLOCO 2 — TRAY ICON
+  ──────────────────────────────────────────────── */
+  .tray-demos {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .tray-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .tray-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .tray-icon canvas {
+    display: none;
+  }
+  .tray-bg {
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: rgba(60,60,60,0.8);
+  }
+  .tray-arc {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+  }
+  .tray-text {
+    position: relative;
+    font-size: 11px;
+    font-weight: 800;
+    z-index: 2;
+  }
+  .tray-caption {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .tray-pct {
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  /* ────────────────────────────────────────────────
+     BLOCO 3 — GRÁFICO DIÁRIO
+  ──────────────────────────────────────────────── */
+  .daily-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .daily-chart {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    padding: 12px 8px 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .day-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .bars-group {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 48px;
+  }
+  .bar {
+    width: 8px;
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+  }
+  .bar.session { background: rgba(34,197,94,0.55); }
+  .bar.weekly  { background: #22c55e; }
+  .bar.credits { background: rgba(59,130,246,0.85); }
+  .bar.crit    { background: rgba(239,68,68,0.85) !important; }
+  .bar.warn    { background: rgba(245,158,11,0.85) !important; }
+  .day-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 4px;
+  }
+  .day-col.today .day-label {
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .day-col.today .bars-group {
+    position: relative;
+  }
+  .day-col.today .bars-group::after {
+    content: 'hoje';
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--blue);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .day-col.future .bar { opacity: 0.15; }
+
+  .legend-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .leg {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted);
+  }
+  .leg-dot {
+    width: 8px; height: 8px; border-radius: 2px;
+  }
+
+  .daily-notes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .note-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .note-box strong { color: var(--text); }
+
+  /* ────────────────────────────────────────────────
+     BLOCO 4 — FLUXO DE DADOS
+  ──────────────────────────────────────────────── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 90px;
+    text-align: center;
+  }
+  .flow-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .flow-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .flow-sub {
+    font-size: 9px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .flow-arrow {
+    font-size: 18px;
+    color: var(--muted);
+    padding: 0 4px;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+  }
+  .flow-branches {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-left: 4px;
+  }
+  .flow-branch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .flow-branch-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ────────────────────────────────────────────────
+     BLOCO 5 — POLLING
+  ──────────────────────────────────────────────── */
+  .poll-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+  .poll-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  .poll-icon { font-size: 20px; }
+  .poll-name {
+    font-size: 10px; font-weight: 700;
+    color: var(--text);
+  }
+  .poll-interval {
+    font-size: 12px; font-weight: 800;
+  }
+  .poll-desc {
+    font-size: 9px; color: var(--muted); line-height: 1.4;
+  }
+
+  /* ────────────────────────────────────────────────
+     BLOCO 6 — ESTADOS ESPECIAIS
+  ──────────────────────────────────────────────── */
+  .states-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .state-card {
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid;
+  }
+  .state-card.rate-limit {
+    background: rgba(245,158,11,0.08);
+    border-color: rgba(245,158,11,0.25);
+  }
+  .state-card.error {
+    background: rgba(239,68,68,0.08);
+    border-color: rgba(239,68,68,0.25);
+  }
+  .state-card.resetting {
+    background: rgba(59,130,246,0.08);
+    border-color: rgba(59,130,246,0.25);
+  }
+  .state-icon { font-size: 22px; margin-bottom: 8px; }
+  .state-title {
+    font-size: 12px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .state-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+
+  /* ── Print / PDF — mantém tema dark ── */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  @media print {
+    body { padding: 24px; }
+    @page { margin: 0; size: A4 landscape; }
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0 20px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<div class="header">
+  <div class="tag">Documentação Visual</div>
+  <h1>Claude Usage Monitor</h1>
+  <p>Como o sistema de visualização funciona — gauges, gráficos, ícone na bandeja e fluxo de dados</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     1. GAUGES SEMICIRCULARES
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 1</div>
+  <div class="section-title"><span class="num">1</span> Gauges Semicirculares (Medidores de Uso)</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div class="gauges-block">
+
+      <!-- Gauge Sessão — verde (45%) -->
+      <div class="gauge-demo">
+        <svg class="gauge-svg" viewBox="0 0 130 72">
+          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="172.8" stroke-dashoffset="95"/>
+          <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="18" font-weight="800" fill="#f0f0f0">45%</text>
+        </svg>
+        <div class="gauge-val" style="color:#22c55e">45%</div>
+        <div class="gauge-label">Sessão (5h)</div>
+        <div class="gauge-reset">resets em 2h 14min</div>
+      </div>
+
+      <!-- Gauge Semanal — âmbar (72%) -->
+      <div class="gauge-demo">
+        <svg class="gauge-svg" viewBox="0 0 130 72">
+          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="172.8" stroke-dashoffset="48"/>
+          <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="18" font-weight="800" fill="#f0f0f0">72%</text>
+        </svg>
+        <div class="gauge-val" style="color:#f59e0b">72%</div>
+        <div class="gauge-label">Semanal (7d)</div>
+        <div class="gauge-reset">resets em 1d 4h</div>
+      </div>
+
+      <!-- Gauge crítico — vermelho (91%) -->
+      <div class="gauge-demo">
+        <svg class="gauge-svg" viewBox="0 0 130 72">
+          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="172.8" stroke-dashoffset="16"/>
+          <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="18" font-weight="800" fill="#f0f0f0">91%</text>
+        </svg>
+        <div class="gauge-val" style="color:#ef4444">91%</div>
+        <div class="gauge-label">Sessão (5h)</div>
+        <div class="gauge-reset">resets em 0h 22min</div>
+      </div>
+
+      <!-- Legenda de cores -->
+      <div class="color-legend">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;">Sistema de cores</div>
+        <div class="color-row">
+          <div class="color-dot" style="background:#22c55e"></div>
+          <span style="color:#22c55e;font-weight:600;">Verde</span>
+          <span class="color-range">0 – 59%</span>
+        </div>
+        <div class="color-row">
+          <div class="color-dot" style="background:#f59e0b"></div>
+          <span style="color:#f59e0b;font-weight:600;">Âmbar</span>
+          <span class="color-range">60 – 79%</span>
+        </div>
+        <div class="color-row">
+          <div class="color-dot" style="background:#ef4444"></div>
+          <span style="color:#ef4444;font-weight:600;">Vermelho</span>
+          <span class="color-range">≥ 80%</span>
+        </div>
+
+        <div style="margin-top:12px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;">
+          <strong style="color:var(--text)">Acima de 100%</strong><br>
+          Gauge trava em 100% visualmente.<br>
+          Texto exibe <code style="color:#f59e0b">&gt;XXX%</code> (ex: <code style="color:#ef4444">&gt;1600%</code>).
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     2. ÍCONE DA BANDEJA
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 2</div>
+  <div class="section-title"><span class="num">2</span> Ícone na Bandeja do Sistema</div>
+  <div class="divider"></div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      Gerado em <code>&lt;canvas&gt;</code> oculto (32×32px). Usa o <strong>maior valor</strong> entre sessão e semanal para cor e arco.
+    </p>
+    <div class="tray-demos">
+
+      <!-- 45% verde -->
+      <div class="tray-item">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
+          <circle cx="26" cy="26" r="20" fill="none" stroke="#22c55e" stroke-width="5"
+                  stroke-dasharray="125.6" stroke-dashoffset="69" stroke-linecap="round"
+                  transform="rotate(-90 26 26)"/>
+          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#f0f0f0">45</text>
+        </svg>
+        <div class="tray-pct" style="color:#22c55e">45%</div>
+        <div class="tray-caption">Normal</div>
+      </div>
+
+      <!-- 72% âmbar -->
+      <div class="tray-item">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
+          <circle cx="26" cy="26" r="20" fill="none" stroke="#f59e0b" stroke-width="5"
+                  stroke-dasharray="125.6" stroke-dashoffset="35" stroke-linecap="round"
+                  transform="rotate(-90 26 26)"/>
+          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#f0f0f0">72</text>
+        </svg>
+        <div class="tray-pct" style="color:#f59e0b">72%</div>
+        <div class="tray-caption">Atenção</div>
+      </div>
+
+      <!-- 91% vermelho -->
+      <div class="tray-item">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
+          <circle cx="26" cy="26" r="20" fill="none" stroke="#ef4444" stroke-width="5"
+                  stroke-dasharray="125.6" stroke-dashoffset="11" stroke-linecap="round"
+                  transform="rotate(-90 26 26)"/>
+          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#f0f0f0">91</text>
+        </svg>
+        <div class="tray-pct" style="color:#ef4444">91%</div>
+        <div class="tray-caption">Crítico</div>
+      </div>
+
+      <!-- ≥100% vermelho — !!! -->
+      <div class="tray-item">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
+          <circle cx="26" cy="26" r="20" fill="none" stroke="#ef4444" stroke-width="5"
+                  stroke-dasharray="125.6" stroke-dashoffset="0" stroke-linecap="round"
+                  transform="rotate(-90 26 26)"/>
+          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#ef4444">!!!</text>
+        </svg>
+        <div class="tray-pct" style="color:#ef4444">≥100%</div>
+        <div class="tray-caption">Ultrapassado</div>
+      </div>
+
+      <div style="flex:1;min-width:160px;font-size:11px;color:var(--muted);line-height:1.8;padding-left:8px;border-left:1px solid var(--border);">
+        <strong style="color:var(--text);display:block;margin-bottom:8px;">Composição do ícone</strong>
+        🔵 <strong style="color:var(--text)">Fundo</strong> — círculo cinza (adapta ao tema)<br>
+        🟢 <strong style="color:var(--text)">Arco</strong> — proporcional ao maior % (sessão ou semanal)<br>
+        🔤 <strong style="color:var(--text)">Texto</strong> — valor numérico central (<code>!!!</code> se ≥ 100%)<br>
+        🎨 <strong style="color:var(--text)">Cor</strong> — mesma paleta dos gauges
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     3. GRÁFICO DIÁRIO
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 3</div>
+  <div class="section-title"><span class="num">3</span> Gráfico de Barras Diário (7 dias)</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div class="daily-wrap">
+
+      <!-- Gráfico demo -->
+      <div>
+        <div class="legend-row" style="margin-bottom:12px;">
+          <div class="leg"><div class="leg-dot" style="background:rgba(34,197,94,0.55)"></div>Sessão 5h</div>
+          <div class="leg"><div class="leg-dot" style="background:#22c55e"></div>Semanal 7d</div>
+          <div class="leg"><div class="leg-dot" style="background:rgba(59,130,246,0.85)"></div>Créditos (opcional)</div>
+        </div>
+        <div class="daily-chart">
+          <!-- Seg -->
+          <div class="day-col">
+            <div class="bars-group">
+              <div class="bar session" style="height:14px"></div>
+              <div class="bar weekly ok" style="height:20px"></div>
+            </div>
+            <div class="day-label">Seg</div>
+          </div>
+          <!-- Ter -->
+          <div class="day-col">
+            <div class="bars-group">
+              <div class="bar session warn" style="height:28px"></div>
+              <div class="bar weekly warn" style="height:32px"></div>
+            </div>
+            <div class="day-label">Ter</div>
+          </div>
+          <!-- Qua -->
+          <div class="day-col">
+            <div class="bars-group">
+              <div class="bar session" style="height:18px"></div>
+              <div class="bar weekly warn" style="height:38px"></div>
+            </div>
+            <div class="day-label">Qua</div>
+          </div>
+          <!-- Qui -->
+          <div class="day-col">
+            <div class="bars-group">
+              <div class="bar session crit" style="height:38px"></div>
+              <div class="bar weekly crit" style="height:44px"></div>
+              <div class="bar credits" style="height:20px"></div>
+            </div>
+            <div class="day-label">Qui</div>
+          </div>
+          <!-- Sex -->
+          <div class="day-col">
+            <div class="bars-group">
+              <div class="bar session" style="height:12px"></div>
+              <div class="bar weekly crit" style="height:46px"></div>
+            </div>
+            <div class="day-label">Sex</div>
+          </div>
+          <!-- Sab — hoje -->
+          <div class="day-col today">
+            <div class="bars-group">
+              <div class="bar session warn" style="height:22px"></div>
+              <div class="bar weekly crit" style="height:40px"></div>
+            </div>
+            <div class="day-label">Sáb</div>
+          </div>
+          <!-- Dom — futuro -->
+          <div class="day-col future">
+            <div class="bars-group">
+              <div class="bar session" style="height:6px;opacity:0.15"></div>
+              <div class="bar weekly" style="height:6px;opacity:0.15"></div>
+            </div>
+            <div class="day-label">Dom</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:right;">
+          ↑ pico máximo do dia &nbsp;|&nbsp; altura máx = 40px (100%)
+        </div>
+      </div>
+
+      <!-- Notas explicativas -->
+      <div class="daily-notes">
+        <div class="note-box">
+          <strong>Ciclo de 7 dias</strong><br>
+          Calculado a partir de <code>resets_at</code> da janela semanal.<br>
+          <code>cycleStart = resets_at − 7 dias</code>
+        </div>
+        <div class="note-box">
+          <strong>Dias futuros</strong><br>
+          Exibidos sem barras. Dia atual destacado com rótulo em azul.
+        </div>
+        <div class="note-box">
+          <strong>Resets de sessão</strong><br>
+          A janela de 5h pode resetar várias vezes/dia.<br>
+          <code>sessionResets</code>: nº de janelas abertas<br>
+          <code>sessionAccum</code>: uso acumulado das anteriores
+        </div>
+        <div class="note-box">
+          <strong>Barra de créditos</strong><br>
+          Exibida apenas se o usuário tem plano de créditos (<code>maxCredits</code> presente no histórico).
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     4. FLUXO DE DADOS
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 4</div>
+  <div class="section-title"><span class="num">4</span> Fluxo de Dados</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;">
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);">🌐</div>
+        <div class="flow-name">API Anthropic</div>
+        <div class="flow-sub">/api/oauth/usage</div>
+      </div>
+      <div class="flow-arrow">→</div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);">🔌</div>
+        <div class="flow-name">usageApiService</div>
+        <div class="flow-sub">GET + retry 5xx<br>429 → rate limit</div>
+      </div>
+      <div class="flow-arrow">→</div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);">⏱</div>
+        <div class="flow-name">pollingService</div>
+        <div class="flow-sub">Normal / Fast / Idle<br>backoff rate limit</div>
+      </div>
+      <div class="flow-arrow">→</div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.25);">📡</div>
+        <div class="flow-name">IPC Main→Renderer</div>
+        <div class="flow-sub">usage-updated<br>rate-limited</div>
+      </div>
+      <div class="flow-arrow">→</div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">📊</div>
+          updateGauge (sessão + semanal)
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">🖼</div>
+          updateTrayIcon (canvas PNG)
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">📅</div>
+          renderDailyChart (7 dias)
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">🔔</div>
+          notificationService
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     5. INTERVALOS DE POLLING
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 5</div>
+  <div class="section-title"><span class="num">5</span> Intervalos de Polling</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div class="poll-grid">
+      <div class="poll-item" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;">
+        <div class="poll-icon">🟢</div>
+        <div class="poll-name">Normal</div>
+        <div class="poll-interval" style="color:#22c55e">10 min</div>
+        <div class="poll-desc">Uso estável</div>
+      </div>
+      <div class="poll-item" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;">
+        <div class="poll-icon">⚡</div>
+        <div class="poll-name">Fast</div>
+        <div class="poll-interval" style="color:#f59e0b">7 min</div>
+        <div class="poll-desc">Spike &gt;1%<br>detectado</div>
+      </div>
+      <div class="poll-item" style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);border-radius:12px;">
+        <div class="poll-icon">💤</div>
+        <div class="poll-name">Idle</div>
+        <div class="poll-interval" style="color:#94a3b8">30 min</div>
+        <div class="poll-desc">Sem atividade<br>recente</div>
+      </div>
+      <div class="poll-item" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;">
+        <div class="poll-icon">🚫</div>
+        <div class="poll-name">Rate Limit</div>
+        <div class="poll-interval" style="color:#ef4444">5→60 min</div>
+        <div class="poll-desc">Backoff duplo<br>a cada limite</div>
+      </div>
+      <div class="poll-item" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:12px;">
+        <div class="poll-icon">⚙️</div>
+        <div class="poll-name">Custom</div>
+        <div class="poll-interval" style="color:#a855f7">config</div>
+        <div class="poll-desc">Usuário define<br>via settings</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     6. ESTADOS ESPECIAIS
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 6</div>
+  <div class="section-title"><span class="num">6</span> Estados Especiais da Interface</div>
+  <div class="divider"></div>
+  <div class="states-grid">
+
+    <div class="state-card rate-limit">
+      <div class="state-icon">⏸</div>
+      <div class="state-title" style="color:#f59e0b">Rate Limit</div>
+      <div class="state-desc">
+        API retornou 429.<br>
+        Faixa laranja com contagem regressiva.<br>
+        <code>triggerNow()</code> bloqueado até expirar.<br>
+        Backoff: 5→10→20→40→60 min.
+      </div>
+    </div>
+
+    <div class="state-card error">
+      <div class="state-icon">❌</div>
+      <div class="state-title" style="color:#ef4444">Erro de API</div>
+      <div class="state-desc">
+        Falha na requisição (não 429).<br>
+        Banner vermelho visível na UI.<br>
+        Retry apenas em erros 5xx;<br>
+        4xx (exceto 429) não retenta.
+      </div>
+    </div>
+
+    <div class="state-card resetting">
+      <div class="state-icon">🔄</div>
+      <div class="state-title" style="color:#3b82f6">Reiniciando</div>
+      <div class="state-desc">
+        <code>resets_at</code> está no passado.<br>
+        Exibe "Reiniciando..." até o<br>próximo update da API confirmar<br>os novos valores da janela.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ── Footer ── -->
+<div class="footer">
+  Claude Usage Monitor · Electron + TypeScript · Chart.js ·
+  <span style="color:var(--blue)">src/renderer/app.ts</span>
+</div>
+
+</body>
+</html>
