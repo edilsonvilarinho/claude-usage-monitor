@@ -374,8 +374,8 @@ describe('PollingService', () => {
     expect(mockFetch).toHaveBeenCalledTimes(calls + 1)
   })
 
-  // 18. forceNow() calls poll() unlike triggerNow() which returns a no-op when rate limited
-  it('forceNow() calls poll() when rate limited (reschedules timer, unlike triggerNow no-op)', async () => {
+  // 18. forceNow() bypasses rate limit, triggerNow() is a no-op when rate limited
+  it('forceNow() bypasses rate limit and fetches immediately (triggerNow is no-op)', async () => {
     const future = Date.now() + 10 * 60 * 1000
     service.restoreRateLimit(future, 1)
 
@@ -385,19 +385,12 @@ describe('PollingService', () => {
     await Promise.resolve()
     expect(mockFetch).not.toHaveBeenCalled()
 
-    // triggerNow() is a no-op when rate limited — it returns early before calling poll()
+    // triggerNow() is a no-op when rate limited — returns early before calling poll()
     await service.triggerNow()
     expect(mockFetch).not.toHaveBeenCalled()
 
-    // forceNow() does NOT have the triggerNow early-exit guard — it calls poll() directly.
-    // poll() itself still respects rate limit (schedules timer and returns), so fetch still won't run.
-    // But forceNow() did call poll() (can verify timer was rescheduled).
+    // forceNow() clears rate-limit state and fetches immediately
     await service.forceNow()
-    // fetch still blocked by rate limit inside poll()
-    expect(mockFetch).not.toHaveBeenCalled()
-
-    // After rate limit expires, poll fires
-    await vi.advanceTimersByTimeAsync(10 * 60 * 1000 + 100)
     await flushPromises()
     expect(mockFetch).toHaveBeenCalledTimes(1)
   })
