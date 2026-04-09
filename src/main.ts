@@ -665,6 +665,15 @@ app.whenReady().then(() => {
     pollingService.restoreRateLimit(saved, savedCount || 1, savedResetAt || undefined);
   }
 
+  // Remove duplicate session windows (same resetsAt) that may have been recorded in past sessions
+  const accountDataForDedup = getAccountData();
+  const dedupedWindows = accountDataForDedup.sessionWindows?.filter(
+    (w, i, arr) => arr.findIndex(x => x.resetsAt === w.resetsAt) === i
+  ) ?? [];
+  if (dedupedWindows.length !== (accountDataForDedup.sessionWindows?.length ?? 0)) {
+    saveAccountData({ sessionWindows: dedupedWindows });
+  }
+
   // Sync registry state: re-apply stored preference if it differs from actual registry value
   if (launchAtStartup !== undefined && isLaunchAtStartupEnabled() !== launchAtStartup) {
     setLaunchAtStartup(launchAtStartup);
@@ -717,9 +726,12 @@ app.whenReady().then(() => {
 
     const updatedSessionWindows = [...(accountData.sessionWindows ?? [])];
     if (completedWindow) {
-      updatedSessionWindows.push(completedWindow);
-      // Manter no máximo 40 janelas (≈ 7 dias × ~5 janelas/dia)
-      if (updatedSessionWindows.length > 40) updatedSessionWindows.splice(0, updatedSessionWindows.length - 40);
+      const alreadyRecorded = updatedSessionWindows.some(w => w.resetsAt === completedWindow!.resetsAt);
+      if (!alreadyRecorded) {
+        updatedSessionWindows.push(completedWindow);
+        // Manter no máximo 40 janelas (≈ 7 dias × ~5 janelas/dia)
+        if (updatedSessionWindows.length > 40) updatedSessionWindows.splice(0, updatedSessionWindows.length - 40);
+      }
     }
 
     saveAccountData({
