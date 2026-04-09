@@ -142,6 +142,7 @@ export class PollingService extends EventEmitter {
     }
 
     try {
+      this.emit('before-poll');
       const data = await fetchUsageData();
       this.errorCount = 0;
       this.rateLimited = false;

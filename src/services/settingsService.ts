@@ -129,6 +129,8 @@ export interface AppSettings {
   usageHistory: UsageSnapshot[];
   showHistory: boolean;
   dailyHistory: DailySnapshot[];
+  autoBackupMode: 'never' | 'before' | 'after' | 'always';
+  autoBackupFolder: string;
 }
 
 const defaults: AppSettings = {
@@ -157,6 +159,8 @@ const defaults: AppSettings = {
   usageHistory: [],
   showHistory: false,
   dailyHistory: [],
+  autoBackupMode: 'never',
+  autoBackupFolder: '',
 };
 
 const store = new Store<AppSettings>({
@@ -191,6 +195,8 @@ const store = new Store<AppSettings>({
     usageHistory: { type: 'array' },
     showHistory: { type: 'boolean' },
     dailyHistory: { type: 'array' },
+    autoBackupMode: { type: 'string', enum: ['never', 'before', 'after', 'always'] },
+    autoBackupFolder: { type: 'string' },
   },
 });
 
@@ -213,6 +219,8 @@ export function getSettings(): AppSettings {
     usageHistory: store.get('usageHistory', defaults.usageHistory),
     showHistory: store.get('showHistory', defaults.showHistory),
     dailyHistory: store.get('dailyHistory', defaults.dailyHistory),
+    autoBackupMode: store.get('autoBackupMode', defaults.autoBackupMode),
+    autoBackupFolder: store.get('autoBackupFolder', defaults.autoBackupFolder),
   };
 }
 
@@ -262,4 +270,6 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.usageHistory !== undefined) store.set('usageHistory', settings.usageHistory);
   if (settings.showHistory !== undefined) store.set('showHistory', settings.showHistory);
   if (settings.dailyHistory !== undefined) store.set('dailyHistory', settings.dailyHistory);
+  if (settings.autoBackupMode !== undefined) store.set('autoBackupMode', settings.autoBackupMode);
+  if (settings.autoBackupFolder !== undefined) store.set('autoBackupFolder', settings.autoBackupFolder);
 }

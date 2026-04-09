@@ -316,6 +316,26 @@ function showUpdateAvailableToast(version: string, url: string): void {
   notif.show();
 }
 
+// ─── Auto backup ─────────────────────────────────────────────────────────────
+
+async function performAutoBackup(): Promise<void> {
+  try {
+    const { autoBackupFolder } = getSettings();
+    const accountData = getAccountData();
+    const folder = autoBackupFolder || path.join(app.getPath('userData'), 'backups');
+    fs.mkdirSync(folder, { recursive: true });
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      dailyHistory: accountData.dailyHistory ?? [],
+      timeSeries:   accountData.timeSeries   ?? {},
+      sessionWindows: accountData.sessionWindows ?? [],
+    };
+    fs.writeFileSync(path.join(folder, 'auto-backup.json'), JSON.stringify(payload, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[Main] performAutoBackup failed:', err);
+  }
+}
+
 // ─── Weekly backup ───────────────────────────────────────────────────────────
 
 async function backupWeeklyData(): Promise<string> {
@@ -603,6 +623,11 @@ function registerIpcHandlers(): void {
     return importBackupData();
   });
 
+  ipcMain.handle('choose-auto-backup-folder', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+    return result.canceled ? null : (result.filePaths[0] ?? null);
+  });
+
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
     pollingService.setCustomInterval(ms);
   });
@@ -720,6 +745,12 @@ app.whenReady().then(() => {
       }
     }
 
+    // Auto backup após atualização
+    const autoBackupModeAfter = getSettings().autoBackupMode;
+    if (autoBackupModeAfter === 'after' || autoBackupModeAfter === 'always') {
+      void performAutoBackup();
+    }
+
     if (suppressNextNotification) {
       syncWindowState(data);
       suppressNextNotification = false;
@@ -735,6 +766,13 @@ app.whenReady().then(() => {
 
     if (Date.now() - cachedProfileAt > 3_600_000) {
       void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); setActiveAccount(p.account.email); if (popup) popup.webContents.send('profile-updated', cachedProfile); }).catch(() => {});
+    }
+  });
+
+  pollingService.on('before-poll', () => {
+    const mode = getSettings().autoBackupMode;
+    if (mode === 'before' || mode === 'always') {
+      void performAutoBackup();
     }
   });
 

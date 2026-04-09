@@ -238,6 +238,25 @@
         </div>
       </div>
 
+      <!-- Auto Backup -->
+      <div class="settings-group">
+        <div class="settings-title" data-i18n="autoBackupTitle">Auto Backup</div>
+        <div class="settings-row">
+          <label data-i18n="autoBackupModeLabel">Modo</label>
+          <select class="setting-select" id="setting-auto-backup-mode">
+            <option value="never"  data-i18n="autoBackupNever">Nunca</option>
+            <option value="before" data-i18n="autoBackupBefore">Antes da consulta</option>
+            <option value="after"  data-i18n="autoBackupAfter">Após atualizar</option>
+            <option value="always" data-i18n="autoBackupAlways">Sempre</option>
+          </select>
+        </div>
+        <div class="settings-row" id="row-auto-backup-folder">
+          <label data-i18n="autoBackupFolderLabel">Pasta</label>
+          <button class="test-btn" id="btn-auto-backup-folder" data-i18n="autoBackupChoose">Escolher...</button>
+        </div>
+        <div class="settings-hint" id="lbl-auto-backup-folder"></div>
+      </div>
+
     </div><!-- /settings-area -->
 
   </div>

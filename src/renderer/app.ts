@@ -80,6 +80,7 @@ declare global {
       backupWeeklyData: () => Promise<string>;
       importBackup: () => Promise<{ imported: number; merged: number }>;
       updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }) => Promise<void>;
+      chooseAutoBackupFolder: () => Promise<string | null>;
     };
   }
 }
@@ -165,6 +166,15 @@ const translations = {
     dayDetailEmpty:   'No data for this day yet',
     dayDetailSession: 'Session (5h)',
     dayDetailWeekly:  'Weekly (7d)',
+    autoBackupTitle:      'Auto Backup',
+    autoBackupModeLabel:  'Mode',
+    autoBackupNever:      'Never',
+    autoBackupBefore:     'Before poll',
+    autoBackupAfter:      'After update',
+    autoBackupAlways:     'Always',
+    autoBackupFolderLabel: 'Folder',
+    autoBackupChoose:     'Choose...',
+    autoBackupFolderDefault: 'Default folder',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -242,6 +252,15 @@ const translations = {
     dayDetailEmpty:   'Nenhum dado para este dia ainda',
     dayDetailSession: 'Sessão (5h)',
     dayDetailWeekly:  'Semanal (7d)',
+    autoBackupTitle:      'Backup Automático',
+    autoBackupModeLabel:  'Modo',
+    autoBackupNever:      'Nunca',
+    autoBackupBefore:     'Antes da consulta',
+    autoBackupAfter:      'Após atualizar',
+    autoBackupAlways:     'Sempre',
+    autoBackupFolderLabel: 'Pasta',
+    autoBackupChoose:     'Escolher...',
+    autoBackupFolderDefault: 'Pasta padrão',
   },
 } as const;
 
@@ -581,6 +600,13 @@ async function openDayDetailModal(date: string): Promise<void> {
   emptyEl.classList.add('hidden');
 
   const tickColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#aaa';
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark'
+    || (document.documentElement.getAttribute('data-theme') === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const sessionBorder = '#a78bfa';
+  const weeklyBorder  = '#60a5fa';
+  const sessionFill   = isDarkMode ? 'rgba(167,139,250,0.38)' : 'rgba(167,139,250,0.22)';
+  const weeklyFill    = isDarkMode ? 'rgba(96,165,250,0.28)'  : 'rgba(96,165,250,0.15)';
 
   const labels  = points.map(p => new Date(p.ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }));
   const session = points.map(p => Math.min(p.session, 100));
@@ -628,8 +654,8 @@ async function openDayDetailModal(date: string): Promise<void> {
         {
           label: t.dayDetailSession,
           data: session,
-          borderColor: 'var(--accent-purple, #a78bfa)',
-          backgroundColor: 'rgba(167,139,250,0.20)',
+          borderColor: sessionBorder,
+          backgroundColor: sessionFill,
           fill: true,
           tension: 0.3,
           pointRadius: 0,
@@ -638,8 +664,8 @@ async function openDayDetailModal(date: string): Promise<void> {
         {
           label: t.dayDetailWeekly,
           data: weekly,
-          borderColor: 'var(--accent-blue, #60a5fa)',
-          backgroundColor: 'rgba(96,165,250,0.15)',
+          borderColor: weeklyBorder,
+          backgroundColor: weeklyFill,
           fill: true,
           tension: 0.3,
           pointRadius: 0,
@@ -654,19 +680,19 @@ async function openDayDetailModal(date: string): Promise<void> {
       scales: {
         x: {
           ticks: { maxTicksLimit: 6, color: tickColor, font: { size: 10 } },
-          grid: { color: 'rgba(128,128,128,0.2)' },
+          grid: { color: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' },
         },
         y: {
           min: 0,
           max: 100,
           ticks: { stepSize: 25, color: tickColor, font: { size: 10 }, callback: (v) => `${v}%` },
-          grid: { color: 'rgba(128,128,128,0.2)' },
+          grid: { color: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' },
         },
       },
       plugins: {
         legend: {
           display: true,
-          labels: { color: tickColor, font: { size: 10 }, boxWidth: 10, padding: 8 },
+          labels: { color: isDarkMode ? '#d0d0d0' : '#555555', font: { size: 10 }, boxWidth: 10, padding: 8 },
         },
         tooltip: { mode: 'index', intersect: false },
       },
@@ -764,8 +790,10 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     return `<div class="daily-col${todayClass}${futureClass}" data-date="${s.date}">
       ${tooltipHtml}
       <div class="daily-bar-wrap">
-        ${resetBadge}
-        <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
+        <div class="session-bar-slot">
+          ${resetBadge}
+          <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
+        </div>
         <div class="daily-bar weekly ${wClass}" style="height:${wPx}px"></div>
         ${creditsBar}
       </div>
@@ -907,6 +935,13 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-auto-refresh') as HTMLInputElement).checked = autoRefresh;
   (document.getElementById('setting-auto-refresh-interval') as HTMLInputElement).value = String(autoRefreshInterval);
 
+  const autoBackupMode = s.autoBackupMode ?? 'never';
+  (document.getElementById('setting-auto-backup-mode') as HTMLSelectElement).value = autoBackupMode;
+  const lblFolder = document.getElementById('lbl-auto-backup-folder');
+  if (lblFolder) lblFolder.textContent = s.autoBackupFolder || tr().autoBackupFolderDefault;
+  (document.getElementById('row-auto-backup-folder') as HTMLElement).style.display =
+    autoBackupMode === 'never' ? 'none' : '';
+
   applyTheme(s.theme);
   applyTranslations();
   applySize(size);
@@ -935,6 +970,7 @@ async function saveSettingsFromUI(): Promise<void> {
   const weeklyTh         = Math.min(100, Math.max(1, Number((document.getElementById('setting-weekly-threshold') as HTMLInputElement).value)));
   const notifyOnReset    = (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked;
   const resetThreshold   = Math.min(99, Math.max(1, Number((document.getElementById('setting-reset-threshold') as HTMLInputElement).value)));
+  const autoBackupMode   = (document.getElementById('setting-auto-backup-mode') as HTMLSelectElement).value as AppSettings['autoBackupMode'];
 
   currentLang = lang;
   applyTranslations();
@@ -942,6 +978,8 @@ async function saveSettingsFromUI(): Promise<void> {
   applySize(windowSize);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnReset ? '1' : '0.4';
+  (document.getElementById('row-auto-backup-folder') as HTMLElement).style.display =
+    autoBackupMode === 'never' ? 'none' : '';
 
   await window.claudeUsage.saveSettings({
     launchAtStartup: startup,
@@ -951,6 +989,7 @@ async function saveSettingsFromUI(): Promise<void> {
     windowSize,
     autoRefresh,
     autoRefreshInterval,
+    autoBackupMode,
     notifications: {
       enabled: notifOn,
       soundEnabled,
@@ -1216,6 +1255,7 @@ function init(): void {
     'setting-window-size',
     'setting-auto-refresh', 'setting-auto-refresh-interval',
     'setting-session-threshold', 'setting-weekly-threshold',
+    'setting-auto-backup-mode',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
@@ -1223,6 +1263,15 @@ function init(): void {
 
   document.getElementById('btn-test-notif')!.addEventListener('click', () => {
     void window.claudeUsage.testNotification();
+  });
+
+  document.getElementById('btn-auto-backup-folder')!.addEventListener('click', async () => {
+    const folder = await window.claudeUsage.chooseAutoBackupFolder();
+    if (folder) {
+      await window.claudeUsage.saveSettings({ autoBackupFolder: folder });
+      const lbl = document.getElementById('lbl-auto-backup-folder');
+      if (lbl) lbl.textContent = folder;
+    }
   });
 
   document.getElementById('setting-session-threshold')!.addEventListener('input', (e) => {
