@@ -685,13 +685,15 @@ async function openReportModal(): Promise<void> {
   const recentWindows = [...sessionWindows].reverse().slice(0, 10);
   const windowsTitle = currentLang === 'pt-BR' ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
   windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` +
-    recentWindows.map(w => {
+    recentWindows.map((w, i) => {
       const dt = new Date(w.resetsAt);
       const dateStr = dt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
       const timeStr = dt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
       const pct = Math.min(w.peak, 200);
       const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
+      const label = currentLang === 'pt-BR' ? `Janela ${i + 1}` : `Window ${i + 1}`;
       return `<div class="report-window-row">
+        <span class="report-window-label">${label}</span>
         <span class="report-window-date">${dateStr} ${timeStr}</span>
         <span class="report-window-peak" style="color:${color}">${pct}%</span>
       </div>`;
