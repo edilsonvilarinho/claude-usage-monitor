@@ -692,10 +692,11 @@ async function openReportModal(): Promise<void> {
   const buildRow = (resetsAt: string, peak: number, index: number, isOpen: boolean) => {
     const endDt   = new Date(resetsAt);
     const startDt = new Date(endDt.getTime() - 5 * 60 * 60 * 1000);
-    const dateStr  = startDt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const fmtDate = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const startStr = `${fmtDate(startDt)} ${fmt(startDt)}`;
     const rangeStr = isOpen
-      ? `${fmt(startDt)} → ${isPtBR ? 'em andamento' : 'ongoing'}`
-      : `${fmt(startDt)} → ${fmt(endDt)}`;
+      ? `${startStr} → ${isPtBR ? 'em andamento' : 'ongoing'}`
+      : `${startStr} → ${fmtDate(endDt)} ${fmt(endDt)}`;
     const pct   = Math.min(peak, 200);
     const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
     const label = isPtBR ? `Janela ${index}` : `Window ${index}`;
@@ -704,7 +705,7 @@ async function openReportModal(): Promise<void> {
       : `<span class="window-badge closed">${isPtBR ? 'Fechada' : 'Closed'}</span>`;
     return `<div class="report-window-row">
       <span class="report-window-label">${label} ${badge}</span>
-      <span class="report-window-date">${dateStr} · ${rangeStr}</span>
+      <span class="report-window-date">${rangeStr}</span>
       <span class="report-window-peak" style="color:${color}">${pct}%</span>
     </div>`;
   };
