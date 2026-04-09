@@ -615,6 +615,10 @@ function registerIpcHandlers(): void {
     return getAccountData().sessionWindows ?? [];
   });
 
+  ipcMain.handle('get-current-session-window', () => {
+    return getAccountData().currentSessionWindow ?? null;
+  });
+
   ipcMain.handle('backup-weekly-data', async () => {
     return backupWeeklyData();
   });

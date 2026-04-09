@@ -96,6 +96,9 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   getSessionWindows: (): Promise<import('./models/usageData').SessionWindowRecord[]> =>
     ipcRenderer.invoke('get-session-windows'),
 
+  getCurrentSessionWindow: (): Promise<import('./models/usageData').CurrentSessionWindow | null> =>
+    ipcRenderer.invoke('get-current-session-window'),
+
   chooseAutoBackupFolder: (): Promise<string | null> =>
     ipcRenderer.invoke('choose-auto-backup-folder'),
 });

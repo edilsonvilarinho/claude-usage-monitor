@@ -60,6 +60,7 @@ declare global {
       onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void) => void;
       getDayTimeSeries: (date: string) => Promise<{ ts: number; session: number; weekly: number }[]>;
       getSessionWindows: () => Promise<{ resetsAt: string; peak: number; date: string }[]>;
+      getCurrentSessionWindow: () => Promise<{ resetsAt: string; peak: number } | null>;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -572,9 +573,10 @@ async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
   modal.classList.remove('hidden');
 
-  const [dailyHistory, sessionWindows] = await Promise.all([
+  const [dailyHistory, sessionWindows, currentWindow] = await Promise.all([
     window.claudeUsage.getDailyHistory(),
     window.claudeUsage.getSessionWindows(),
+    window.claudeUsage.getCurrentSessionWindow(),
   ]);
 
   const sorted = [...(dailyHistory ?? [])].sort((a, b) => a.date.localeCompare(b.date));
@@ -684,22 +686,37 @@ async function openReportModal(): Promise<void> {
   }
   const recentWindows = [...sessionWindows].reverse().slice(0, 10);
   const windowsTitle = currentLang === 'pt-BR' ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
-  windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` +
-    recentWindows.map((w, i) => {
-      const endDt   = new Date(w.resetsAt);
-      const startDt = new Date(endDt.getTime() - 5 * 60 * 60 * 1000);
-      const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
-      const dateStr  = startDt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
-      const rangeStr = `${fmt(startDt)} → ${fmt(endDt)}`;
-      const pct = Math.min(w.peak, 200);
-      const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
-      const label = currentLang === 'pt-BR' ? `Janela ${i + 1}` : `Window ${i + 1}`;
-      return `<div class="report-window-row">
-        <span class="report-window-label">${label}</span>
-        <span class="report-window-date">${dateStr} · ${rangeStr}</span>
-        <span class="report-window-peak" style="color:${color}">${pct}%</span>
-      </div>`;
-    }).join('');
+  const isPtBR = currentLang === 'pt-BR';
+  const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+
+  const buildRow = (resetsAt: string, peak: number, index: number, isOpen: boolean) => {
+    const endDt   = new Date(resetsAt);
+    const startDt = new Date(endDt.getTime() - 5 * 60 * 60 * 1000);
+    const dateStr  = startDt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const rangeStr = isOpen
+      ? `${fmt(startDt)} → ${isPtBR ? 'em andamento' : 'ongoing'}`
+      : `${fmt(startDt)} → ${fmt(endDt)}`;
+    const pct   = Math.min(peak, 200);
+    const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
+    const label = isPtBR ? `Janela ${index}` : `Window ${index}`;
+    const badge = isOpen
+      ? `<span class="window-badge open">${isPtBR ? 'Aberta' : 'Open'}</span>`
+      : `<span class="window-badge closed">${isPtBR ? 'Fechada' : 'Closed'}</span>`;
+    return `<div class="report-window-row">
+      <span class="report-window-label">${label} ${badge}</span>
+      <span class="report-window-date">${dateStr} · ${rangeStr}</span>
+      <span class="report-window-peak" style="color:${color}">${pct}%</span>
+    </div>`;
+  };
+
+  let windowRows = '';
+  let idx = 1;
+  if (currentWindow) {
+    windowRows += buildRow(currentWindow.resetsAt, currentWindow.peak, idx++, true);
+  }
+  windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, idx++, false)).join('');
+
+  windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` + windowRows;
 }
 
 async function openDayDetailModal(date: string): Promise<void> {
