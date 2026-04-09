@@ -396,7 +396,7 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
     (accountData.dailyHistory ?? []).map(s => [s.date, s])
   );
   const mergedTimeSeries = { ...(accountData.timeSeries ?? {}) };
-  const existingWindowKeys = new Set((accountData.sessionWindows ?? []).map(w => w.resetsAt));
+  const existingWindowKeys = new Set((accountData.sessionWindows ?? []).map(w => new Date(w.resetsAt).getTime()));
   const mergedWindows = [...(accountData.sessionWindows ?? [])];
 
   let mergedCount = 0;
@@ -425,9 +425,10 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
     // sessionWindows — merge deduplicado por resetsAt
     if (Array.isArray(payload.sessionWindows)) {
       for (const w of payload.sessionWindows) {
-        if (w.resetsAt && !existingWindowKeys.has(w.resetsAt)) {
+        const wTs = w.resetsAt ? new Date(w.resetsAt).getTime() : NaN;
+        if (!isNaN(wTs) && !existingWindowKeys.has(wTs)) {
           mergedWindows.push(w);
-          existingWindowKeys.add(w.resetsAt);
+          existingWindowKeys.add(wTs);
         }
       }
     }
@@ -665,11 +666,15 @@ app.whenReady().then(() => {
     pollingService.restoreRateLimit(saved, savedCount || 1, savedResetAt || undefined);
   }
 
-  // Remove duplicate session windows (same resetsAt) that may have been recorded in past sessions
+  // Remove duplicate session windows — compara por timestamp numérico para evitar falhas com strings ISO ligeiramente diferentes
   const accountDataForDedup = getAccountData();
-  const dedupedWindows = accountDataForDedup.sessionWindows?.filter(
-    (w, i, arr) => arr.findIndex(x => x.resetsAt === w.resetsAt) === i
-  ) ?? [];
+  const seenTs = new Set<number>();
+  const dedupedWindows = (accountDataForDedup.sessionWindows ?? []).filter(w => {
+    const ts = new Date(w.resetsAt).getTime();
+    if (seenTs.has(ts)) return false;
+    seenTs.add(ts);
+    return true;
+  });
   if (dedupedWindows.length !== (accountDataForDedup.sessionWindows?.length ?? 0)) {
     saveAccountData({ sessionWindows: dedupedWindows });
   }
@@ -726,7 +731,8 @@ app.whenReady().then(() => {
 
     const updatedSessionWindows = [...(accountData.sessionWindows ?? [])];
     if (completedWindow) {
-      const alreadyRecorded = updatedSessionWindows.some(w => w.resetsAt === completedWindow!.resetsAt);
+      const completedTs = new Date(completedWindow.resetsAt).getTime();
+      const alreadyRecorded = updatedSessionWindows.some(w => new Date(w.resetsAt).getTime() === completedTs);
       if (!alreadyRecorded) {
         updatedSessionWindows.push(completedWindow);
         // Manter no máximo 40 janelas (≈ 7 dias × ~5 janelas/dia)
