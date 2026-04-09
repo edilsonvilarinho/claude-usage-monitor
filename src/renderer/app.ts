@@ -538,6 +538,7 @@ function barClass(pct: number): string {
 let sessionChart: Chart | null = null;
 let weeklyChart:  Chart | null = null;
 let lastRenderedData: { session: number; weekly: number } | null = null;
+let sessionResetTimer: ReturnType<typeof setTimeout> | null = null;
 
 // ── Daily cycle chart ─────────────────────────────────────────────────────────
 
@@ -842,6 +843,19 @@ function updateUI(data: UsageData): void {
 
   // Store resets_at for daily chart
   lastWeeklyResetsAt = data.seven_day.resets_at;
+
+  // Zera o gauge de sessão localmente quando a janela de 5h expira, sem esperar o próximo poll
+  if (sessionResetTimer) clearTimeout(sessionResetTimer);
+  const msUntilSessionReset = new Date(data.five_hour.resets_at).getTime() - Date.now();
+  if (msUntilSessionReset > 0) {
+    sessionResetTimer = setTimeout(() => {
+      sessionResetTimer = null;
+      if (sessionChart) updateGauge(sessionChart, 0);
+      (document.getElementById('pct-session') as HTMLElement).textContent = '0%';
+      updateTrayIcon(0, lastRenderedData?.weekly ?? 0);
+      void window.claudeUsage.refreshNow();
+    }, msUntilSessionReset);
+  }
 
   fitWindow();
 
