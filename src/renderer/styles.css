@@ -862,9 +862,9 @@ body {
 }
 
 .clear-history-btn {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 5px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text-secondary);
@@ -962,11 +962,17 @@ body {
   padding: 0 2px;
 }
 
+.session-bar-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  min-width: 0;
+}
+
 .reset-badge {
-  position: absolute;
-  top: 3px;
-  left: 50%;
-  transform: translateX(-50%);
   background: var(--accent-orange);
   color: #fff;
   font-size: 7px;
@@ -979,8 +985,14 @@ body {
   justify-content: center;
   padding: 0 2px;
   line-height: 1;
-  z-index: 1;
+  flex-shrink: 0;
   pointer-events: none;
+  margin-bottom: 2px;
+}
+
+.session-bar-slot .daily-bar.session {
+  width: 100%;
+  flex: none;
 }
 
 .daily-bar {
@@ -1096,8 +1108,8 @@ body {
 
 /* ── Day detail modal ───────────────────────────────────────────────── */
 .day-detail-box {
-  width: 300px;
-  padding: 14px 16px 12px;
+  width: 340px;
+  padding: 16px 20px 14px;
   text-align: left;
 }
 
@@ -1132,7 +1144,7 @@ body {
 
 .day-detail-chart-wrap {
   position: relative;
-  height: 155px;
+  height: 175px;
 }
 
 .day-detail-empty {
