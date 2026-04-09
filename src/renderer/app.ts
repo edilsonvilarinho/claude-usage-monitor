@@ -591,8 +591,9 @@ async function openReportModal(): Promise<void> {
 
   const peakSession = sorted.length ? Math.max(...sorted.map(d => d.maxSession)) : 0;
   const avgSession  = sorted.length ? Math.round(sorted.reduce((s, d) => s + d.maxSession, 0) / sorted.length) : 0;
-  const totalWindows = (sessionWindows ?? []).length;
-  const peakWindow   = totalWindows ? Math.max(...(sessionWindows ?? []).map(w => w.peak)) : 0;
+  const totalWindows = (sessionWindows ?? []).length + (currentWindow ? 1 : 0);
+  const allPeaks = [...(sessionWindows ?? []).map(w => w.peak), ...(currentWindow ? [currentWindow.peak] : [])];
+  const peakWindow = allPeaks.length ? Math.max(...allPeaks) : 0;
 
   const tickColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#aaa';
   const gridColor = 'rgba(128,128,128,0.15)';
