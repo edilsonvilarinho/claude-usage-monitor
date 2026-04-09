@@ -151,6 +151,7 @@ const translations = {
     tooltipCredits: 'Credits',
     tooltipResets: (n: number) => `${n} resets`,
     tooltipAccum: (n: number) => `${n}% accumulated`,
+    resetLegendLabel: 'Resets',
     editHistoryBtn: '✎',
     editSnapshotTitle: 'Edit day data',
     editDateLabel: 'Day',
@@ -227,6 +228,7 @@ const translations = {
     tooltipCredits: 'Créditos',
     tooltipResets: (n: number) => `${n} resets`,
     tooltipAccum: (n: number) => `${n}% acumulado`,
+    resetLegendLabel: 'Resets',
     editHistoryBtn: '✎',
     editSnapshotTitle: 'Editar dados do dia',
     editDateLabel: 'Dia',
@@ -682,17 +684,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
 
   // Detectar se créditos existem em algum dia do histórico
   const hasCredits = dailyData.some(d => d.maxCredits !== undefined);
-
-  // Legenda dinâmica
-  const legendEl = document.getElementById('daily-legend');
-  if (legendEl) {
-    const t = tr();
-    legendEl.innerHTML = [
-      `<span class="legend-dot session"></span><span class="legend-text">${t.sessionLabel}</span>`,
-      `<span class="legend-dot weekly"></span><span class="legend-text">${t.weeklyLabel}</span>`,
-      ...(hasCredits ? [`<span class="legend-dot credits"></span><span class="legend-text">${t.creditsLabel}</span>`] : []),
-    ].join('');
-  }
+  const hasResets  = dailyData.some(d => (d.sessionWindowCount ?? 1) > 1);
 
   // Build 7 day slots
   const slots: {
@@ -722,6 +714,18 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
   }
 
   const t   = tr();
+
+  // Legenda dinâmica
+  const legendEl = document.getElementById('daily-legend');
+  if (legendEl) {
+    legendEl.innerHTML = [
+      `<span class="legend-dot session"></span><span class="legend-text">${t.sessionLabel}</span>`,
+      `<span class="legend-dot weekly"></span><span class="legend-text">${t.weeklyLabel}</span>`,
+      ...(hasCredits ? [`<span class="legend-dot credits"></span><span class="legend-text">${t.creditsLabel}</span>`] : []),
+      ...(hasResets  ? [`<span class="legend-dot reset"></span><span class="legend-text">${t.resetLegendLabel}</span>`] : []),
+    ].join('');
+  }
+
   const BAR_MAX_PX = 40;
   container.innerHTML = slots.map(s => {
     const wPx = s.weeklyPct  !== null ? Math.max(3, Math.round((s.weeklyPct  / 100) * BAR_MAX_PX)) : 0;
@@ -736,6 +740,9 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     const futureClass = s.isFuture ? ' future' : '';
     const creditsBar  = hasCredits
       ? `<div class="daily-bar credits ${cClass}" style="height:${cPx}px"></div>`
+      : '';
+    const resetBadge = (!s.isFuture && s.sessionWindowCount > 1)
+      ? `<div class="reset-badge">${Math.max(0, s.sessionWindowCount - 1)}</div>`
       : '';
 
     // Tooltip
@@ -757,6 +764,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
     return `<div class="daily-col${todayClass}${futureClass}" data-date="${s.date}">
       ${tooltipHtml}
       <div class="daily-bar-wrap">
+        ${resetBadge}
         <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
         <div class="daily-bar weekly ${wClass}" style="height:${wPx}px"></div>
         ${creditsBar}
