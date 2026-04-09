@@ -11,6 +11,10 @@ import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 import { updateDailySnapshot } from './services/dailySnapshotService';
 
+/** Arredonda timestamp para o minuto mais próximo — usado para deduplicar janelas de sessão
+ *  cujo resetsAt difere por milissegundos devido à precisão variável da API */
+const toMinuteTs = (iso: string) => Math.round(new Date(iso).getTime() / 60000);
+
 // Enable StatusNotifierItem on Linux for better tray compatibility (GNOME, Pantheon, KDE)
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('enable-features', 'StatusNotifierItem');
@@ -396,7 +400,7 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
     (accountData.dailyHistory ?? []).map(s => [s.date, s])
   );
   const mergedTimeSeries = { ...(accountData.timeSeries ?? {}) };
-  const existingWindowKeys = new Set((accountData.sessionWindows ?? []).map(w => new Date(w.resetsAt).getTime()));
+  const existingWindowKeys = new Set((accountData.sessionWindows ?? []).map(w => toMinuteTs(w.resetsAt)));
   const mergedWindows = [...(accountData.sessionWindows ?? [])];
 
   let mergedCount = 0;
@@ -425,7 +429,7 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
     // sessionWindows — merge deduplicado por resetsAt
     if (Array.isArray(payload.sessionWindows)) {
       for (const w of payload.sessionWindows) {
-        const wTs = w.resetsAt ? new Date(w.resetsAt).getTime() : NaN;
+        const wTs = w.resetsAt ? toMinuteTs(w.resetsAt) : NaN;
         if (!isNaN(wTs) && !existingWindowKeys.has(wTs)) {
           mergedWindows.push(w);
           existingWindowKeys.add(wTs);
@@ -666,11 +670,11 @@ app.whenReady().then(() => {
     pollingService.restoreRateLimit(saved, savedCount || 1, savedResetAt || undefined);
   }
 
-  // Remove duplicate session windows — compara por timestamp numérico para evitar falhas com strings ISO ligeiramente diferentes
+  // Remove duplicate session windows — arredonda para o minuto para ignorar diferenças de ms da API
   const accountDataForDedup = getAccountData();
   const seenTs = new Set<number>();
   const dedupedWindows = (accountDataForDedup.sessionWindows ?? []).filter(w => {
-    const ts = new Date(w.resetsAt).getTime();
+    const ts = toMinuteTs(w.resetsAt);
     if (seenTs.has(ts)) return false;
     seenTs.add(ts);
     return true;
@@ -731,8 +735,8 @@ app.whenReady().then(() => {
 
     const updatedSessionWindows = [...(accountData.sessionWindows ?? [])];
     if (completedWindow) {
-      const completedTs = new Date(completedWindow.resetsAt).getTime();
-      const alreadyRecorded = updatedSessionWindows.some(w => new Date(w.resetsAt).getTime() === completedTs);
+      const completedTs = toMinuteTs(completedWindow.resetsAt);
+      const alreadyRecorded = updatedSessionWindows.some(w => toMinuteTs(w.resetsAt) === completedTs);
       if (!alreadyRecorded) {
         updatedSessionWindows.push(completedWindow);
         // Manter no máximo 40 janelas (≈ 7 dias × ~5 janelas/dia)
