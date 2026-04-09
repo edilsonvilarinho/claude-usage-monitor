@@ -566,6 +566,137 @@ let sessionResetTimer: ReturnType<typeof setTimeout> | null = null;
 let lastWeeklyResetsAt: string | null = null;
 let currentDailyHistory: DailySnapshot[] = [];
 let dayDetailChart: Chart | null = null;
+let reportChart: Chart | null = null;
+
+async function openReportModal(): Promise<void> {
+  const modal = document.getElementById('report-modal')!;
+  modal.classList.remove('hidden');
+
+  const [dailyHistory, sessionWindows] = await Promise.all([
+    window.claudeUsage.getDailyHistory(),
+    window.claudeUsage.getSessionWindows(),
+  ]);
+
+  const sorted = [...(dailyHistory ?? [])].sort((a, b) => a.date.localeCompare(b.date));
+
+  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
+  const labels = sorted.map(d => {
+    const dt = new Date(d.date + 'T12:00:00');
+    return dt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+  });
+  const sessionData = sorted.map(d => Math.min(d.maxSession, 200));
+  const weeklyData  = sorted.map(d => Math.min(d.maxWeekly,  200));
+
+  const peakSession = sorted.length ? Math.max(...sorted.map(d => d.maxSession)) : 0;
+  const avgSession  = sorted.length ? Math.round(sorted.reduce((s, d) => s + d.maxSession, 0) / sorted.length) : 0;
+  const totalWindows = (sessionWindows ?? []).length;
+  const peakWindow   = totalWindows ? Math.max(...(sessionWindows ?? []).map(w => w.peak)) : 0;
+
+  const tickColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#aaa';
+  const gridColor = 'rgba(128,128,128,0.15)';
+
+  if (reportChart) { reportChart.destroy(); reportChart = null; }
+
+  const canvas = document.getElementById('report-chart') as HTMLCanvasElement;
+  reportChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: currentLang === 'pt-BR' ? 'Sessão pico' : 'Session peak',
+          data: sessionData,
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.12)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#22c55e',
+          fill: true,
+          tension: 0.3,
+        },
+        {
+          label: currentLang === 'pt-BR' ? 'Semanal máx.' : 'Weekly max',
+          data: weeklyData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#3b82f6',
+          fill: true,
+          tension: 0.3,
+          borderDash: [5, 3],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: tickColor, font: { size: 10 }, boxWidth: 10, padding: 10 },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: Math.max(100, peakSession + 10, peakWindow + 10),
+          ticks: { color: tickColor, font: { size: 9 }, callback: v => `${v}%` },
+          grid: { color: gridColor },
+        },
+        x: {
+          ticks: { color: tickColor, font: { size: 9 }, maxRotation: 45 },
+          grid: { color: gridColor },
+        },
+      },
+    },
+  });
+
+  // Stats cards
+  const statsEl = document.getElementById('report-stats')!;
+  const statItems = currentLang === 'pt-BR'
+    ? [
+        { label: 'Dias monitorados', value: `${sorted.length}` },
+        { label: 'Pico de sessão',   value: `${peakSession}%` },
+        { label: 'Média de sessão',  value: `${avgSession}%` },
+        { label: 'Janelas de sessão', value: `${totalWindows}` },
+      ]
+    : [
+        { label: 'Monitored days',   value: `${sorted.length}` },
+        { label: 'Session peak',     value: `${peakSession}%` },
+        { label: 'Session average',  value: `${avgSession}%` },
+        { label: 'Session windows',  value: `${totalWindows}` },
+      ];
+  statsEl.innerHTML = statItems
+    .map(s => `<div class="stat-card"><div class="stat-value">${s.value}</div><div class="stat-label">${s.label}</div></div>`)
+    .join('');
+
+  // Session windows list
+  const windowsEl = document.getElementById('report-windows')!;
+  if (!sessionWindows || sessionWindows.length === 0) {
+    windowsEl.innerHTML = '';
+    return;
+  }
+  const recentWindows = [...sessionWindows].reverse().slice(0, 10);
+  const windowsTitle = currentLang === 'pt-BR' ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
+  windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` +
+    recentWindows.map(w => {
+      const dt = new Date(w.resetsAt);
+      const dateStr = dt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+      const timeStr = dt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+      const pct = Math.min(w.peak, 200);
+      const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
+      return `<div class="report-window-row">
+        <span class="report-window-date">${dateStr} ${timeStr}</span>
+        <span class="report-window-peak" style="color:${color}">${pct}%</span>
+      </div>`;
+    }).join('');
+}
 
 async function openDayDetailModal(date: string): Promise<void> {
   const modal    = document.getElementById('day-detail-modal')!;
@@ -1072,6 +1203,11 @@ function init(): void {
         renderDailyChart(d, lastWeeklyResetsAt!);
       });
     }
+  });
+
+  document.getElementById('btn-report-history')!.addEventListener('click', () => void openReportModal());
+  document.getElementById('btn-close-report')!.addEventListener('click', () => {
+    document.getElementById('report-modal')!.classList.add('hidden');
   });
 
   document.getElementById('btn-clear-history')!.addEventListener('click', async () => {
