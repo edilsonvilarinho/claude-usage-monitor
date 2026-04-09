@@ -41,7 +41,7 @@ let credentialPath = '';
 let cachedProfile: ProfileData | null = null;
 let cachedProfileAt = 0;
 
-const POPUP_WIDTH  = 340;
+const POPUP_WIDTH  = 360;
 const POPUP_HEIGHT = 210;
 
 function markAsProgrammaticMove(): void {
