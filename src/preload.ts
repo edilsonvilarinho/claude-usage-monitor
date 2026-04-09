@@ -79,7 +79,7 @@ contextBridge.exposeInMainWorld('claudeUsage', {
 
   importBackup: (): Promise<{ imported: number; merged: number }> => ipcRenderer.invoke('import-backup'),
 
-  updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }): Promise<void> =>
+  updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }): Promise<void> =>
     ipcRenderer.invoke('update-daily-snapshot', snapshot),
 
   onNextPollAt: (cb: (nextPollAt: number) => void): void => {

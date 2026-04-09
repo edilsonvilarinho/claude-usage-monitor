@@ -575,7 +575,7 @@ function registerIpcHandlers(): void {
     saveAccountData({ dailyHistory: [] });
   });
 
-  ipcMain.handle('update-daily-snapshot', (_event, snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }) => {
+  ipcMain.handle('update-daily-snapshot', (_event, snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }) => {
     const data = getAccountData();
     const dailyHistory = data.dailyHistory ?? [];
     const idx = dailyHistory.findIndex((d: { date: string }) => d.date === snapshot.date);

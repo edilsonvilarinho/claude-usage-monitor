@@ -29,7 +29,7 @@ export interface DailySnapshot {
   maxWeekly: number;     // max weekly % seen that day (integer 0-999)
   maxSession: number;    // peak session % of current/last window (integer 0-999)
   maxCredits?: number;   // max credits % seen that day (integer 0-100), only when enabled
-  sessionResets?: number; // # of 5h windows that started today (default 1)
+  sessionWindowCount?: number; // # of 5h windows that started today (default 1)
   sessionAccum?: number;  // sum of peaks of completed windows (current excluded)
 }
 

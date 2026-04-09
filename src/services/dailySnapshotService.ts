@@ -54,7 +54,7 @@ export function updateDailySnapshot(
       const peak = currentWindow.peak;
       completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: today };
       existingDay.sessionAccum  = (existingDay.sessionAccum  ?? 0) + peak;
-      existingDay.sessionResets = (existingDay.sessionResets ?? 1) + 1;
+      existingDay.sessionWindowCount = (existingDay.sessionWindowCount ?? 1) + 1;
       existingDay.maxSession    = sessionPctInt; // inicia rastreamento da nova janela
     } else {
       existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
@@ -69,7 +69,7 @@ export function updateDailySnapshot(
       maxWeekly: weeklyPctInt,
       maxSession: sessionPctInt,
       maxCredits: creditsPctInt,
-      sessionResets: 1,
+      sessionWindowCount: 1,
       sessionAccum: 0,
     });
   }

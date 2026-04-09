@@ -6,7 +6,7 @@ import {
 Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Legend);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number; sessionResets?: number; sessionAccum?: number }
+interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number; sessionWindowCount?: number; sessionAccum?: number }
 
 interface UsageWindow {
   utilization: number;
@@ -79,7 +79,7 @@ declare global {
       clearDailyHistory: () => Promise<void>;
       backupWeeklyData: () => Promise<string>;
       importBackup: () => Promise<{ imported: number; merged: number }>;
-      updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionResets: number }) => Promise<void>;
+      updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }) => Promise<void>;
     };
   }
 }
@@ -698,7 +698,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
   const slots: {
     date: string; label: string; isToday: boolean; isFuture: boolean;
     weeklyPct: number | null; sessionPct: number | null; creditsPct: number | null;
-    sessionResets: number; sessionAccum: number;
+    sessionWindowCount: number; sessionAccum: number;
   }[] = [];
   const now = new Date();
   const todayStr = now.toLocaleDateString('sv');
@@ -716,7 +716,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
       weeklyPct:    found ? Math.min(found.maxWeekly, 100) : null,
       sessionPct:   found ? Math.min(found.maxSession ?? 0, 100) : null,
       creditsPct:   (found && found.maxCredits !== undefined) ? Math.min(found.maxCredits, 100) : null,
-      sessionResets: found?.sessionResets ?? 1,
+      sessionWindowCount: found?.sessionWindowCount ?? 1,
       sessionAccum:  found?.sessionAccum  ?? 0,
     });
   }
@@ -744,8 +744,8 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string): v
       const sessionLine = s.sessionPct !== null
         ? `<div><span class="tip-dot session"></span>${t.tooltipSession}: <b>${s.sessionPct}%</b></div>`
         : '';
-      const resetLine = (s.sessionAccum > 0 || s.sessionResets > 1)
-        ? `<div class="tip-resets">${t.tooltipResets(Math.max(0, s.sessionResets - 1))} · ${t.tooltipAccum(accumTotal)}</div>`
+      const resetLine = (s.sessionAccum > 0 || s.sessionWindowCount > 1)
+        ? `<div class="tip-resets">${t.tooltipResets(Math.max(0, s.sessionWindowCount - 1))} · ${t.tooltipAccum(accumTotal)}</div>`
         : '';
       const weeklyLine = `<div><span class="tip-dot weekly"></span>${t.tooltipWeekly}: <b>${s.weeklyPct}%</b></div>`;
       const creditsLine = s.creditsPct !== null
@@ -1058,8 +1058,8 @@ function init(): void {
       const found = currentDailyHistory.find(d => d.date === dateStr);
       (document.getElementById('edit-maxSession') as HTMLInputElement).value = String(found?.maxSession ?? 0);
       (document.getElementById('edit-sessionAccum') as HTMLInputElement).value = String(found?.sessionAccum ?? 0);
-      // sessionResets is stored as "windows count" (starts at 1), display as "resets count" (0-based)
-      (document.getElementById('edit-sessionResets') as HTMLInputElement).value = String(Math.max(0, (found?.sessionResets ?? 1) - 1));
+      // sessionWindowCount starts at 1 (first window); display as resets count (0-based)
+      (document.getElementById('edit-sessionWindowCount') as HTMLInputElement).value = String(Math.max(0, (found?.sessionWindowCount ?? 1) - 1));
       (document.getElementById('edit-maxWeekly') as HTMLInputElement).value = String(found?.maxWeekly ?? 0);
     }
 
@@ -1080,7 +1080,7 @@ function init(): void {
       maxSession: parseInt((document.getElementById('edit-maxSession') as HTMLInputElement).value, 10) || 0,
       sessionAccum: parseInt((document.getElementById('edit-sessionAccum') as HTMLInputElement).value, 10) || 0,
       // convert back: user inputs resets count, store as windows count (resets + 1)
-      sessionResets: (parseInt((document.getElementById('edit-sessionResets') as HTMLInputElement).value, 10) || 0) + 1,
+      sessionWindowCount: (parseInt((document.getElementById('edit-sessionWindowCount') as HTMLInputElement).value, 10) || 0) + 1,
       maxWeekly: parseInt((document.getElementById('edit-maxWeekly') as HTMLInputElement).value, 10) || 0,
     };
     await window.claudeUsage.updateDailySnapshot(snapshot);
