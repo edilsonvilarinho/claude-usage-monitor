@@ -1278,7 +1278,7 @@ function applySectionVisibility(s: Pick<AppSettings,
   const compactMode    = (document.getElementById('setting-compact-mode')    as HTMLInputElement)?.checked ?? false;
   const essentialMode  = (document.getElementById('setting-essential-mode')  as HTMLInputElement)?.checked ?? false;
   const layoutOptions  = document.getElementById('layout-options') as HTMLElement;
-  if (layoutOptions) layoutOptions.style.display = compactMode ? 'none' : '';
+  if (layoutOptions) layoutOptions.style.display = (compactMode || essentialMode) ? 'none' : '';
 
   if (essentialMode) {
     // Modo essencial: mostra apenas conta, gauges, créditos e rodapé
