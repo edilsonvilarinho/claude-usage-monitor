@@ -140,6 +140,7 @@ export interface AppSettings {
   compactMode: boolean;
   essentialMode: boolean;
   cloudSync: CloudSyncSettings;
+  showCloudSyncSettings: boolean;
 }
 
 const defaults: AppSettings = {
@@ -178,6 +179,7 @@ const defaults: AppSettings = {
   showBackupSettings:  true,
   compactMode: false,
   essentialMode: false,
+  showCloudSyncSettings: true,
   cloudSync: {
     enabled: false,
     serverUrl: '',
@@ -232,6 +234,7 @@ const store = new Store<AppSettings>({
     showBackupSettings:  { type: 'boolean' },
     compactMode: { type: 'boolean' },
     essentialMode: { type: 'boolean' },
+    showCloudSyncSettings: { type: 'boolean' },
     cloudSync: { type: 'object' },
   },
 });
@@ -265,6 +268,7 @@ export function getSettings(): AppSettings {
     showBackupSettings:  store.get('showBackupSettings',  defaults.showBackupSettings),
     compactMode: store.get('compactMode', defaults.compactMode),
     essentialMode: store.get('essentialMode', defaults.essentialMode),
+    showCloudSyncSettings: store.get('showCloudSyncSettings', defaults.showCloudSyncSettings),
     cloudSync: store.get('cloudSync', defaults.cloudSync) as CloudSyncSettings,
   };
 }
@@ -336,6 +340,7 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.showBackupSettings  !== undefined) store.set('showBackupSettings',  settings.showBackupSettings);
   if (settings.compactMode !== undefined) store.set('compactMode', settings.compactMode);
   if (settings.essentialMode !== undefined) store.set('essentialMode', settings.essentialMode);
+  if (settings.showCloudSyncSettings !== undefined) store.set('showCloudSyncSettings', settings.showCloudSyncSettings);
   if (settings.cloudSync !== undefined) store.set('cloudSync', settings.cloudSync);
 }
 
