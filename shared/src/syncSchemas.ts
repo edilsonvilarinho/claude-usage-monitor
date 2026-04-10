@@ -39,14 +39,36 @@ export const SyncCurrentWindowSchema = z.object({
   updatedAt: z.number().int().positive(),
 });
 
+const SyncNotificationsSchema = z.object({
+  enabled: z.boolean().optional(),
+  sessionThreshold: z.number().int().min(0).max(100).optional(),
+  weeklyThreshold: z.number().int().min(0).max(100).optional(),
+  resetThreshold: z.number().int().min(0).max(100).optional(),
+  notifyOnReset: z.boolean().optional(),
+  notifyOnWindowReset: z.boolean().optional(),
+  soundEnabled: z.boolean().optional(),
+});
+
 export const SyncSettingsSchema = z.object({
-  theme: z.string().optional(),
-  language: z.string().optional(),
-  notifyThreshold: z.number().int().min(0).max(100).optional(),
+  theme: z.enum(['system', 'dark', 'light']).optional(),
+  language: z.enum(['en', 'pt-BR']).optional(),
+  notifications: SyncNotificationsSchema.optional(),
   updatedAt: z.number().int().positive(),
 });
 
-export const SyncPushPayloadSchema = z.object({
+export const AuthExchangeRequestSchema = z.object({
+  accessToken: z.string().min(1),
+  deviceId: z.string().min(1),
+  deviceLabel: z.string().optional(),
+});
+
+export const AuthExchangeResponseSchema = z.object({
+  jwt: z.string(),
+  expiresAt: z.number().int().positive(),
+  email: z.string().email(),
+});
+
+export const SyncPushRequestSchema = z.object({
   deviceId: z.string().min(1),
   daily: z.array(SyncDailySnapshotSchema),
   sessionWindows: z.array(SyncSessionWindowSchema),
@@ -56,5 +78,17 @@ export const SyncPushPayloadSchema = z.object({
   settings: SyncSettingsSchema.optional(),
 });
 
-export type SyncPushPayloadInput = z.input<typeof SyncPushPayloadSchema>;
-export type SyncPushPayloadOutput = z.output<typeof SyncPushPayloadSchema>;
+export const SyncPullResponseSchema = z.object({
+  daily: z.array(SyncDailySnapshotSchema),
+  sessionWindows: z.array(SyncSessionWindowSchema),
+  timeSeries: z.array(SyncTimeSeriesPointSchema),
+  usageSnapshots: z.array(SyncUsageSnapshotSchema),
+  currentWindow: SyncCurrentWindowSchema.optional(),
+  settings: SyncSettingsSchema.optional(),
+  serverTime: z.number().int().positive(),
+});
+
+// Alias mantido para compatibilidade
+export const SyncPushPayloadSchema = SyncPushRequestSchema;
+export type SyncPushPayloadInput = z.input<typeof SyncPushRequestSchema>;
+export type SyncPushPayloadOutput = z.output<typeof SyncPushRequestSchema>;

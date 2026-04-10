@@ -1,5 +1,15 @@
 /** Tipos compartilhados entre o cliente Electron e o servidor Hono */
 
+export interface SyncNotifications {
+  enabled?: boolean;
+  sessionThreshold?: number;
+  weeklyThreshold?: number;
+  resetThreshold?: number;
+  notifyOnReset?: boolean;
+  notifyOnWindowReset?: boolean;
+  soundEnabled?: boolean;
+}
+
 export interface SyncDailySnapshot {
   date: string;              // YYYY-MM-DD
   maxWeekly: number;
@@ -14,7 +24,7 @@ export interface SyncDailySnapshot {
 export interface SyncSessionWindow {
   date: string;              // YYYY-MM-DD
   resetsAt: string;          // ISO datetime
-  resetsAtMinute: number;    // unix minute (ts / 60000)
+  resetsAtMinute: number;    // floor(ts / 60000)
   peak: number;
   updatedAt: number;         // unix ms
 }
@@ -40,9 +50,9 @@ export interface SyncCurrentWindow {
 }
 
 export interface SyncSettings {
-  theme?: string;
-  language?: string;
-  notifyThreshold?: number;
+  theme?: 'system' | 'dark' | 'light';
+  language?: 'en' | 'pt-BR';
+  notifications?: SyncNotifications;
   updatedAt: number;         // unix ms
 }
 
@@ -65,7 +75,14 @@ export interface SyncPullResponse {
   usageSnapshots: SyncUsageSnapshot[];
   currentWindow?: SyncCurrentWindow;
   settings?: SyncSettings;
-  pulledAt: number;          // unix ms — usar como novo cursor
+  serverTime: number;        // unix ms
+}
+
+/** Request do POST /auth/exchange */
+export interface AuthExchangeRequest {
+  accessToken: string;
+  deviceId: string;
+  deviceLabel?: string;
 }
 
 /** Resposta do POST /auth/exchange */
