@@ -82,6 +82,7 @@ declare global {
       importBackup: () => Promise<{ imported: number; merged: number }>;
       updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }) => Promise<void>;
       chooseAutoBackupFolder: () => Promise<string | null>;
+      onProfileUpdated: (cb: (profile: ProfileData) => void) => void;
     };
   }
 }
@@ -1181,8 +1182,7 @@ function init(): void {
 
   void loadSettings();
 
-  void window.claudeUsage.getProfile().then((profile) => {
-    if (!profile) return;
+  function applyProfile(profile: ProfileData): void {
     const bar     = document.getElementById('account-bar') as HTMLElement;
     const avatar  = document.getElementById('account-avatar') as HTMLElement;
     const nameEl  = document.getElementById('account-name') as HTMLElement;
@@ -1207,6 +1207,15 @@ function init(): void {
 
     bar.style.display = 'flex';
     fitWindow();
+  }
+
+  void window.claudeUsage.getProfile().then((profile) => {
+    if (!profile) return;
+    applyProfile(profile);
+  });
+
+  window.claudeUsage.onProfileUpdated((profile) => {
+    applyProfile(profile);
   });
 
   void window.claudeUsage.getAppVersion().then((version) => {
@@ -1248,8 +1257,14 @@ function init(): void {
     const { merged } = await window.claudeUsage.importBackup();
     if (merged === 0) return;
     alert(tr().importSuccess(merged));
-    const updated = await window.claudeUsage.getDailyHistory();
-    if (lastWeeklyResetsAt) renderDailyChart(updated, lastWeeklyResetsAt);
+    if (lastWeeklyResetsAt) {
+      const updated = await window.claudeUsage.getDailyHistory();
+      renderDailyChart(updated, lastWeeklyResetsAt);
+    } else {
+      // Ainda não recebemos dados do polling — dispara um refresh
+      // para obter resets_at; onUsageUpdated vai renderizar o gráfico
+      void window.claudeUsage.refreshNow();
+    }
   });
 
   document.getElementById('btn-edit-history')!.addEventListener('click', () => {

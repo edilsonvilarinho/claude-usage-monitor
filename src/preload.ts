@@ -101,4 +101,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
 
   chooseAutoBackupFolder: (): Promise<string | null> =>
     ipcRenderer.invoke('choose-auto-backup-folder'),
+
+  onProfileUpdated: (cb: (profile: ProfileData) => void): void => {
+    ipcRenderer.on('profile-updated', (_event, profile: ProfileData) => cb(profile));
+  },
 });
