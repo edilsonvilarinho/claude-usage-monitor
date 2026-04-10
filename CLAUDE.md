@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+## Idioma
+- Sempre responda ao usuário em **pt-br**
+- Mensagens de commit devem ser escritas em **pt-br**
+
 ## Commands
 ```bash
 npm run dev          # compile main + start Electron (system tray)

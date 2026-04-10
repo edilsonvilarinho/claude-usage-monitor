@@ -1430,6 +1430,7 @@ function init(): void {
       await window.claudeUsage.saveSettings({ autoBackupFolder: folder });
       const lbl = document.getElementById('lbl-auto-backup-folder');
       if (lbl) lbl.textContent = folder;
+      fitWindow();
     }
   });
 
