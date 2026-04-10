@@ -105,4 +105,22 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   onProfileUpdated: (cb: (profile: ProfileData) => void): void => {
     ipcRenderer.on('profile-updated', (_event, profile: ProfileData) => cb(profile));
   },
+
+  sync: {
+    getStatus: (): Promise<import('./services/syncService').SyncStatus> =>
+      ipcRenderer.invoke('sync:get-status'),
+
+    enable: (serverUrl: string, deviceLabel?: string): Promise<void> =>
+      ipcRenderer.invoke('sync:enable', serverUrl, deviceLabel),
+
+    disable: (wipeRemote?: boolean): Promise<void> =>
+      ipcRenderer.invoke('sync:disable', wipeRemote),
+
+    triggerNow: (): Promise<void> =>
+      ipcRenderer.invoke('sync:trigger-now'),
+
+    onEvent: (cb: (event: { type: string; payload: unknown }) => void): void => {
+      ipcRenderer.on('sync-event', (_event, data: { type: string; payload: unknown }) => cb(data));
+    },
+  },
 });
