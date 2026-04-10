@@ -31,6 +31,7 @@ app.setAppUserModelId('com.claudeusage.monitor');
 
 let tray: Tray | null = null;
 let popup: BrowserWindow | null = null;
+let registeredShortcut = '';
 let lastUsageData: UsageData | null = null;
 let tooltipRefreshTimer: NodeJS.Timeout | null = null;
 let suppressNextNotification = false;
@@ -499,7 +500,7 @@ function buildContextMenu(): Menu {
       },
     },
     { type: 'separator' },
-    { label: 'Ctrl+Shift+U — Toggle window', enabled: false },
+    { label: registeredShortcut ? `${registeredShortcut} — Toggle window` : 'No shortcut available', enabled: false },
     { label: t.trayExit, click: () => app.quit() }
   );
 
@@ -691,10 +692,17 @@ app.whenReady().then(() => {
   tray = createTray();
   popup = createPopup();
 
-  const registered = globalShortcut.register('Ctrl+Shift+U', () => togglePopup());
-  if (!registered) {
-    console.warn('[Main] Failed to register global shortcut Ctrl+Shift+U — may be in use by another app');
+  const shortcutCandidates = ['Ctrl+Shift+U', 'Ctrl+Alt+U', 'Ctrl+Shift+Alt+U'];
+  for (const sc of shortcutCandidates) {
+    if (globalShortcut.register(sc, () => togglePopup())) {
+      registeredShortcut = sc;
+      break;
+    }
   }
+  if (!registeredShortcut) {
+    console.warn('[Main] Could not register any global shortcut for toggle window — all candidates in use');
+  }
+  tray?.setContextMenu(buildContextMenu());
 
   void fetchProfileData().then(p => { cachedProfile = p; cachedProfileAt = Date.now(); setActiveAccount(p.account.email); }).catch(() => {});
 
