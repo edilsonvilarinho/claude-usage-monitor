@@ -1159,6 +1159,11 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked = essentialMode;
   const layoutOptions = document.getElementById('layout-options') as HTMLElement;
   if (layoutOptions) layoutOptions.style.display = (compactMode || essentialMode) ? 'none' : '';
+  // Esconde a row do outro modo quando um está ativo
+  const rowCompact   = document.getElementById('row-compact-mode')   as HTMLElement;
+  const rowEssential = document.getElementById('row-essential-mode') as HTMLElement;
+  if (rowCompact)   rowCompact.style.display   = essentialMode ? 'none' : '';
+  if (rowEssential) rowEssential.style.display = compactMode   ? 'none' : '';
   (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked = showDailyChart;
   (document.getElementById('setting-show-extra-bars')  as HTMLInputElement).checked = showExtraBars;
   (document.getElementById('setting-show-footer')      as HTMLInputElement).checked = showFooter;
@@ -1279,6 +1284,10 @@ function applySectionVisibility(s: Pick<AppSettings,
   const essentialMode  = (document.getElementById('setting-essential-mode')  as HTMLInputElement)?.checked ?? false;
   const layoutOptions  = document.getElementById('layout-options') as HTMLElement;
   if (layoutOptions) layoutOptions.style.display = (compactMode || essentialMode) ? 'none' : '';
+  const rowCompactEl   = document.getElementById('row-compact-mode')   as HTMLElement;
+  const rowEssentialEl = document.getElementById('row-essential-mode') as HTMLElement;
+  if (rowCompactEl)   rowCompactEl.style.display   = essentialMode ? 'none' : '';
+  if (rowEssentialEl) rowEssentialEl.style.display = compactMode   ? 'none' : '';
 
   if (essentialMode) {
     // Modo essencial: mostra apenas conta, gauges, créditos e rodapé
@@ -1593,15 +1602,20 @@ function init(): void {
     }
     const layoutOptions = document.getElementById('layout-options') as HTMLElement;
     if (layoutOptions) layoutOptions.style.display = compact ? 'none' : '';
+    // Esconde a row do modo essencial quando compacto está ativo, e vice-versa
+    const rowEssential = document.getElementById('row-essential-mode') as HTMLElement;
+    if (rowEssential) rowEssential.style.display = compact ? 'none' : '';
     void saveSettingsFromUI();
   });
 
-  // Modo essencial: ativa → esconde layout-options; desativa → mostra (se compact não estiver on)
+  // Modo essencial: ativa → esconde layout-options e row do compacto; desativa → restaura
   document.getElementById('setting-essential-mode')!.addEventListener('change', () => {
     const essential = (document.getElementById('setting-essential-mode') as HTMLInputElement).checked;
     const compact   = (document.getElementById('setting-compact-mode')   as HTMLInputElement).checked;
     const layoutOptions = document.getElementById('layout-options') as HTMLElement;
     if (layoutOptions) layoutOptions.style.display = (essential || compact) ? 'none' : '';
+    const rowCompact = document.getElementById('row-compact-mode') as HTMLElement;
+    if (rowCompact) rowCompact.style.display = essential ? 'none' : '';
     void saveSettingsFromUI();
   });
 
