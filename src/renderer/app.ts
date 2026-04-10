@@ -67,7 +67,7 @@ declare global {
       onRateLimited: (cb: (until: number, resetAt?: number) => void) => void;
       onNextPollAt: (cb: (nextPollAt: number) => void) => void;
       onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void) => void;
-      getDayTimeSeries: (date: string) => Promise<{ ts: number; session: number; weekly: number }[]>;
+      getDayTimeSeries: (date: string) => Promise<{ ts: number; session: number; weekly: number; credits?: number }[]>;
       getSessionWindows: () => Promise<{ resetsAt: string; peak: number; date: string }[]>;
       getCurrentSessionWindow: () => Promise<{ resetsAt: string; peak: number } | null>;
       getSettings: () => Promise<AppSettings>;
@@ -177,6 +177,7 @@ const translations = {
     dayDetailEmpty:   'No data for this day yet',
     dayDetailSession: 'Session (5h)',
     dayDetailWeekly:  'Weekly (7d)',
+    dayDetailCredits: 'Credits',
     autoBackupTitle:      'Auto Backup',
     autoBackupModeLabel:  'Mode',
     autoBackupNever:      'Never',
@@ -271,6 +272,7 @@ const translations = {
     dayDetailEmpty:   'Nenhum dado para este dia ainda',
     dayDetailSession: 'Sessão (5h)',
     dayDetailWeekly:  'Semanal (7d)',
+    dayDetailCredits: 'Créditos',
     autoBackupTitle:      'Backup Automático',
     autoBackupModeLabel:  'Modo',
     autoBackupNever:      'Nunca',
@@ -786,12 +788,16 @@ async function openDayDetailModal(date: string): Promise<void> {
 
   const sessionBorder = '#a78bfa';
   const weeklyBorder  = '#60a5fa';
+  const creditsBorder = '#22c55e';
   const sessionFill   = isDarkMode ? 'rgba(167,139,250,0.38)' : 'rgba(167,139,250,0.22)';
   const weeklyFill    = isDarkMode ? 'rgba(96,165,250,0.28)'  : 'rgba(96,165,250,0.15)';
+  const creditsFill   = isDarkMode ? 'rgba(34,197,94,0.28)'   : 'rgba(34,197,94,0.15)';
 
   const labels  = points.map(p => new Date(p.ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }));
   const session = points.map(p => Math.min(p.session, 100));
   const weekly  = points.map(p => Math.min(p.weekly,  100));
+  const credits = points.map(p => p.credits != null ? Math.min(p.credits, 100) : null);
+  const hasCredits = credits.some(v => v !== null);
 
   // Reset markers: sessionWindows that belong to this date
   const resets = (windows ?? []).filter(w => w.date === date);
@@ -852,6 +858,17 @@ async function openDayDetailModal(date: string): Promise<void> {
           pointRadius: 0,
           borderWidth: 2,
         },
+        ...(hasCredits ? [{
+          label: t.dayDetailCredits,
+          data: credits,
+          borderColor: creditsBorder,
+          backgroundColor: creditsFill,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 2,
+          spanGaps: true,
+        }] : []),
       ],
     },
     options: {

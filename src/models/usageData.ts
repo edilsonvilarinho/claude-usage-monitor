@@ -6,9 +6,10 @@ export interface UsageSnapshot {
 
 /** Um ponto de coleta da série temporal diária (um por poll bem-sucedido) */
 export interface TimeSeriesPoint {
-  ts: number;      // unix ms
-  session: number; // utilization bruta da API (inteiro, pode ser > 100)
-  weekly: number;  // utilization bruta da API (inteiro, pode ser > 100)
+  ts: number;       // unix ms
+  session: number;  // utilization bruta da API (inteiro, pode ser > 100)
+  weekly: number;   // utilization bruta da API (inteiro, pode ser > 100)
+  credits?: number; // % de créditos usados (0-100), presente só quando extra_usage.is_enabled
 }
 
 /** Janela de sessão de 5h completada — usada como marcador no gráfico e para sessionAccum */

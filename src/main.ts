@@ -723,7 +723,14 @@ app.whenReady().then(() => {
     ).toLocaleDateString('sv');
     const timeSeries = { ...(accountData.timeSeries ?? {}) };
     if (!timeSeries[today]) timeSeries[today] = [];
-    timeSeries[today].push({ ts: now, session: Math.round(data.five_hour.utilization), weekly: Math.round(data.seven_day.utilization) });
+    timeSeries[today].push({
+      ts: now,
+      session: Math.round(data.five_hour.utilization),
+      weekly:  Math.round(data.seven_day.utilization),
+      ...(data.extra_usage?.is_enabled && data.extra_usage.monthly_limit > 0
+        ? { credits: Math.round((data.extra_usage.used_credits / data.extra_usage.monthly_limit) * 100) }
+        : {}),
+    });
     // Remover dias fora do ciclo corrente
     for (const date of Object.keys(timeSeries)) {
       if (date < cycleStartDate) delete timeSeries[date];
