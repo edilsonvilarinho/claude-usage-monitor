@@ -139,6 +139,7 @@ export interface AppSettings {
   showBackupSettings:  boolean;
   compactMode: boolean;
   essentialMode: boolean;
+  cloudSync: CloudSyncSettings;
 }
 
 const defaults: AppSettings = {
@@ -177,6 +178,16 @@ const defaults: AppSettings = {
   showBackupSettings:  true,
   compactMode: false,
   essentialMode: false,
+  cloudSync: {
+    enabled: false,
+    serverUrl: '',
+    deviceId: '',
+    deviceLabel: '',
+    lastSyncAt: 0,
+    lastSyncError: '',
+    lastPullCursor: 0,
+    syncIntervalMinutes: 15,
+  },
 };
 
 const store = new Store<AppSettings>({
@@ -221,6 +232,7 @@ const store = new Store<AppSettings>({
     showBackupSettings:  { type: 'boolean' },
     compactMode: { type: 'boolean' },
     essentialMode: { type: 'boolean' },
+    cloudSync: { type: 'object' },
   },
 });
 
@@ -253,7 +265,19 @@ export function getSettings(): AppSettings {
     showBackupSettings:  store.get('showBackupSettings',  defaults.showBackupSettings),
     compactMode: store.get('compactMode', defaults.compactMode),
     essentialMode: store.get('essentialMode', defaults.essentialMode),
+    cloudSync: store.get('cloudSync', defaults.cloudSync) as CloudSyncSettings,
   };
+}
+
+export interface CloudSyncSettings {
+  enabled: boolean;
+  serverUrl: string;
+  deviceId: string;
+  deviceLabel: string;
+  lastSyncAt: number;
+  lastSyncError: string;
+  lastPullCursor: number;
+  syncIntervalMinutes: number;
 }
 
 export function saveSettings(settings: Partial<AppSettings>): void {
@@ -312,4 +336,72 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.showBackupSettings  !== undefined) store.set('showBackupSettings',  settings.showBackupSettings);
   if (settings.compactMode !== undefined) store.set('compactMode', settings.compactMode);
   if (settings.essentialMode !== undefined) store.set('essentialMode', settings.essentialMode);
+  if (settings.cloudSync !== undefined) store.set('cloudSync', settings.cloudSync);
+}
+
+// ─── Cloud sync secrets (JWT encriptado em store separado) ────────────────────
+
+export interface CloudSyncSecrets {
+  jwt: string;
+  jwtExpiresAt: number;
+}
+
+const cloudSyncSecretsDefaults: CloudSyncSecrets = {
+  jwt: '',
+  jwtExpiresAt: 0,
+};
+
+const cloudSyncSecretsStore = new Store<CloudSyncSecrets>({
+  name: 'cloud-sync',
+  encryptionKey: 'claude-usage-sync',
+  defaults: cloudSyncSecretsDefaults,
+});
+
+export function getCloudSyncSecrets(): CloudSyncSecrets {
+  return {
+    jwt: cloudSyncSecretsStore.get('jwt', cloudSyncSecretsDefaults.jwt) as string,
+    jwtExpiresAt: cloudSyncSecretsStore.get('jwtExpiresAt', cloudSyncSecretsDefaults.jwtExpiresAt) as number,
+  };
+}
+
+export function setCloudSyncSecrets(partial: Partial<CloudSyncSecrets>): void {
+  if (partial.jwt !== undefined) cloudSyncSecretsStore.set('jwt', partial.jwt);
+  if (partial.jwtExpiresAt !== undefined) cloudSyncSecretsStore.set('jwtExpiresAt', partial.jwtExpiresAt);
+}
+
+// ─── Outbox de operações pendentes ────────────────────────────────────────────
+
+export interface OutboxItem {
+  op: string;
+  payload: unknown;
+  attemptCount: number;
+  lastError: string;
+  queuedAt: number;
+}
+
+interface OutboxStore {
+  items: OutboxItem[];
+}
+
+const outboxStore = new Store<OutboxStore>({
+  name: 'sync-outbox',
+  defaults: { items: [] },
+});
+
+export function getOutbox(): OutboxItem[] {
+  return outboxStore.get('items', []) as OutboxItem[];
+}
+
+export function setOutbox(ops: OutboxItem[]): void {
+  outboxStore.set('items', ops);
+}
+
+export function appendOutbox(op: OutboxItem): void {
+  const current = getOutbox();
+  current.push(op);
+  outboxStore.set('items', current);
+}
+
+export function clearOutbox(): void {
+  outboxStore.set('items', []);
 }
