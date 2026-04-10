@@ -677,6 +677,81 @@ body {
   display: none;
 }
 
+/* ── Cloud Sync section ──────────────────────────────────────────────────────── */
+
+.sync-text-input {
+  font-size: 12px;
+  font-family: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 5px;
+  padding: 3px 6px;
+  width: 180px;
+}
+
+.sync-text-input:focus {
+  outline: 1px solid var(--accent-blue);
+  border-color: var(--accent-blue);
+}
+
+.sync-status-panel {
+  background: rgba(128, 128, 128, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.sync-status-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.sync-status-label {
+  color: var(--text-secondary);
+  min-width: 72px;
+  flex-shrink: 0;
+}
+
+.sync-status-value {
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.sync-status-err {
+  color: #f87171;
+}
+
+.sync-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sync-btn-disable {
+  color: var(--text-secondary) !important;
+}
+
+.sync-btn-wipe {
+  color: #f87171 !important;
+}
+
+.sync-btn-wipe:hover {
+  background: rgba(248, 113, 113, 0.15) !important;
+}
+
+.sync-error-msg {
+  font-size: 11px;
+  color: #f87171;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
 /* ── Force-refresh modal ───────────────────────────────────────────── */
 .modal-overlay {
   position: absolute;
