@@ -138,6 +138,7 @@ export interface AppSettings {
   showNotifSettings:   boolean;
   showBackupSettings:  boolean;
   compactMode: boolean;
+  essentialMode: boolean;
 }
 
 const defaults: AppSettings = {
@@ -175,6 +176,7 @@ const defaults: AppSettings = {
   showNotifSettings:   true,
   showBackupSettings:  true,
   compactMode: false,
+  essentialMode: false,
 };
 
 const store = new Store<AppSettings>({
@@ -218,6 +220,7 @@ const store = new Store<AppSettings>({
     showNotifSettings:   { type: 'boolean' },
     showBackupSettings:  { type: 'boolean' },
     compactMode: { type: 'boolean' },
+    essentialMode: { type: 'boolean' },
   },
 });
 
@@ -249,6 +252,7 @@ export function getSettings(): AppSettings {
     showNotifSettings:   store.get('showNotifSettings',   defaults.showNotifSettings),
     showBackupSettings:  store.get('showBackupSettings',  defaults.showBackupSettings),
     compactMode: store.get('compactMode', defaults.compactMode),
+    essentialMode: store.get('essentialMode', defaults.essentialMode),
   };
 }
 
@@ -307,4 +311,5 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.showNotifSettings   !== undefined) store.set('showNotifSettings',   settings.showNotifSettings);
   if (settings.showBackupSettings  !== undefined) store.set('showBackupSettings',  settings.showBackupSettings);
   if (settings.compactMode !== undefined) store.set('compactMode', settings.compactMode);
+  if (settings.essentialMode !== undefined) store.set('essentialMode', settings.essentialMode);
 }

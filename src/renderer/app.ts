@@ -189,6 +189,7 @@ const translations = {
     autoBackupFolderDefault: 'Default folder',
     layoutTitle:            'Layout',
     compactModeLabel:       'Compact mode',
+    essentialModeLabel:     'Essential mode',
     showDailyChartLabel:    'Weekly chart',
     showExtraBarsLabel:     'Credits / Sonnet bars',
     showFooterLabel:        'Update footer',
@@ -284,6 +285,7 @@ const translations = {
     autoBackupFolderDefault: 'Pasta padrão',
     layoutTitle:            'Layout',
     compactModeLabel:       'Modo compacto',
+    essentialModeLabel:     'Modo essencial',
     showDailyChartLabel:    'Gráfico semanal',
     showExtraBarsLabel:     'Barras de créditos / Sonnet',
     showFooterLabel:        'Rodapé de atualização',
@@ -1151,8 +1153,10 @@ async function loadSettings(): Promise<void> {
   const showGeneralSettings = s.showGeneralSettings ?? true;
   const showNotifSettings   = s.showNotifSettings   ?? true;
   const showBackupSettings  = s.showBackupSettings  ?? true;
-  const compactMode = s.compactMode ?? false;
-  (document.getElementById('setting-compact-mode')     as HTMLInputElement).checked = compactMode;
+  const compactMode   = s.compactMode   ?? false;
+  const essentialMode = s.essentialMode ?? false;
+  (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked = compactMode;
+  (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked = essentialMode;
   const layoutOptions = document.getElementById('layout-options') as HTMLElement;
   if (layoutOptions) layoutOptions.style.display = compactMode ? 'none' : '';
   (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked = showDailyChart;
@@ -1194,6 +1198,7 @@ async function saveSettingsFromUI(): Promise<void> {
   let showNotifSettings   = (document.getElementById('setting-show-notif')      as HTMLInputElement).checked;
   let showBackupSettings  = (document.getElementById('setting-show-backup')     as HTMLInputElement).checked;
   let compactMode         = (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked;
+  const essentialMode     = (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked;
   // Se qualquer um dos 6 foi ativado manualmente enquanto compact estava on → desliga compact
   if (compactMode && (showDailyChart || showExtraBars || showFooter || showGeneralSettings || showNotifSettings || showBackupSettings)) {
     compactMode = false;
@@ -1226,6 +1231,7 @@ async function saveSettingsFromUI(): Promise<void> {
     showNotifSettings,
     showBackupSettings,
     compactMode,
+    essentialMode,
     notifications: {
       enabled: notifOn,
       soundEnabled,
@@ -1269,22 +1275,35 @@ function applySectionVisibility(s: Pick<AppSettings,
   const showNotif   = s.showNotifSettings   ?? true;
   const showBackup  = s.showBackupSettings  ?? true;
 
-  const compactMode = (document.getElementById('setting-compact-mode') as HTMLInputElement)?.checked ?? false;
-  const layoutOptions = document.getElementById('layout-options') as HTMLElement;
+  const compactMode    = (document.getElementById('setting-compact-mode')    as HTMLInputElement)?.checked ?? false;
+  const essentialMode  = (document.getElementById('setting-essential-mode')  as HTMLInputElement)?.checked ?? false;
+  const layoutOptions  = document.getElementById('layout-options') as HTMLElement;
   if (layoutOptions) layoutOptions.style.display = compactMode ? 'none' : '';
 
-  historyHeader.style.display  = showChart ? '' : 'none';
-  historySection.style.display = showChart ? '' : 'none';
-  extraSectionAllowed = showExtra;
-  if (!showExtra) extraSection.style.display = 'none';
-  footer.style.display  = showFoot    ? '' : 'none';
-  groupGeneral.style.display = showGeneral ? '' : 'none';
-  groupNotif.style.display   = showNotif   ? '' : 'none';
-  groupBackup.style.display  = showBackup  ? '' : 'none';
+  if (essentialMode) {
+    // Modo essencial: mostra apenas conta, gauges, créditos e rodapé
+    historyHeader.style.display  = 'none';
+    historySection.style.display = 'none';
+    extraSectionAllowed = true;
+    footer.style.display = '';
+    groupGeneral.style.display = 'none';
+    groupNotif.style.display   = 'none';
+    groupBackup.style.display  = 'none';
+    if (divider) divider.style.display = 'none';
+  } else {
+    historyHeader.style.display  = showChart ? '' : 'none';
+    historySection.style.display = showChart ? '' : 'none';
+    extraSectionAllowed = showExtra;
+    if (!showExtra) extraSection.style.display = 'none';
+    footer.style.display  = showFoot    ? '' : 'none';
+    groupGeneral.style.display = showGeneral ? '' : 'none';
+    groupNotif.style.display   = showNotif   ? '' : 'none';
+    groupBackup.style.display  = showBackup  ? '' : 'none';
 
-  // Esconde o divisor e a settings-area inteira se todos os grupos estiverem ocultos
-  const anySettingsVisible = showGeneral || showNotif || showBackup;
-  if (divider) divider.style.display = anySettingsVisible ? '' : 'none';
+    // Esconde o divisor e a settings-area inteira se todos os grupos estiverem ocultos
+    const anySettingsVisible = showGeneral || showNotif || showBackup;
+    if (divider) divider.style.display = anySettingsVisible ? '' : 'none';
+  }
 
   fitWindow();
 }
@@ -1557,6 +1576,7 @@ function init(): void {
     'setting-show-general',
     'setting-show-notif',
     'setting-show-backup',
+    'setting-essential-mode',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
