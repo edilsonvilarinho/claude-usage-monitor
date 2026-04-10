@@ -1158,7 +1158,7 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked = compactMode;
   (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked = essentialMode;
   const layoutOptions = document.getElementById('layout-options') as HTMLElement;
-  if (layoutOptions) layoutOptions.style.display = compactMode ? 'none' : '';
+  if (layoutOptions) layoutOptions.style.display = (compactMode || essentialMode) ? 'none' : '';
   (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked = showDailyChart;
   (document.getElementById('setting-show-extra-bars')  as HTMLInputElement).checked = showExtraBars;
   (document.getElementById('setting-show-footer')      as HTMLInputElement).checked = showFooter;
@@ -1576,7 +1576,6 @@ function init(): void {
     'setting-show-general',
     'setting-show-notif',
     'setting-show-backup',
-    'setting-essential-mode',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
@@ -1594,6 +1593,15 @@ function init(): void {
     }
     const layoutOptions = document.getElementById('layout-options') as HTMLElement;
     if (layoutOptions) layoutOptions.style.display = compact ? 'none' : '';
+    void saveSettingsFromUI();
+  });
+
+  // Modo essencial: ativa → esconde layout-options; desativa → mostra (se compact não estiver on)
+  document.getElementById('setting-essential-mode')!.addEventListener('change', () => {
+    const essential = (document.getElementById('setting-essential-mode') as HTMLInputElement).checked;
+    const compact   = (document.getElementById('setting-compact-mode')   as HTMLInputElement).checked;
+    const layoutOptions = document.getElementById('layout-options') as HTMLElement;
+    if (layoutOptions) layoutOptions.style.display = (essential || compact) ? 'none' : '';
     void saveSettingsFromUI();
   });
 
