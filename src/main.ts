@@ -275,6 +275,17 @@ function updateTrayTooltip(data: UsageData): void {
   ];
   if (nextLine) parts.push(nextLine);
   if (pollingService.isPaused) parts.push(t.trayPaused);
+
+  const cloudSyncSettings = getSettings().cloudSync;
+  if (cloudSyncSettings.enabled) {
+    const thirtyMinMs = 30 * 60 * 1000;
+    if (cloudSyncSettings.lastSyncError) {
+      parts.push('Cloud sync: error');
+    } else if (cloudSyncSettings.lastSyncAt && Date.now() - cloudSyncSettings.lastSyncAt < thirtyMinMs) {
+      parts.push('Cloud sync: OK');
+    }
+  }
+
   if (lastResponseInfo) {
     const respTime = new Date(lastResponseInfo.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (lastResponseInfo.ok) {
