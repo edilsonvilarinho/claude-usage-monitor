@@ -131,6 +131,13 @@ export interface AppSettings {
   dailyHistory: DailySnapshot[];
   autoBackupMode: 'never' | 'before' | 'after' | 'always';
   autoBackupFolder: string;
+  showDailyChart: boolean;
+  showExtraBars:  boolean;
+  showFooter:     boolean;
+  showGeneralSettings: boolean;
+  showNotifSettings:   boolean;
+  showBackupSettings:  boolean;
+  compactMode: boolean;
 }
 
 const defaults: AppSettings = {
@@ -161,6 +168,13 @@ const defaults: AppSettings = {
   dailyHistory: [],
   autoBackupMode: 'never',
   autoBackupFolder: '',
+  showDailyChart: true,
+  showExtraBars:  true,
+  showFooter:     true,
+  showGeneralSettings: true,
+  showNotifSettings:   true,
+  showBackupSettings:  true,
+  compactMode: false,
 };
 
 const store = new Store<AppSettings>({
@@ -197,6 +211,13 @@ const store = new Store<AppSettings>({
     dailyHistory: { type: 'array' },
     autoBackupMode: { type: 'string', enum: ['never', 'before', 'after', 'always'] },
     autoBackupFolder: { type: 'string' },
+    showDailyChart: { type: 'boolean' },
+    showExtraBars:  { type: 'boolean' },
+    showFooter:     { type: 'boolean' },
+    showGeneralSettings: { type: 'boolean' },
+    showNotifSettings:   { type: 'boolean' },
+    showBackupSettings:  { type: 'boolean' },
+    compactMode: { type: 'boolean' },
   },
 });
 
@@ -221,6 +242,13 @@ export function getSettings(): AppSettings {
     dailyHistory: store.get('dailyHistory', defaults.dailyHistory),
     autoBackupMode: store.get('autoBackupMode', defaults.autoBackupMode),
     autoBackupFolder: store.get('autoBackupFolder', defaults.autoBackupFolder),
+    showDailyChart: store.get('showDailyChart', defaults.showDailyChart),
+    showExtraBars:  store.get('showExtraBars',  defaults.showExtraBars),
+    showFooter:     store.get('showFooter',     defaults.showFooter),
+    showGeneralSettings: store.get('showGeneralSettings', defaults.showGeneralSettings),
+    showNotifSettings:   store.get('showNotifSettings',   defaults.showNotifSettings),
+    showBackupSettings:  store.get('showBackupSettings',  defaults.showBackupSettings),
+    compactMode: store.get('compactMode', defaults.compactMode),
   };
 }
 
@@ -272,4 +300,11 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.dailyHistory !== undefined) store.set('dailyHistory', settings.dailyHistory);
   if (settings.autoBackupMode !== undefined) store.set('autoBackupMode', settings.autoBackupMode);
   if (settings.autoBackupFolder !== undefined) store.set('autoBackupFolder', settings.autoBackupFolder);
+  if (settings.showDailyChart !== undefined) store.set('showDailyChart', settings.showDailyChart);
+  if (settings.showExtraBars  !== undefined) store.set('showExtraBars',  settings.showExtraBars);
+  if (settings.showFooter     !== undefined) store.set('showFooter',     settings.showFooter);
+  if (settings.showGeneralSettings !== undefined) store.set('showGeneralSettings', settings.showGeneralSettings);
+  if (settings.showNotifSettings   !== undefined) store.set('showNotifSettings',   settings.showNotifSettings);
+  if (settings.showBackupSettings  !== undefined) store.set('showBackupSettings',  settings.showBackupSettings);
+  if (settings.compactMode !== undefined) store.set('compactMode', settings.compactMode);
 }

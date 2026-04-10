@@ -48,6 +48,15 @@ interface AppSettings {
   autoRefresh: boolean;
   autoRefreshInterval: number;
   showHistory: boolean;
+  autoBackupMode: 'never' | 'before' | 'after' | 'always';
+  autoBackupFolder: string;
+  showDailyChart: boolean;
+  showExtraBars:  boolean;
+  showFooter:     boolean;
+  showGeneralSettings: boolean;
+  showNotifSettings:   boolean;
+  showBackupSettings:  boolean;
+  compactMode: boolean;
 }
 
 declare global {
@@ -177,6 +186,14 @@ const translations = {
     autoBackupFolderLabel: 'Folder',
     autoBackupChoose:     'Choose...',
     autoBackupFolderDefault: 'Default folder',
+    layoutTitle:            'Layout',
+    compactModeLabel:       'Compact mode',
+    showDailyChartLabel:    'Weekly chart',
+    showExtraBarsLabel:     'Credits / Sonnet bars',
+    showFooterLabel:        'Update footer',
+    showGeneralSettingsLabel: 'General panel',
+    showNotifSettingsLabel:   'Notifications panel',
+    showBackupSettingsLabel:  'Backup panel',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -263,6 +280,14 @@ const translations = {
     autoBackupFolderLabel: 'Pasta',
     autoBackupChoose:     'Escolher...',
     autoBackupFolderDefault: 'Pasta padrão',
+    layoutTitle:            'Layout',
+    compactModeLabel:       'Modo compacto',
+    showDailyChartLabel:    'Gráfico semanal',
+    showExtraBarsLabel:     'Barras de créditos / Sonnet',
+    showFooterLabel:        'Rodapé de atualização',
+    showGeneralSettingsLabel: 'Painel Geral',
+    showNotifSettingsLabel:   'Painel Notificações',
+    showBackupSettingsLabel:  'Painel Backup',
   },
 } as const;
 
@@ -336,6 +361,7 @@ function applySize(size: AppSettings['windowSize']): void {
 
 let currentAutoRefreshIntervalMs = 300 * 1000;
 let autoRefreshEnabled = false;
+let extraSectionAllowed = true;
 
 function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
   autoRefreshEnabled = enabled;
@@ -1019,7 +1045,8 @@ function updateUI(data: UsageData): void {
   }
 
   const extraSection = document.getElementById('extra-section') as HTMLElement;
-  extraSection.style.display = (data.seven_day_sonnet || hasCredits) ? 'block' : 'none';
+  extraSection.style.display =
+    (extraSectionAllowed && (data.seven_day_sonnet || hasCredits)) ? 'block' : 'none';
 
   (document.getElementById('updated-text') as HTMLElement).textContent =
     tr().updatedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -1101,6 +1128,23 @@ async function loadSettings(): Promise<void> {
   applyTranslations();
   applySize(size);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
+  const showDailyChart     = s.showDailyChart     ?? true;
+  const showExtraBars      = s.showExtraBars      ?? true;
+  const showFooter         = s.showFooter         ?? true;
+  const showGeneralSettings = s.showGeneralSettings ?? true;
+  const showNotifSettings   = s.showNotifSettings   ?? true;
+  const showBackupSettings  = s.showBackupSettings  ?? true;
+  const compactMode = s.compactMode ?? false;
+  (document.getElementById('setting-compact-mode')     as HTMLInputElement).checked = compactMode;
+  const layoutOptions = document.getElementById('layout-options') as HTMLElement;
+  if (layoutOptions) layoutOptions.style.display = compactMode ? 'none' : '';
+  (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked = showDailyChart;
+  (document.getElementById('setting-show-extra-bars')  as HTMLInputElement).checked = showExtraBars;
+  (document.getElementById('setting-show-footer')      as HTMLInputElement).checked = showFooter;
+  (document.getElementById('setting-show-general')     as HTMLInputElement).checked = showGeneralSettings;
+  (document.getElementById('setting-show-notif')       as HTMLInputElement).checked = showNotifSettings;
+  (document.getElementById('setting-show-backup')      as HTMLInputElement).checked = showBackupSettings;
+  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings });
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
 
@@ -1126,12 +1170,25 @@ async function saveSettingsFromUI(): Promise<void> {
   const notifyOnReset    = (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked;
   const resetThreshold   = Math.min(99, Math.max(1, Number((document.getElementById('setting-reset-threshold') as HTMLInputElement).value)));
   const autoBackupMode   = (document.getElementById('setting-auto-backup-mode') as HTMLSelectElement).value as AppSettings['autoBackupMode'];
+  let showDailyChart     = (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked;
+  let showExtraBars      = (document.getElementById('setting-show-extra-bars')  as HTMLInputElement).checked;
+  let showFooter         = (document.getElementById('setting-show-footer')      as HTMLInputElement).checked;
+  let showGeneralSettings = (document.getElementById('setting-show-general')    as HTMLInputElement).checked;
+  let showNotifSettings   = (document.getElementById('setting-show-notif')      as HTMLInputElement).checked;
+  let showBackupSettings  = (document.getElementById('setting-show-backup')     as HTMLInputElement).checked;
+  let compactMode         = (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked;
+  // Se qualquer um dos 6 foi ativado manualmente enquanto compact estava on → desliga compact
+  if (compactMode && (showDailyChart || showExtraBars || showFooter || showGeneralSettings || showNotifSettings || showBackupSettings)) {
+    compactMode = false;
+    (document.getElementById('setting-compact-mode') as HTMLInputElement).checked = false;
+  }
 
   currentLang = lang;
   applyTranslations();
   applyTheme(theme);
   applySize(windowSize);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
+  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings });
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnReset ? '1' : '0.4';
   (document.getElementById('row-auto-backup-folder') as HTMLElement).style.display =
     autoBackupMode === 'never' ? 'none' : '';
@@ -1145,6 +1202,13 @@ async function saveSettingsFromUI(): Promise<void> {
     autoRefresh,
     autoRefreshInterval,
     autoBackupMode,
+    showDailyChart,
+    showExtraBars,
+    showFooter,
+    showGeneralSettings,
+    showNotifSettings,
+    showBackupSettings,
+    compactMode,
     notifications: {
       enabled: notifOn,
       soundEnabled,
@@ -1166,6 +1230,46 @@ function applyTheme(theme: AppSettings['theme']): void {
   } else {
     el.setAttribute('data-theme', theme);
   }
+}
+
+function applySectionVisibility(s: Pick<AppSettings,
+  'showDailyChart' | 'showExtraBars' | 'showFooter' |
+  'showGeneralSettings' | 'showNotifSettings' | 'showBackupSettings'>
+): void {
+  const historyHeader  = document.querySelector('.history-header') as HTMLElement;
+  const historySection = document.getElementById('history-section') as HTMLElement;
+  const extraSection   = document.getElementById('extra-section') as HTMLElement;
+  const footer         = document.querySelector('.footer') as HTMLElement;
+  const groupGeneral   = document.getElementById('settings-group-general') as HTMLElement;
+  const groupNotif     = document.getElementById('settings-group-notif') as HTMLElement;
+  const groupBackup    = document.getElementById('settings-group-backup') as HTMLElement;
+  const divider        = document.querySelector('.section-divider') as HTMLElement;
+
+  const showChart   = s.showDailyChart ?? true;
+  const showExtra   = s.showExtraBars  ?? true;
+  const showFoot    = s.showFooter     ?? true;
+  const showGeneral = s.showGeneralSettings ?? true;
+  const showNotif   = s.showNotifSettings   ?? true;
+  const showBackup  = s.showBackupSettings  ?? true;
+
+  const compactMode = (document.getElementById('setting-compact-mode') as HTMLInputElement)?.checked ?? false;
+  const layoutOptions = document.getElementById('layout-options') as HTMLElement;
+  if (layoutOptions) layoutOptions.style.display = compactMode ? 'none' : '';
+
+  historyHeader.style.display  = showChart ? '' : 'none';
+  historySection.style.display = showChart ? '' : 'none';
+  extraSectionAllowed = showExtra;
+  if (!showExtra) extraSection.style.display = 'none';
+  footer.style.display  = showFoot    ? '' : 'none';
+  groupGeneral.style.display = showGeneral ? '' : 'none';
+  groupNotif.style.display   = showNotif   ? '' : 'none';
+  groupBackup.style.display  = showBackup  ? '' : 'none';
+
+  // Esconde o divisor e a settings-area inteira se todos os grupos estiverem ocultos
+  const anySettingsVisible = showGeneral || showNotif || showBackup;
+  if (divider) divider.style.display = anySettingsVisible ? '' : 'none';
+
+  fitWindow();
 }
 
 // ── Force refresh modal ───────────────────────────────────────────────────────
@@ -1430,10 +1534,31 @@ function init(): void {
     'setting-auto-refresh', 'setting-auto-refresh-interval',
     'setting-session-threshold', 'setting-weekly-threshold',
     'setting-auto-backup-mode',
+    'setting-show-daily-chart',
+    'setting-show-extra-bars',
+    'setting-show-footer',
+    'setting-show-general',
+    'setting-show-notif',
+    'setting-show-backup',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
   }
+
+  // Modo compacto: marca → desmarca os 6 outros; desmarca → marca todos os 6
+  document.getElementById('setting-compact-mode')!.addEventListener('change', () => {
+    const compact = (document.getElementById('setting-compact-mode') as HTMLInputElement).checked;
+    const otherIds = [
+      'setting-show-daily-chart', 'setting-show-extra-bars', 'setting-show-footer',
+      'setting-show-general', 'setting-show-notif', 'setting-show-backup',
+    ];
+    for (const id of otherIds) {
+      (document.getElementById(id) as HTMLInputElement).checked = !compact;
+    }
+    const layoutOptions = document.getElementById('layout-options') as HTMLElement;
+    if (layoutOptions) layoutOptions.style.display = compact ? 'none' : '';
+    void saveSettingsFromUI();
+  });
 
   document.getElementById('btn-test-notif')!.addEventListener('click', () => {
     void window.claudeUsage.testNotification();

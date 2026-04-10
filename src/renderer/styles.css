@@ -82,6 +82,9 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
 }
 
 /* ── Header ────────────────────────────────────────────────────────── */
@@ -223,7 +226,8 @@ body {
 .content {
   padding: 12px 12px 16px;
   overflow-y: auto;
-  max-height: calc(100vh - 38px); /* 38px = header height */
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── Gauge grid ────────────────────────────────────────────────────── */

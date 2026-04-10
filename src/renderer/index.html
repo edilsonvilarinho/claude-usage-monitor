@@ -123,8 +123,64 @@
     <!-- ── Settings ── -->
     <div class="settings-area">
 
-      <!-- General -->
+      <!-- Layout -->
       <div class="settings-group">
+        <div class="settings-title" data-i18n="layoutTitle">Layout</div>
+        <div class="settings-row">
+          <label data-i18n="compactModeLabel">Modo compacto</label>
+          <label class="toggle">
+            <input type="checkbox" id="setting-compact-mode" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="layout-options">
+          <div class="settings-row">
+            <label data-i18n="showDailyChartLabel">Gráfico semanal</label>
+            <label class="toggle">
+              <input type="checkbox" id="setting-show-daily-chart" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="showExtraBarsLabel">Barras de créditos / Sonnet</label>
+            <label class="toggle">
+              <input type="checkbox" id="setting-show-extra-bars" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="showFooterLabel">Rodapé de atualização</label>
+            <label class="toggle">
+              <input type="checkbox" id="setting-show-footer" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="showGeneralSettingsLabel">Painel Geral</label>
+            <label class="toggle">
+              <input type="checkbox" id="setting-show-general" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="showNotifSettingsLabel">Painel Notificações</label>
+            <label class="toggle">
+              <input type="checkbox" id="setting-show-notif" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="showBackupSettingsLabel">Painel Backup</label>
+            <label class="toggle">
+              <input type="checkbox" id="setting-show-backup" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- General -->
+      <div class="settings-group" id="settings-group-general">
         <div class="settings-title" data-i18n="generalTitle">General</div>
         <div class="settings-row">
           <label data-i18n="launchAtStartup">Launch at startup</label>
@@ -182,7 +238,7 @@
       </div>
 
       <!-- Notifications -->
-      <div class="settings-group">
+      <div class="settings-group" id="settings-group-notif">
         <div class="settings-title" data-i18n="notifTitle">Notifications</div>
         <div class="settings-row">
           <label data-i18n="enable">Enable</label>
@@ -240,7 +296,7 @@
       </div>
 
       <!-- Auto Backup -->
-      <div class="settings-group">
+      <div class="settings-group" id="settings-group-backup">
         <div class="settings-title" data-i18n="autoBackupTitle">Auto Backup</div>
         <div class="settings-row">
           <label data-i18n="autoBackupModeLabel">Modo</label>
