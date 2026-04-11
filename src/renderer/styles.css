@@ -1452,6 +1452,20 @@ body {
 }
 .smart-indicator.hidden { display: none; }
 
+/* ── Smart Recommendation Bar ── */
+.smart-rec-bar {
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 6px 12px 6px 10px;
+  border-left: 3px solid transparent;
+  margin: 0 12px 8px;
+  border-radius: 2px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  display: block;
+}
+.smart-rec-bar.hidden { display: none; }
+
 /* ── Smart Time Input ── */
 .sp-time-input {
   background: var(--bg-solid);
@@ -1467,12 +1481,18 @@ body {
 .sp-verdict {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 8px;
   padding: 10px 12px;
   border-radius: 6px;
   color: #fff;
   font-weight: 600;
+  font-size: 13px;
+  line-height: 1.4;
   margin-bottom: 12px;
+}
+#sp-verdict-text {
+  flex: 1;
 }
 .sp-donut-wrap {
   position: relative;

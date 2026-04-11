@@ -247,10 +247,10 @@ const translations = {
     smartPlanValidationError: 'Invalid schedule: break must be within work hours',
     smartPlanStart: 'From',
     smartPlanEnd: 'To',
-    'smartPlan.status.blue': 'Free mode / out of work hours',
-    'smartPlan.status.green': 'Safe margin',
-    'smartPlan.status.yellow': 'Collision warning',
-    'smartPlan.status.red': 'Critical risk of block',
+    'smartPlan.status.blue': 'Outside configured work hours. Strategic planning paused.',
+    'smartPlan.status.green': 'Clear path. Start your most complex and high-context tasks now.',
+    'smartPlan.status.yellow': 'Beware of overhead. Your reset will fall in the middle of your work window. Interleave heavy tasks with manual coding or prioritize lower-context files.',
+    'smartPlan.status.red': 'Imminent block. Avoid sending large prompts. Focus on purely manual refactoring, PR reviews, or documentation until the reset.',
     'smartPlan.openDetails': 'Open smart schedule details',
     'smartPlan.resetNextDay': '+1 day',
     dayShort0: 'Sun',
@@ -394,10 +394,10 @@ const translations = {
     smartPlanValidationError: 'Agenda inválida: intervalo deve estar dentro do expediente',
     smartPlanStart: 'Início',
     smartPlanEnd: 'Fim',
-    'smartPlan.status.blue': 'Modo livre / fora do expediente',
-    'smartPlan.status.green': 'Margem segura',
-    'smartPlan.status.yellow': 'Alerta de colisão',
-    'smartPlan.status.red': 'Risco crítico de bloqueio',
+    'smartPlan.status.blue': 'Fora do horário comercial configurado. Planejamento estratégico pausado.',
+    'smartPlan.status.green': 'Caminho livre. Inicie suas tarefas mais complexas e de alto consumo de contexto agora.',
+    'smartPlan.status.yellow': 'Cuidado com o overhead. Seu reset cairá no meio da sua janela de trabalho. Intercale tarefas pesadas com codificação manual ou priorize arquivos de menor contexto.',
+    'smartPlan.status.red': 'Bloqueio iminente. Evite enviar prompts grandes. Concentre-se em refatorações puramente manuais, revisão de PRs ou documentação até o reset.',
     'smartPlan.openDetails': 'Abrir detalhes da agenda',
     'smartPlan.resetNextDay': '+1 dia',
     dayShort0: 'Dom',
@@ -1501,9 +1501,11 @@ function openSmartModal(): void {
 
 function applySmartIndicator(s: import('./globals').SmartStatus): void {
   const btn = document.getElementById('smart-indicator') as HTMLButtonElement | null;
+  const recBar = document.getElementById('smart-rec-bar') as HTMLElement | null;
   if (!btn) return;
   if (!s.enabled) {
     btn.classList.add('hidden');
+    if (recBar) recBar.classList.add('hidden');
     return;
   }
   btn.classList.remove('hidden');
@@ -1511,7 +1513,12 @@ function applySmartIndicator(s: import('./globals').SmartStatus): void {
   if (dot) dot.style.background = s.colorHex;
   const t = tr() as Record<string, string>;
   const statusText = t[s.messageKey] ?? s.messageKey;
-  btn.title = `Agenda: ${statusText}`;
+  btn.title = statusText;
+  if (recBar) {
+    recBar.textContent = statusText;
+    recBar.style.borderLeftColor = s.colorHex;
+    recBar.classList.remove('hidden');
+  }
 }
 
 function applyTheme(theme: AppSettings['theme']): void {
