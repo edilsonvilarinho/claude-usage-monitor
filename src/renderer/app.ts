@@ -251,6 +251,7 @@ const translations = {
     'smartPlan.status.green': 'Clear path. Start your most complex and high-context tasks now.',
     'smartPlan.status.yellow': 'Beware of overhead. Your reset will fall in the middle of your work window. Interleave heavy tasks with manual coding or prioritize lower-context files.',
     'smartPlan.status.red': 'Imminent block. Avoid sending large prompts. Focus on purely manual refactoring, PR reviews, or documentation until the reset.',
+    'smartPlan.status.purple': "Bio-Rhythm Synchronization: To avoid 'dead resets', we suggest sending your first message at {time} so your reset aligns perfectly with your break. Protect your focus.",
     'smartPlan.openDetails': 'Open smart schedule details',
     'smartPlan.resetNextDay': '+1 day',
     dayShort0: 'Sun',
@@ -398,6 +399,7 @@ const translations = {
     'smartPlan.status.green': 'Caminho livre. Inicie suas tarefas mais complexas e de alto consumo de contexto agora.',
     'smartPlan.status.yellow': 'Cuidado com o overhead. Seu reset cairá no meio da sua janela de trabalho. Intercale tarefas pesadas com codificação manual ou priorize arquivos de menor contexto.',
     'smartPlan.status.red': 'Bloqueio iminente. Evite enviar prompts grandes. Concentre-se em refatorações puramente manuais, revisão de PRs ou documentação até o reset.',
+    'smartPlan.status.purple': "Sincronização de Bio-Ritmo: Para evitar 'resets mortos', sugerimos disparar sua primeira mensagem às {time} para que seu reset alinhe perfeitamente com seu intervalo. Proteja seu foco.",
     'smartPlan.openDetails': 'Abrir detalhes da agenda',
     'smartPlan.resetNextDay': '+1 dia',
     dayShort0: 'Dom',
@@ -1427,8 +1429,8 @@ function openSmartModal(): void {
   // Header
   const header = document.getElementById('sp-verdict-header')!;
   header.style.backgroundColor = s.colorHex;
-  (document.getElementById('sp-verdict-text') as HTMLElement).textContent =
-    t[s.messageKey] ?? s.messageKey;
+  const verdictText = (t[s.messageKey] ?? s.messageKey).replace('{time}', s.idealStartTime ?? '');
+  (document.getElementById('sp-verdict-text') as HTMLElement).textContent = verdictText;
 
   // Donut
   if (spDonutChart) { spDonutChart.destroy(); spDonutChart = null; }
@@ -1517,9 +1519,10 @@ function applySmartIndicator(s: import('./globals').SmartStatus): void {
   if (dot) dot.style.background = s.colorHex;
   const t = tr() as Record<string, string>;
   const statusText = t[s.messageKey] ?? s.messageKey;
-  btn.title = statusText;
+  const resolvedText = statusText.replace('{time}', s.idealStartTime ?? '');
+  btn.title = resolvedText;
   if (recBar) {
-    recBar.textContent = statusText;
+    recBar.textContent = resolvedText;
     recBar.style.borderLeftColor = s.colorHex;
     recBar.classList.remove('hidden');
   }

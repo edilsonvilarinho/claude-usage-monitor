@@ -7,7 +7,7 @@ export interface WorkSchedule {
   breakEnd: string;
 }
 
-export type SmartStatusId = 'blue' | 'green' | 'yellow' | 'red';
+export type SmartStatusId = 'blue' | 'green' | 'yellow' | 'red' | 'purple';
 
 export interface SmartStatus {
   statusId: SmartStatusId;
@@ -22,5 +22,6 @@ export interface SmartStatus {
   breakStartMin: number;
   breakEndMin: number;
   resetCrossesDay: boolean;
+  idealStartTime?: string;
   enabled: boolean;
 }

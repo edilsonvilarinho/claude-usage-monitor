@@ -1,6 +1,6 @@
 import type { WorkSchedule } from './settingsService';
 
-export type SmartStatusId = 'blue' | 'green' | 'yellow' | 'red';
+export type SmartStatusId = 'blue' | 'green' | 'yellow' | 'red' | 'purple';
 
 export interface SmartStatus {
   statusId: SmartStatusId;
@@ -15,6 +15,7 @@ export interface SmartStatus {
   breakStartMin: number;
   breakEndMin: number;
   resetCrossesDay: boolean;
+  idealStartTime?: string;
   enabled: boolean;
 }
 
@@ -65,16 +66,25 @@ export function computeSmartStatus(
     return { ...base, statusId: 'blue', colorHex: '#3b82f6', messageKey: 'smartPlan.status.blue' };
   }
 
-  // 2. GREEN
+  // 2. PURPLE — dentro do expediente, sessão ainda não iniciada
+  if (usoSessao === 0) {
+    const idealMin = Math.max(workStartMin, breakStartMin - 300);
+    const idealH = Math.floor(idealMin / 60) % 24;
+    const idealM = idealMin % 60;
+    const idealStartTime = `${String(idealH).padStart(2, '0')}:${String(idealM).padStart(2, '0')}`;
+    return { ...base, statusId: 'purple', colorHex: '#a855f7', messageKey: 'smartPlan.status.purple', idealStartTime };
+  }
+
+  // 3. GREEN
   if (usoSessao <= 50 || (momentoDoReset >= breakStartMin && momentoDoReset <= breakEndMin)) {
     return { ...base, statusId: 'green', colorHex: '#22c55e', messageKey: 'smartPlan.status.green' };
   }
 
-  // 3. RED
+  // 4. RED
   if (usoSessao >= 85 && minutosParaReset > 45 && momentoDoReset < workEndMin) {
     return { ...base, statusId: 'red', colorHex: '#ef4444', messageKey: 'smartPlan.status.red' };
   }
 
-  // 4. YELLOW (fallback)
+  // 5. YELLOW (fallback)
   return { ...base, statusId: 'yellow', colorHex: '#eab308', messageKey: 'smartPlan.status.yellow' };
 }
