@@ -243,7 +243,7 @@ body {
 
 /* ── Main content ──────────────────────────────────────────────────── */
 .content {
-  padding: 12px 12px 16px;
+  padding: 12px 12px 8px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -377,7 +377,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 2px;
+  padding: 4px 12px 12px;
+  flex-shrink: 0;
 }
 
 .updated-text {
