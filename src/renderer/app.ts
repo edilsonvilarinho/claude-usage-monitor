@@ -56,6 +56,7 @@ interface AppSettings {
   showGeneralSettings: boolean;
   showNotifSettings:   boolean;
   showBackupSettings:  boolean;
+  showCloudSyncSettings: boolean;
   compactMode: boolean;
 }
 
@@ -92,6 +93,20 @@ declare global {
       updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }) => Promise<void>;
       chooseAutoBackupFolder: () => Promise<string | null>;
       onProfileUpdated: (cb: (profile: ProfileData) => void) => void;
+      sync: {
+        getStatus: () => Promise<{
+          enabled: boolean;
+          lastSyncAt: number;
+          lastError: string;
+          pendingOps: number;
+          jwtExpiresAt: number;
+          email: string;
+        }>;
+        enable: (serverUrl: string, deviceLabel?: string) => Promise<void>;
+        disable: (wipeRemote?: boolean) => Promise<void>;
+        triggerNow: () => Promise<void>;
+        onEvent: (cb: (data: { type: string; payload: unknown }) => void) => void;
+      };
     };
   }
 }
@@ -196,6 +211,25 @@ const translations = {
     showGeneralSettingsLabel: 'General panel',
     showNotifSettingsLabel:   'Notifications panel',
     showBackupSettingsLabel:  'Backup panel',
+    showCloudSyncSettingsLabel: 'Cloud Sync panel',
+    syncNever:        'Never',
+    syncJustNow:      'Just now',
+    syncMinAgo:       (n: number) => `${n} min ago`,
+    syncHAgo:         (n: number) => `${n}h ago`,
+    syncDAgo:         (n: number) => `${n}d ago`,
+    syncSoon:         'Soon',
+    syncInMin:        (n: number) => `in ${n} min`,
+    syncInH:          (n: number) => `in ${n}h`,
+    syncNowBtn:       'Sync now',
+    syncSyncingBtn:   'Syncing...',
+    syncDisableBtn:   'Disable',
+    syncWipeBtn:      'Wipe remote',
+    syncLabelAccount: 'Account',
+    syncLabelServer:  'Server',
+    syncLabelLast:    'Last sync',
+    syncLabelNext:    'Next sync',
+    syncLabelPending: 'Pending ops',
+    syncLabelError:   'Last error',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -292,6 +326,25 @@ const translations = {
     showGeneralSettingsLabel: 'Painel Geral',
     showNotifSettingsLabel:   'Painel Notificações',
     showBackupSettingsLabel:  'Painel Backup',
+    showCloudSyncSettingsLabel: 'Painel Cloud Sync',
+    syncNever:        'Nunca',
+    syncJustNow:      'Agora mesmo',
+    syncMinAgo:       (n: number) => `${n} min atrás`,
+    syncHAgo:         (n: number) => `${n}h atrás`,
+    syncDAgo:         (n: number) => `${n}d atrás`,
+    syncSoon:         'Em breve',
+    syncInMin:        (n: number) => `em ${n} min`,
+    syncInH:          (n: number) => `em ${n}h`,
+    syncNowBtn:       'Sincronizar',
+    syncSyncingBtn:   'Sincronizando...',
+    syncDisableBtn:   'Desativar',
+    syncWipeBtn:      'Limpar remoto',
+    syncLabelAccount: 'Conta',
+    syncLabelServer:  'Servidor',
+    syncLabelLast:    'Última sync',
+    syncLabelNext:    'Próxima sync',
+    syncLabelPending: 'Ops pendentes',
+    syncLabelError:   'Último erro',
   },
 } as const;
 
@@ -1153,6 +1206,7 @@ async function loadSettings(): Promise<void> {
   const showGeneralSettings = s.showGeneralSettings ?? true;
   const showNotifSettings   = s.showNotifSettings   ?? true;
   const showBackupSettings  = s.showBackupSettings  ?? true;
+  const showCloudSyncSettings = s.showCloudSyncSettings ?? true;
   const compactMode   = s.compactMode   ?? false;
   const essentialMode = s.essentialMode ?? false;
   (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked = compactMode;
@@ -1170,7 +1224,11 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-show-general')     as HTMLInputElement).checked = showGeneralSettings;
   (document.getElementById('setting-show-notif')       as HTMLInputElement).checked = showNotifSettings;
   (document.getElementById('setting-show-backup')      as HTMLInputElement).checked = showBackupSettings;
-  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings });
+  (document.getElementById('setting-show-cloud-sync')  as HTMLInputElement).checked = showCloudSyncSettings;
+  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings, showCloudSyncSettings });
+
+  // Popula estado inicial da seção Cloud Sync
+  void loadCloudSyncStatus();
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
 
@@ -1202,10 +1260,11 @@ async function saveSettingsFromUI(): Promise<void> {
   let showGeneralSettings = (document.getElementById('setting-show-general')    as HTMLInputElement).checked;
   let showNotifSettings   = (document.getElementById('setting-show-notif')      as HTMLInputElement).checked;
   let showBackupSettings  = (document.getElementById('setting-show-backup')     as HTMLInputElement).checked;
+  const showCloudSyncSettings = (document.getElementById('setting-show-cloud-sync') as HTMLInputElement).checked;
   let compactMode         = (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked;
   const essentialMode     = (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked;
-  // Se qualquer um dos 6 foi ativado manualmente enquanto compact estava on → desliga compact
-  if (compactMode && (showDailyChart || showExtraBars || showFooter || showGeneralSettings || showNotifSettings || showBackupSettings)) {
+  // Se qualquer um dos 7 foi ativado manualmente enquanto compact estava on → desliga compact
+  if (compactMode && (showDailyChart || showExtraBars || showFooter || showGeneralSettings || showNotifSettings || showBackupSettings || showCloudSyncSettings)) {
     compactMode = false;
     (document.getElementById('setting-compact-mode') as HTMLInputElement).checked = false;
   }
@@ -1215,7 +1274,7 @@ async function saveSettingsFromUI(): Promise<void> {
   applyTheme(theme);
   applySize(windowSize);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
-  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings });
+  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings, showCloudSyncSettings });
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnReset ? '1' : '0.4';
   (document.getElementById('row-auto-backup-folder') as HTMLElement).style.display =
     autoBackupMode === 'never' ? 'none' : '';
@@ -1235,6 +1294,7 @@ async function saveSettingsFromUI(): Promise<void> {
     showGeneralSettings,
     showNotifSettings,
     showBackupSettings,
+    showCloudSyncSettings,
     compactMode,
     essentialMode,
     notifications: {
@@ -1262,7 +1322,7 @@ function applyTheme(theme: AppSettings['theme']): void {
 
 function applySectionVisibility(s: Pick<AppSettings,
   'showDailyChart' | 'showExtraBars' | 'showFooter' |
-  'showGeneralSettings' | 'showNotifSettings' | 'showBackupSettings'>
+  'showGeneralSettings' | 'showNotifSettings' | 'showBackupSettings' | 'showCloudSyncSettings'>
 ): void {
   const historyHeader  = document.querySelector('.history-header') as HTMLElement;
   const historySection = document.getElementById('history-section') as HTMLElement;
@@ -1271,14 +1331,16 @@ function applySectionVisibility(s: Pick<AppSettings,
   const groupGeneral   = document.getElementById('settings-group-general') as HTMLElement;
   const groupNotif     = document.getElementById('settings-group-notif') as HTMLElement;
   const groupBackup    = document.getElementById('settings-group-backup') as HTMLElement;
+  const groupCloudSync = document.getElementById('settings-group-cloud-sync') as HTMLElement;
   const divider        = document.querySelector('.section-divider') as HTMLElement;
 
-  const showChart   = s.showDailyChart ?? true;
-  const showExtra   = s.showExtraBars  ?? true;
-  const showFoot    = s.showFooter     ?? true;
-  const showGeneral = s.showGeneralSettings ?? true;
-  const showNotif   = s.showNotifSettings   ?? true;
-  const showBackup  = s.showBackupSettings  ?? true;
+  const showChart     = s.showDailyChart ?? true;
+  const showExtra     = s.showExtraBars  ?? true;
+  const showFoot      = s.showFooter     ?? true;
+  const showGeneral   = s.showGeneralSettings ?? true;
+  const showNotif     = s.showNotifSettings   ?? true;
+  const showBackup    = s.showBackupSettings  ?? true;
+  const showCloudSync = s.showCloudSyncSettings ?? true;
 
   const compactMode    = (document.getElementById('setting-compact-mode')    as HTMLInputElement)?.checked ?? false;
   const essentialMode  = (document.getElementById('setting-essential-mode')  as HTMLInputElement)?.checked ?? false;
@@ -1298,6 +1360,7 @@ function applySectionVisibility(s: Pick<AppSettings,
     groupGeneral.style.display = 'none';
     groupNotif.style.display   = 'none';
     groupBackup.style.display  = 'none';
+    if (groupCloudSync) groupCloudSync.style.display = 'none';
     if (divider) divider.style.display = 'none';
   } else {
     historyHeader.style.display  = showChart ? '' : 'none';
@@ -1308,9 +1371,10 @@ function applySectionVisibility(s: Pick<AppSettings,
     groupGeneral.style.display = showGeneral ? '' : 'none';
     groupNotif.style.display   = showNotif   ? '' : 'none';
     groupBackup.style.display  = showBackup  ? '' : 'none';
+    if (groupCloudSync) groupCloudSync.style.display = showCloudSync ? '' : 'none';
 
     // Esconde o divisor e a settings-area inteira se todos os grupos estiverem ocultos
-    const anySettingsVisible = showGeneral || showNotif || showBackup;
+    const anySettingsVisible = showGeneral || showNotif || showBackup || showCloudSync;
     if (divider) divider.style.display = anySettingsVisible ? '' : 'none';
   }
 
@@ -1321,6 +1385,106 @@ function applySectionVisibility(s: Pick<AppSettings,
 
 function showForceRefreshModal(): void {
   document.getElementById('force-refresh-modal')!.classList.remove('hidden');
+}
+
+// ── Cloud Sync UI ─────────────────────────────────────────────────────────────
+
+function formatRelativeTime(ts: number): string {
+  const t = tr();
+  if (!ts) return t.syncNever;
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return t.syncJustNow;
+  if (mins < 60) return t.syncMinAgo(mins);
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return t.syncHAgo(hrs);
+  return t.syncDAgo(Math.floor(hrs / 24));
+}
+
+function applyCloudSyncStatus(status: {
+  enabled: boolean;
+  lastSyncAt: number;
+  lastError: string;
+  pendingOps: number;
+  jwtExpiresAt: number;
+  email: string;
+}): void {
+  const setup  = document.getElementById('cloud-sync-setup')  as HTMLElement;
+  const panel  = document.getElementById('cloud-sync-status') as HTMLElement;
+
+  if (!status.enabled) {
+    setup.style.display  = '';
+    panel.style.display  = 'none';
+    return;
+  }
+
+  const t = tr();
+
+  setup.style.display  = 'none';
+  panel.style.display  = '';
+
+  const emailEl   = document.getElementById('sync-status-email')   as HTMLElement;
+  const serverEl  = document.getElementById('sync-status-server')  as HTMLElement;
+  const lastEl    = document.getElementById('sync-status-last')    as HTMLElement;
+  const nextEl    = document.getElementById('sync-status-next')    as HTMLElement;
+  const pendEl    = document.getElementById('sync-status-pending') as HTMLElement;
+  const errRow    = document.getElementById('sync-status-error-row') as HTMLElement;
+  const errEl     = document.getElementById('sync-status-error')   as HTMLElement;
+
+  const settings = getSettings_cache;
+  const intervalMs = (settings?.cloudSync?.syncIntervalMinutes ?? 15) * 60 * 1000;
+  const nextSyncAt = status.lastSyncAt ? status.lastSyncAt + intervalMs : 0;
+
+  emailEl.textContent   = status.email || '—';
+  serverEl.textContent  = settings?.cloudSync?.serverUrl || '—';
+  lastEl.textContent    = formatRelativeTime(status.lastSyncAt);
+  nextEl.textContent    = nextSyncAt ? formatRelativeTime(nextSyncAt - (Date.now() - nextSyncAt) - (Date.now() - nextSyncAt)) : '—';
+  // Simplified: show next sync as time from now
+  if (nextSyncAt) {
+    const diffNext = nextSyncAt - Date.now();
+    if (diffNext <= 0) {
+      nextEl.textContent = t.syncSoon;
+    } else {
+      const minsNext = Math.ceil(diffNext / 60000);
+      nextEl.textContent = minsNext < 60 ? t.syncInMin(minsNext) : t.syncInH(Math.ceil(minsNext / 60));
+    }
+  } else {
+    nextEl.textContent = '—';
+  }
+  pendEl.textContent = String(status.pendingOps);
+
+  if (status.lastError) {
+    errRow.style.display = '';
+    errEl.textContent = status.lastError;
+  } else {
+    errRow.style.display = 'none';
+    errEl.textContent = '';
+  }
+
+  fitWindow();
+}
+
+// Cache local das settings para a seção de cloud sync (evita async em applyCloudSyncStatus)
+let getSettings_cache: { cloudSync: { serverUrl: string; syncIntervalMinutes: number } } | null = null;
+
+async function loadCloudSyncStatus(): Promise<void> {
+  try {
+    const s = await window.claudeUsage.getSettings();
+    getSettings_cache = s as typeof getSettings_cache;
+    const status = await window.claudeUsage.sync.getStatus();
+    applyCloudSyncStatus(status);
+    // Pre-fill server URL and device label if already set
+    if (!status.enabled && s.cloudSync) {
+      const urlEl   = document.getElementById('sync-server-url')   as HTMLInputElement;
+      const labelEl = document.getElementById('sync-device-label') as HTMLInputElement;
+      if (s.cloudSync.serverUrl && urlEl) urlEl.value = (s as AppSettings & { cloudSync: { serverUrl: string; deviceLabel: string } }).cloudSync.serverUrl;
+      if ((s as AppSettings & { cloudSync: { deviceLabel: string } }).cloudSync.deviceLabel && labelEl) {
+        labelEl.value = (s as AppSettings & { cloudSync: { deviceLabel: string } }).cloudSync.deviceLabel;
+      }
+    }
+  } catch (_e) {
+    // sync API not available — hide the section gracefully
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -1585,17 +1749,18 @@ function init(): void {
     'setting-show-general',
     'setting-show-notif',
     'setting-show-backup',
+    'setting-show-cloud-sync',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
   }
 
-  // Modo compacto: marca → desmarca os 6 outros; desmarca → marca todos os 6
+  // Modo compacto: marca → desmarca os 7 outros; desmarca → marca todos os 7
   document.getElementById('setting-compact-mode')!.addEventListener('change', () => {
     const compact = (document.getElementById('setting-compact-mode') as HTMLInputElement).checked;
     const otherIds = [
       'setting-show-daily-chart', 'setting-show-extra-bars', 'setting-show-footer',
-      'setting-show-general', 'setting-show-notif', 'setting-show-backup',
+      'setting-show-general', 'setting-show-notif', 'setting-show-backup', 'setting-show-cloud-sync',
     ];
     for (const id of otherIds) {
       (document.getElementById(id) as HTMLInputElement).checked = !compact;
@@ -1649,6 +1814,86 @@ function init(): void {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (lastRenderedData) {
       updateTrayIcon(lastRenderedData.session, lastRenderedData.weekly);
+    }
+  });
+
+  // ── Cloud Sync event listeners ──────────────────────────────────────────────
+
+  document.getElementById('btn-sync-enable')!.addEventListener('click', async () => {
+    const urlEl   = document.getElementById('sync-server-url')   as HTMLInputElement;
+    const labelEl = document.getElementById('sync-device-label') as HTMLInputElement;
+    const errEl   = document.getElementById('sync-setup-error')  as HTMLElement;
+    const btn     = document.getElementById('btn-sync-enable')   as HTMLButtonElement;
+
+    errEl.style.display = 'none';
+    errEl.textContent   = '';
+    btn.disabled = true;
+    btn.textContent = 'Connecting...';
+
+    try {
+      await window.claudeUsage.sync.enable(urlEl.value.trim(), labelEl.value.trim() || undefined);
+      const status = await window.claudeUsage.sync.getStatus();
+      applyCloudSyncStatus(status);
+    } catch (e) {
+      errEl.textContent   = e instanceof Error ? e.message : String(e);
+      errEl.style.display = '';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign in & enable';
+    }
+  });
+
+  document.getElementById('btn-sync-now')!.addEventListener('click', async () => {
+    const btn   = document.getElementById('btn-sync-now')      as HTMLButtonElement;
+    const errEl = document.getElementById('sync-enabled-error') as HTMLElement;
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = tr().syncSyncingBtn;
+    try {
+      await window.claudeUsage.sync.triggerNow();
+      const status = await window.claudeUsage.sync.getStatus();
+      applyCloudSyncStatus(status);
+    } catch (e) {
+      errEl.textContent   = e instanceof Error ? e.message : String(e);
+      errEl.style.display = '';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = tr().syncNowBtn;
+    }
+  });
+
+  document.getElementById('btn-sync-disable')!.addEventListener('click', async () => {
+    const errEl = document.getElementById('sync-enabled-error') as HTMLElement;
+    errEl.style.display = 'none';
+    try {
+      await window.claudeUsage.sync.disable(false);
+      const status = await window.claudeUsage.sync.getStatus();
+      applyCloudSyncStatus(status);
+    } catch (e) {
+      errEl.textContent   = e instanceof Error ? e.message : String(e);
+      errEl.style.display = '';
+    }
+  });
+
+  document.getElementById('btn-sync-wipe')!.addEventListener('click', async () => {
+    if (!confirm('This will permanently delete all your data from the sync server. Are you sure?')) return;
+    const errEl = document.getElementById('sync-enabled-error') as HTMLElement;
+    errEl.style.display = 'none';
+    try {
+      await window.claudeUsage.sync.disable(true);
+      const status = await window.claudeUsage.sync.getStatus();
+      applyCloudSyncStatus(status);
+    } catch (e) {
+      errEl.textContent   = e instanceof Error ? e.message : String(e);
+      errEl.style.display = '';
+    }
+  });
+
+  // Escuta eventos em tempo real do syncService
+  window.claudeUsage.sync.onEvent(async (data) => {
+    if (['sync-started', 'sync-success', 'sync-error', 'sync-enabled', 'sync-disabled', 'enabled', 'disabled'].includes(data.type)) {
+      const status = await window.claudeUsage.sync.getStatus();
+      applyCloudSyncStatus(status);
     }
   });
 }

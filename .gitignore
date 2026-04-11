@@ -5,3 +5,6 @@ dist-build/
 .env
 *.log
 .claude/settings.local.json
+server/data/
+server/dist/
+shared/dist/

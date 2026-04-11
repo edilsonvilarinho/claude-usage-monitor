@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { pollingService, LastResponseInfo } from './services/pollingService';
 import { getSettings, saveSettings, setActiveAccount, getAccountData, saveAccountData } from './services/settingsService';
+import { syncService } from './services/syncService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
@@ -274,6 +275,17 @@ function updateTrayTooltip(data: UsageData): void {
   ];
   if (nextLine) parts.push(nextLine);
   if (pollingService.isPaused) parts.push(t.trayPaused);
+
+  const cloudSyncSettings = getSettings().cloudSync;
+  if (cloudSyncSettings.enabled) {
+    const thirtyMinMs = 30 * 60 * 1000;
+    if (cloudSyncSettings.lastSyncError) {
+      parts.push('Cloud sync: error');
+    } else if (cloudSyncSettings.lastSyncAt && Date.now() - cloudSyncSettings.lastSyncAt < thirtyMinMs) {
+      parts.push('Cloud sync: OK');
+    }
+  }
+
   if (lastResponseInfo) {
     const respTime = new Date(lastResponseInfo.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (lastResponseInfo.ok) {
@@ -642,6 +654,20 @@ function registerIpcHandlers(): void {
     pollingService.setCustomInterval(ms);
   });
 
+  ipcMain.handle('sync:get-status', () => syncService.getStatus());
+
+  ipcMain.handle('sync:enable', async (_event, serverUrl: string, deviceLabel?: string) => {
+    await syncService.enable(serverUrl, deviceLabel);
+  });
+
+  ipcMain.handle('sync:disable', async (_event, wipeRemote?: boolean) => {
+    await syncService.disable(wipeRemote ?? false);
+  });
+
+  ipcMain.handle('sync:trigger-now', async () => {
+    await syncService.syncNow();
+  });
+
   ipcMain.on('set-window-height', (_event, height: number) => {
     if (!popup) return;
     const workArea = screen.getPrimaryDisplay().workArea;
@@ -767,6 +793,8 @@ app.whenReady().then(() => {
       sessionWindows: updatedSessionWindows,
     });
 
+    syncService.enqueuePush(getAccountData());
+
     updateTrayTooltip(data);
     if (tooltipRefreshTimer) clearInterval(tooltipRefreshTimer);
     tooltipRefreshTimer = setInterval(() => {
@@ -875,6 +903,15 @@ app.whenReady().then(() => {
   });
 
   pollingService.start();
+
+  syncService.init().catch(err => console.warn('[sync] init failed:', err));
+
+  // Encaminhar eventos do syncService para o renderer
+  syncService.on('sync-event', (event: { type: string; payload: unknown }) => {
+    if (popup) {
+      popup.webContents.send('sync-event', event);
+    }
+  });
 
   setTimeout(() => {
     void runUpdateCheck();
