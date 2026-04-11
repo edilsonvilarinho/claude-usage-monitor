@@ -1588,6 +1588,8 @@ function applyCloudSyncStatus(status: {
   if (!status.enabled) {
     setup.style.display  = '';
     panel.style.display  = 'none';
+    syncLastKnownStatus = status;
+    updateSyncHeaderIcon(status, getSettings_cache?.cloudSync?.serverUrl);
     return;
   }
 
