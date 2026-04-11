@@ -287,13 +287,16 @@ class SyncService extends EventEmitter {
       updatedByDevice: deviceId,
     }));
 
-    const localWindows: SyncSessionWindow[] = (accountData.sessionWindows ?? []).map(w => ({
-      date: w.date ?? w.resetsAt.slice(0, 10),
-      resetsAt: w.resetsAt,
-      resetsAtMinute: Math.floor(new Date(w.resetsAt).getTime() / 60000),
-      peak: w.peak ?? 0,
-      updatedAt: Date.now(),
-    }));
+    const localWindows: SyncSessionWindow[] = (accountData.sessionWindows ?? [])
+      .filter(w => typeof w.resetsAt === 'string' && w.resetsAt.length > 0)
+      .map(w => ({
+        date: w.date ?? w.resetsAt.slice(0, 10),
+        resetsAt: w.resetsAt,
+        resetsAtMinute: Math.floor(new Date(w.resetsAt).getTime() / 60000),
+        peak: w.peak ?? 0,
+        updatedAt: Date.now(),
+      }))
+      .filter(w => w.resetsAtMinute > 0);
 
     const localTimeSeries: SyncTimeSeriesPoint[] = Object.entries(accountData.timeSeries ?? {}).flatMap(
       ([date, pts]) => (pts ?? []).map(p => ({ ...p, date })),
@@ -454,13 +457,16 @@ class SyncService extends EventEmitter {
       updatedByDevice: deviceId,
     }));
 
-    const sessionWindows: SyncSessionWindow[] = (accountData.sessionWindows ?? []).map(w => ({
-      date: w.date ?? w.resetsAt.slice(0, 10),
-      resetsAt: w.resetsAt,
-      resetsAtMinute: Math.floor(new Date(w.resetsAt).getTime() / 60000),
-      peak: Math.round(w.peak ?? 0),
-      updatedAt: Date.now(),
-    }));
+    const sessionWindows: SyncSessionWindow[] = (accountData.sessionWindows ?? [])
+      .filter(w => typeof w.resetsAt === 'string' && w.resetsAt.length > 0)
+      .map(w => ({
+        date: w.date ?? w.resetsAt.slice(0, 10),
+        resetsAt: w.resetsAt,
+        resetsAtMinute: Math.floor(new Date(w.resetsAt).getTime() / 60000),
+        peak: Math.round(w.peak ?? 0),
+        updatedAt: Date.now(),
+      }))
+      .filter(w => w.resetsAtMinute > 0);
 
     const timeSeries: SyncTimeSeriesPoint[] = Object.entries(accountData.timeSeries ?? {}).flatMap(
       ([date, pts]) => (pts ?? []).map(p => ({
