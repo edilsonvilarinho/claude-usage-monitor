@@ -1832,6 +1832,7 @@ function init(): void {
 
     try {
       await window.claudeUsage.sync.enable(urlEl.value.trim(), labelEl.value.trim() || undefined);
+      getSettings_cache = await window.claudeUsage.getSettings() as typeof getSettings_cache;
       const status = await window.claudeUsage.sync.getStatus();
       applyCloudSyncStatus(status);
     } catch (e) {
@@ -1867,6 +1868,7 @@ function init(): void {
     errEl.style.display = 'none';
     try {
       await window.claudeUsage.sync.disable(false);
+      getSettings_cache = await window.claudeUsage.getSettings() as typeof getSettings_cache;
       const status = await window.claudeUsage.sync.getStatus();
       applyCloudSyncStatus(status);
     } catch (e) {
@@ -1881,6 +1883,7 @@ function init(): void {
     errEl.style.display = 'none';
     try {
       await window.claudeUsage.sync.disable(true);
+      getSettings_cache = await window.claudeUsage.getSettings() as typeof getSettings_cache;
       const status = await window.claudeUsage.sync.getStatus();
       applyCloudSyncStatus(status);
     } catch (e) {
