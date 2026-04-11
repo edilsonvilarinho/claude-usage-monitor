@@ -227,6 +227,9 @@ const translations = {
     syncLabelNext:    'Next sync',
     syncLabelPending: 'Pending ops',
     syncLabelError:   'Last error',
+    syncLabelState:   'Status',
+    syncStateSynced:  'Synced',
+    syncStateSyncing: 'Sending...',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -342,6 +345,9 @@ const translations = {
     syncLabelNext:    'Próxima sync',
     syncLabelPending: 'Ops pendentes',
     syncLabelError:   'Último erro',
+    syncLabelState:   'Status',
+    syncStateSynced:  'Sincronizado',
+    syncStateSyncing: 'Enviando...',
   },
 } as const;
 
@@ -1213,6 +1219,7 @@ async function loadSettings(): Promise<void> {
 
   // Popula estado inicial da seção Cloud Sync
   void loadCloudSyncStatus();
+  setInterval(refreshSyncTimes, 30_000);
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
 
@@ -1356,19 +1363,16 @@ function applyCloudSyncStatus(status: {
   const serverEl  = document.getElementById('sync-status-server')  as HTMLElement;
   const lastEl    = document.getElementById('sync-status-last')    as HTMLElement;
   const nextEl    = document.getElementById('sync-status-next')    as HTMLElement;
-  const pendEl    = document.getElementById('sync-status-pending') as HTMLElement;
-  const errRow    = document.getElementById('sync-status-error-row') as HTMLElement;
-  const errEl     = document.getElementById('sync-status-error')   as HTMLElement;
+  const stateEl   = document.getElementById('sync-status-state')   as HTMLElement;
 
   const settings = getSettings_cache;
   const intervalMs = (settings?.cloudSync?.syncIntervalMinutes ?? 15) * 60 * 1000;
   const nextSyncAt = status.lastSyncAt ? status.lastSyncAt + intervalMs : 0;
 
   emailEl.textContent   = status.email || '—';
-  serverEl.textContent  = settings?.cloudSync?.serverUrl || '—';
+  const rawUrl = settings?.cloudSync?.serverUrl || '';
+  serverEl.textContent = rawUrl ? (() => { try { return new URL(rawUrl).host; } catch { return rawUrl; } })() : '—';
   lastEl.textContent    = formatRelativeTime(status.lastSyncAt);
-  nextEl.textContent    = nextSyncAt ? formatRelativeTime(nextSyncAt - (Date.now() - nextSyncAt) - (Date.now() - nextSyncAt)) : '—';
-  // Simplified: show next sync as time from now
   if (nextSyncAt) {
     const diffNext = nextSyncAt - Date.now();
     if (diffNext <= 0) {
@@ -1380,21 +1384,98 @@ function applyCloudSyncStatus(status: {
   } else {
     nextEl.textContent = '—';
   }
-  pendEl.textContent = String(status.pendingOps);
 
   if (status.lastError) {
-    errRow.style.display = '';
-    errEl.textContent = status.lastError;
+    stateEl.textContent = status.lastError;
+    stateEl.style.color = 'var(--accent-red)';
+  } else if (status.pendingOps > 0) {
+    stateEl.textContent = t.syncStateSyncing;
+    stateEl.style.color = '#4a9eff';
   } else {
-    errRow.style.display = 'none';
-    errEl.textContent = '';
+    stateEl.textContent = t.syncStateSynced;
+    stateEl.style.color = 'var(--accent-green)';
   }
 
+  syncLastKnownAt = status.lastSyncAt;
+  syncLastKnownIntervalMs = (settings?.cloudSync?.syncIntervalMinutes ?? 15) * 60 * 1000;
+  syncLastKnownStatus = status;
+
+  updateSyncHeaderIcon(status, getSettings_cache?.cloudSync?.serverUrl);
   fitWindow();
 }
 
 // Cache local das settings para a seção de cloud sync (evita async em applyCloudSyncStatus)
 let getSettings_cache: { cloudSync: { serverUrl: string; syncIntervalMinutes: number } } | null = null;
+let syncLastKnownAt = 0;
+let syncLastKnownIntervalMs = 15 * 60 * 1000;
+let syncLastKnownStatus: { enabled: boolean; lastSyncAt: number; lastError: string; pendingOps: number } | null = null;
+
+function updateSyncHeaderIcon(status: { enabled: boolean; lastSyncAt: number; lastError: string; pendingOps: number }, serverUrl?: string): void {
+  const btn = document.getElementById('btn-cloud-sync') as HTMLButtonElement | null;
+  if (!btn) return;
+
+  if (!status.enabled) {
+    btn.style.display = 'none';
+    return;
+  }
+
+  btn.style.display = '';
+  btn.classList.remove('sync-ok', 'sync-error', 'sync-syncing');
+
+  if (status.lastError) {
+    btn.classList.add('sync-error');
+  } else if (status.pendingOps > 0) {
+    btn.classList.add('sync-syncing');
+  } else {
+    btn.classList.add('sync-ok');
+  }
+
+  const t = tr();
+  const host = serverUrl ? (() => { try { return new URL(serverUrl).hostname; } catch { return serverUrl; } })() : '';
+  const lastStr = formatRelativeTime(syncLastKnownAt || status.lastSyncAt);
+
+  const intervalMs = (getSettings_cache?.cloudSync?.syncIntervalMinutes ?? 15) * 60 * 1000;
+  const nextSyncAt = status.lastSyncAt ? status.lastSyncAt + intervalMs : 0;
+  let nextStr = '—';
+  if (nextSyncAt) {
+    const diff = nextSyncAt - Date.now();
+    if (diff <= 0) nextStr = t.syncSoon;
+    else {
+      const mins = Math.ceil(diff / 60000);
+      nextStr = mins < 60 ? t.syncInMin(mins) : t.syncInH(Math.ceil(mins / 60));
+    }
+  }
+
+  const lines = ['Cloud Sync'];
+  if (host) lines.push(`Servidor: ${host}`);
+  lines.push(`Última sync: ${lastStr}`);
+  if (!status.lastError) lines.push(`Próxima: ${nextStr}`);
+  if (status.lastError) lines.push(`Erro: ${status.lastError}`);
+
+  btn.title = lines.join('\n');
+}
+
+function refreshSyncTimes(): void {
+  if (!syncLastKnownAt) return;
+
+  const t = tr();
+  const lastStr = formatRelativeTime(syncLastKnownAt);
+  const nextSyncAt = syncLastKnownAt + syncLastKnownIntervalMs;
+  const diff = nextSyncAt - Date.now();
+  const nextStr = diff <= 0 ? t.syncSoon
+    : Math.ceil(diff / 60000) < 60 ? t.syncInMin(Math.ceil(diff / 60000))
+    : t.syncInH(Math.ceil(diff / 3600000));
+
+  const lastEl = document.getElementById('sync-status-last') as HTMLElement | null;
+  const nextEl = document.getElementById('sync-status-next') as HTMLElement | null;
+  if (lastEl) lastEl.textContent = lastStr;
+  if (nextEl) nextEl.textContent = nextStr;
+
+  // Atualiza tooltip do ícone no header
+  if (syncLastKnownStatus) {
+    updateSyncHeaderIcon(syncLastKnownStatus, getSettings_cache?.cloudSync?.serverUrl);
+  }
+}
 
 async function loadCloudSyncStatus(): Promise<void> {
   try {
@@ -1686,6 +1767,7 @@ function init(): void {
   // Settings modal — abrir/fechar
   function openSettingsModal(): void {
     document.getElementById('settings-modal')!.classList.remove('hidden');
+    void loadCloudSyncStatus();
   }
 
   function closeSettingsModal(): void {

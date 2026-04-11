@@ -12,6 +12,7 @@ import {
   clearOutbox,
   OutboxItem,
   CloudSyncSettings,
+  NotificationSettings,
 } from './settingsService';
 import { getAccessToken } from './credentialService';
 import { getAccountData, saveAccountData } from './settingsService';
@@ -28,6 +29,7 @@ import {
   SyncCurrentWindow,
   SyncPullResponse,
   AuthExchangeResponse,
+  SyncSettings,
 } from '@claude-usage/shared';
 import type { AccountData } from './settingsService';
 
@@ -157,7 +159,7 @@ class SyncService extends EventEmitter {
       const jwt = await this.ensureValidJwt(cloudSync.serverUrl, cloudSync.deviceId, cloudSync.deviceLabel);
       if (!jwt) return;
 
-      await this.flushOutbox(cloudSync.serverUrl, jwt);
+      await this.flushOutbox(cloudSync.serverUrl, jwt, cloudSync.deviceId);
       await this.doPull(cloudSync.serverUrl, jwt, cloudSync.lastPullCursor);
 
       const now = Date.now();
@@ -177,20 +179,17 @@ class SyncService extends EventEmitter {
     }
   }
 
-  enqueuePush(accountData: AccountData): void {
+  enqueuePush(_accountData: AccountData): void {
     const settings = getSettings();
     if (!settings.cloudSync.enabled) return;
     if (this.temporarilyDisabled) return;
 
-    const item: OutboxItem = {
-      op: 'push',
-      payload: this.buildPushPayload(accountData, settings.cloudSync.deviceId),
-      attemptCount: 0,
-      lastError: '',
-      queuedAt: Date.now(),
-    };
-
-    appendOutbox(item);
+    // Dedup: se já tem um push pendente, não enfileira outro.
+    // O payload é sempre reconstruído fresco no momento do flush.
+    const existing = getOutbox();
+    if (!existing.some(i => i.op === 'push')) {
+      appendOutbox({ op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: Date.now() });
+    }
 
     // Tenta sync imediatamente em background
     void this.syncNow();
@@ -364,38 +363,47 @@ class SyncService extends EventEmitter {
     }
 
     saveAccountData(updates);
-  }
 
-  private async flushOutbox(serverUrl: string, jwt: string): Promise<void> {
-    const outbox = getOutbox();
-    if (outbox.length === 0) return;
-
-    const failed: OutboxItem[] = [];
-
-    for (const item of outbox) {
-      try {
-        if (item.op === 'push') {
-          const resp = await fetch(`${serverUrl}/sync/push`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${jwt}`,
-            },
-            body: JSON.stringify(item.payload),
-          });
-
-          if (resp.status === 401) throw new Error('AUTH_401');
-          if (!resp.ok) throw new Error(`Push failed: ${resp.status}`);
-        }
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        if (errorMsg === 'AUTH_401') throw new Error('AUTH_401');
-        failed.push({ ...item, attemptCount: item.attemptCount + 1, lastError: errorMsg });
+    if (data.settings) {
+      const localUpdatedAt = getSettings().settingsUpdatedAt ?? 0;
+      if (data.settings.updatedAt > localUpdatedAt) {
+        saveSettings({
+          ...(data.settings.theme !== undefined ? { theme: data.settings.theme } : {}),
+          ...(data.settings.language !== undefined ? { language: data.settings.language } : {}),
+          ...(data.settings.notifications !== undefined ? { notifications: data.settings.notifications as NotificationSettings } : {}),
+          settingsUpdatedAt: data.settings.updatedAt,
+        });
       }
     }
+  }
 
-    if (failed.length > 0) {
-      setOutbox(failed);
+  private async flushOutbox(serverUrl: string, jwt: string, deviceId: string): Promise<void> {
+    const outbox = getOutbox();
+    const hasPush = outbox.some(i => i.op === 'push');
+    if (!hasPush) return;
+
+    // Reconstrói o payload fresco — ignora o payload armazenado (pode estar obsoleto)
+    const freshPayload = this.buildPushPayload(getAccountData(), deviceId);
+
+    const resp = await fetch(`${serverUrl}/sync/push`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify(freshPayload),
+    });
+
+    if (resp.status === 401) throw new Error('AUTH_401');
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(`Push failed: ${resp.status} — ${body}`);
+    }
+
+    // Push bem-sucedido: remove todos os itens de push do outbox
+    const remaining = outbox.filter(i => i.op !== 'push');
+    if (remaining.length > 0) {
+      setOutbox(remaining);
     } else {
       clearOutbox();
     }
@@ -437,10 +445,11 @@ class SyncService extends EventEmitter {
   private buildPushPayload(accountData: AccountData, deviceId: string): object {
     const daily: SyncDailySnapshot[] = (accountData.dailyHistory ?? []).map(d => ({
       date: d.date,
-      maxWeekly: d.maxWeekly ?? 0,
-      maxSession: d.maxSession ?? 0,
-      sessionWindowCount: d.sessionWindowCount ?? 0,
-      sessionAccum: d.sessionAccum ?? 0,
+      maxWeekly: Math.round(d.maxWeekly ?? 0),
+      maxSession: Math.round(d.maxSession ?? 0),
+      ...(d.maxCredits !== undefined ? { maxCredits: Math.min(100, Math.round(d.maxCredits)) } : {}),
+      sessionWindowCount: Math.round(d.sessionWindowCount ?? 0),
+      sessionAccum: Math.round(d.sessionAccum ?? 0),
       updatedAt: Date.now(),
       updatedByDevice: deviceId,
     }));
@@ -449,27 +458,41 @@ class SyncService extends EventEmitter {
       date: w.date ?? w.resetsAt.slice(0, 10),
       resetsAt: w.resetsAt,
       resetsAtMinute: Math.floor(new Date(w.resetsAt).getTime() / 60000),
-      peak: w.peak ?? 0,
+      peak: Math.round(w.peak ?? 0),
       updatedAt: Date.now(),
     }));
 
     const timeSeries: SyncTimeSeriesPoint[] = Object.entries(accountData.timeSeries ?? {}).flatMap(
-      ([date, pts]) => (pts ?? []).map(p => ({ ...p, date })),
+      ([date, pts]) => (pts ?? []).map(p => ({
+        ts: p.ts,
+        date,
+        session: Math.round(p.session),
+        weekly: Math.round(p.weekly),
+        ...(p.credits !== undefined ? { credits: Math.min(100, Math.round(p.credits)) } : {}),
+      })),
     );
 
     const usageSnapshots: SyncUsageSnapshot[] = (accountData.usageHistory ?? []).map(s => ({
       ts: s.ts,
-      session: s.session,
-      weekly: s.weekly,
+      session: Math.round(s.session),
+      weekly: Math.round(s.weekly),
     }));
 
     const currentWindow: SyncCurrentWindow | undefined = accountData.currentSessionWindow
       ? {
           resetsAt: accountData.currentSessionWindow.resetsAt,
-          peak: accountData.currentSessionWindow.peak ?? 0,
+          peak: Math.round(accountData.currentSessionWindow.peak ?? 0),
           updatedAt: Date.now(),
         }
       : undefined;
+
+    const appSettings = getSettings();
+    const syncSettings: SyncSettings | undefined = appSettings.settingsUpdatedAt > 0 ? {
+      theme: appSettings.theme,
+      language: appSettings.language,
+      notifications: appSettings.notifications,
+      updatedAt: appSettings.settingsUpdatedAt,
+    } : undefined;
 
     return {
       deviceId,
@@ -478,6 +501,7 @@ class SyncService extends EventEmitter {
       timeSeries,
       usageSnapshots,
       ...(currentWindow ? { currentWindow } : {}),
+      ...(syncSettings ? { settings: syncSettings } : {}),
     };
   }
 

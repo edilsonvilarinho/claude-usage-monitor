@@ -549,6 +549,12 @@ function registerIpcHandlers(): void {
     }
     // Rebuild tray context menu to reflect startup state changes
     tray?.setContextMenu(buildContextMenu());
+    // Se mudou preferência sincronizável, atualizar timestamp e enfileirar push
+    const syncableFields: Array<keyof typeof settings> = ['theme', 'language', 'notifications'];
+    if (syncableFields.some(f => settings[f] !== undefined)) {
+      saveSettings({ settingsUpdatedAt: Date.now() });
+      syncService.enqueuePush(getAccountData());
+    }
   });
 
   ipcMain.handle('set-startup', async (_event, enabled: boolean) => {

@@ -150,6 +150,25 @@ body {
   color: var(--text-primary);
 }
 
+/* ── Cloud sync header icon ───────────────────────────────────────── */
+.sync-cloud-btn {
+  color: var(--text-secondary);
+}
+.sync-cloud-btn.sync-ok {
+  color: var(--accent-green);
+}
+.sync-cloud-btn.sync-error {
+  color: var(--accent-red);
+}
+.sync-cloud-btn.sync-syncing {
+  color: #4a9eff;
+  animation: sync-pulse 1.2s ease-in-out infinite;
+}
+@keyframes sync-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* ── Account bar ──────────────────────────────────────────────────── */
 .account-bar {
   display: flex;
