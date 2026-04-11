@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "dev": "tsc -p tsconfig.main.json && electron --no-sandbox dist/main.js",
-    "build": "tsc -p tsconfig.main.json && node build-renderer.js",
+    "build": "node build-renderer.js",
     "predist": "node -e \"require('fs').rmSync('dist-build', {recursive:true, force:true})\"",
     "dist": "npm run build && electron-builder --win",
     "dist:portable": "npm run build && electron-builder --win portable",
