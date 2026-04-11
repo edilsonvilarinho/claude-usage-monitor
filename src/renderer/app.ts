@@ -724,6 +724,7 @@ let sessionResetTimer: ReturnType<typeof setTimeout> | null = null;
 
 let lastWeeklyResetsAt: string | null = null;
 let lastWeeklyPct: number | null = null;
+let lastSessionPct: number | null = null;
 let currentDailyHistory: DailySnapshot[] = [];
 let dayDetailChart: Chart | null = null;
 let reportChart: Chart | null = null;
@@ -1028,7 +1029,7 @@ async function openDayDetailModal(date: string): Promise<void> {
   });
 }
 
-function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, liveWeeklyPct?: number): void {
+function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, liveWeeklyPct?: number, liveSessionPct?: number): void {
   const container = document.getElementById('daily-chart');
   if (!container) return;
   currentDailyHistory = dailyData;
@@ -1062,7 +1063,9 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, li
       weeklyPct:    isToday && liveWeeklyPct !== undefined
         ? Math.min(liveWeeklyPct, 100)
         : found ? Math.min(found.maxWeekly, 100) : null,
-      sessionPct:   found ? Math.min(found.maxSession ?? 0, 100) : null,
+      sessionPct:   isToday && liveSessionPct !== undefined
+        ? Math.min(liveSessionPct, 100)
+        : found ? Math.min(found.maxSession ?? 0, 100) : null,
       creditsPct:   (found && found.maxCredits !== undefined) ? Math.min(found.maxCredits, 100) : null,
       sessionWindowCount: found?.sessionWindowCount ?? 1,
       sessionAccum:  found?.sessionAccum  ?? 0,
@@ -1208,9 +1211,10 @@ function updateUI(data: UsageData): void {
 
   updateTrayIcon(sessionPct, weeklyPct);
 
-  // Store resets_at and current weekly pct for daily chart
+  // Store resets_at and current pcts for daily chart
   lastWeeklyResetsAt = data.seven_day.resets_at;
   lastWeeklyPct = weeklyPct;
+  lastSessionPct = sessionPct;
 
   // Zera o gauge de sessão localmente quando a janela de 5h expira, sem esperar o próximo poll
   if (sessionResetTimer) clearTimeout(sessionResetTimer);
@@ -1313,7 +1317,7 @@ async function loadSettings(): Promise<void> {
 
   // Daily chart sempre visível — carrega se já temos o resets_at
   void window.claudeUsage.getDailyHistory().then(d => {
-    if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt, lastWeeklyPct ?? undefined);
+    if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt, lastWeeklyPct ?? undefined, lastSessionPct ?? undefined);
   });
 }
 
@@ -1800,7 +1804,7 @@ function init(): void {
   window.claudeUsage.onUsageUpdated(() => {
     if (lastWeeklyResetsAt) {
       void window.claudeUsage.getDailyHistory().then(d => {
-        renderDailyChart(d, lastWeeklyResetsAt!, lastWeeklyPct ?? undefined);
+        renderDailyChart(d, lastWeeklyResetsAt!, lastWeeklyPct ?? undefined, lastSessionPct ?? undefined);
       });
     }
   });
