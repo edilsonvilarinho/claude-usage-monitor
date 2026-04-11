@@ -53,10 +53,7 @@ interface AppSettings {
   showDailyChart: boolean;
   showExtraBars:  boolean;
   showFooter:     boolean;
-  showGeneralSettings: boolean;
-  showNotifSettings:   boolean;
-  showBackupSettings:  boolean;
-  showCloudSyncSettings: boolean;
+  showAccountBar: boolean;
   compactMode: boolean;
 }
 
@@ -419,6 +416,7 @@ function applySize(size: AppSettings['windowSize']): void {
 let currentAutoRefreshIntervalMs = 300 * 1000;
 let autoRefreshEnabled = false;
 let extraSectionAllowed = true;
+let showAccountBar = true;
 
 function applyAutoRefresh(enabled: boolean, intervalSeconds: number): void {
   autoRefreshEnabled = enabled;
@@ -1200,32 +1198,18 @@ async function loadSettings(): Promise<void> {
   applyTranslations();
   applySize(size);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
-  const showDailyChart     = s.showDailyChart     ?? true;
-  const showExtraBars      = s.showExtraBars      ?? true;
-  const showFooter         = s.showFooter         ?? true;
-  const showGeneralSettings = s.showGeneralSettings ?? true;
-  const showNotifSettings   = s.showNotifSettings   ?? true;
-  const showBackupSettings  = s.showBackupSettings  ?? true;
-  const showCloudSyncSettings = s.showCloudSyncSettings ?? true;
-  const compactMode   = s.compactMode   ?? false;
-  const essentialMode = s.essentialMode ?? false;
-  (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked = compactMode;
-  (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked = essentialMode;
-  const layoutOptions = document.getElementById('layout-options') as HTMLElement;
-  if (layoutOptions) layoutOptions.style.display = (compactMode || essentialMode) ? 'none' : '';
-  // Esconde a row do outro modo quando um está ativo
-  const rowCompact   = document.getElementById('row-compact-mode')   as HTMLElement;
-  const rowEssential = document.getElementById('row-essential-mode') as HTMLElement;
-  if (rowCompact)   rowCompact.style.display   = essentialMode ? 'none' : '';
-  if (rowEssential) rowEssential.style.display = compactMode   ? 'none' : '';
-  (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked = showDailyChart;
-  (document.getElementById('setting-show-extra-bars')  as HTMLInputElement).checked = showExtraBars;
-  (document.getElementById('setting-show-footer')      as HTMLInputElement).checked = showFooter;
-  (document.getElementById('setting-show-general')     as HTMLInputElement).checked = showGeneralSettings;
-  (document.getElementById('setting-show-notif')       as HTMLInputElement).checked = showNotifSettings;
-  (document.getElementById('setting-show-backup')      as HTMLInputElement).checked = showBackupSettings;
-  (document.getElementById('setting-show-cloud-sync')  as HTMLInputElement).checked = showCloudSyncSettings;
-  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings, showCloudSyncSettings });
+  const showDailyChart = s.showDailyChart ?? true;
+  const showExtraBars  = s.showExtraBars  ?? true;
+  const showFooter     = s.showFooter     ?? true;
+  const showAccBar     = s.showAccountBar ?? true;
+  const compactMode    = s.compactMode    ?? false;
+  showAccountBar = showAccBar;
+  (document.getElementById('setting-compact-mode')       as HTMLInputElement).checked = compactMode;
+  (document.getElementById('setting-show-daily-chart')   as HTMLInputElement).checked = showDailyChart;
+  (document.getElementById('setting-show-extra-bars')    as HTMLInputElement).checked = showExtraBars;
+  (document.getElementById('setting-show-footer')        as HTMLInputElement).checked = showFooter;
+  (document.getElementById('setting-show-account-bar')   as HTMLInputElement).checked = showAccBar;
+  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showAccountBar: showAccBar });
 
   // Popula estado inicial da seção Cloud Sync
   void loadCloudSyncStatus();
@@ -1254,27 +1238,20 @@ async function saveSettingsFromUI(): Promise<void> {
   const notifyOnReset    = (document.getElementById('setting-notify-on-reset') as HTMLInputElement).checked;
   const resetThreshold   = Math.min(99, Math.max(1, Number((document.getElementById('setting-reset-threshold') as HTMLInputElement).value)));
   const autoBackupMode   = (document.getElementById('setting-auto-backup-mode') as HTMLSelectElement).value as AppSettings['autoBackupMode'];
-  let showDailyChart     = (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked;
-  let showExtraBars      = (document.getElementById('setting-show-extra-bars')  as HTMLInputElement).checked;
-  let showFooter         = (document.getElementById('setting-show-footer')      as HTMLInputElement).checked;
-  let showGeneralSettings = (document.getElementById('setting-show-general')    as HTMLInputElement).checked;
-  let showNotifSettings   = (document.getElementById('setting-show-notif')      as HTMLInputElement).checked;
-  let showBackupSettings  = (document.getElementById('setting-show-backup')     as HTMLInputElement).checked;
-  const showCloudSyncSettings = (document.getElementById('setting-show-cloud-sync') as HTMLInputElement).checked;
-  let compactMode         = (document.getElementById('setting-compact-mode')    as HTMLInputElement).checked;
-  const essentialMode     = (document.getElementById('setting-essential-mode')  as HTMLInputElement).checked;
-  // Se qualquer um dos 7 foi ativado manualmente enquanto compact estava on → desliga compact
-  if (compactMode && (showDailyChart || showExtraBars || showFooter || showGeneralSettings || showNotifSettings || showBackupSettings || showCloudSyncSettings)) {
-    compactMode = false;
-    (document.getElementById('setting-compact-mode') as HTMLInputElement).checked = false;
-  }
+  const showDailyChart   = (document.getElementById('setting-show-daily-chart')  as HTMLInputElement).checked;
+  const showExtraBars    = (document.getElementById('setting-show-extra-bars')   as HTMLInputElement).checked;
+  const showFooter       = (document.getElementById('setting-show-footer')       as HTMLInputElement).checked;
+  const showAccBar       = (document.getElementById('setting-show-account-bar')  as HTMLInputElement).checked;
+  const compactMode      = (document.getElementById('setting-compact-mode')      as HTMLInputElement).checked;
+
+  showAccountBar = showAccBar;
 
   currentLang = lang;
   applyTranslations();
   applyTheme(theme);
   applySize(windowSize);
   applyAutoRefresh(autoRefresh, autoRefreshInterval);
-  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showGeneralSettings, showNotifSettings, showBackupSettings, showCloudSyncSettings });
+  applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showAccountBar: showAccBar });
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnReset ? '1' : '0.4';
   (document.getElementById('row-auto-backup-folder') as HTMLElement).style.display =
     autoBackupMode === 'never' ? 'none' : '';
@@ -1291,12 +1268,8 @@ async function saveSettingsFromUI(): Promise<void> {
     showDailyChart,
     showExtraBars,
     showFooter,
-    showGeneralSettings,
-    showNotifSettings,
-    showBackupSettings,
-    showCloudSyncSettings,
+    showAccountBar: showAccBar,
     compactMode,
-    essentialMode,
     notifications: {
       enabled: notifOn,
       soundEnabled,
@@ -1320,63 +1293,19 @@ function applyTheme(theme: AppSettings['theme']): void {
   }
 }
 
-function applySectionVisibility(s: Pick<AppSettings,
-  'showDailyChart' | 'showExtraBars' | 'showFooter' |
-  'showGeneralSettings' | 'showNotifSettings' | 'showBackupSettings' | 'showCloudSyncSettings'>
-): void {
-  const historyHeader  = document.querySelector('.history-header') as HTMLElement;
+function applySectionVisibility(s: Pick<AppSettings, 'showDailyChart' | 'showExtraBars' | 'showFooter' | 'showAccountBar'>): void {
   const historySection = document.getElementById('history-section') as HTMLElement;
   const extraSection   = document.getElementById('extra-section') as HTMLElement;
   const footer         = document.querySelector('.footer') as HTMLElement;
-  const groupGeneral   = document.getElementById('settings-group-general') as HTMLElement;
-  const groupNotif     = document.getElementById('settings-group-notif') as HTMLElement;
-  const groupBackup    = document.getElementById('settings-group-backup') as HTMLElement;
-  const groupCloudSync = document.getElementById('settings-group-cloud-sync') as HTMLElement;
-  const divider        = document.querySelector('.section-divider') as HTMLElement;
+  const accountBar     = document.getElementById('account-bar') as HTMLElement;
 
-  const showChart     = s.showDailyChart ?? true;
-  const showExtra     = s.showExtraBars  ?? true;
-  const showFoot      = s.showFooter     ?? true;
-  const showGeneral   = s.showGeneralSettings ?? true;
-  const showNotif     = s.showNotifSettings   ?? true;
-  const showBackup    = s.showBackupSettings  ?? true;
-  const showCloudSync = s.showCloudSyncSettings ?? true;
-
-  const compactMode    = (document.getElementById('setting-compact-mode')    as HTMLInputElement)?.checked ?? false;
-  const essentialMode  = (document.getElementById('setting-essential-mode')  as HTMLInputElement)?.checked ?? false;
-  const layoutOptions  = document.getElementById('layout-options') as HTMLElement;
-  if (layoutOptions) layoutOptions.style.display = (compactMode || essentialMode) ? 'none' : '';
-  const rowCompactEl   = document.getElementById('row-compact-mode')   as HTMLElement;
-  const rowEssentialEl = document.getElementById('row-essential-mode') as HTMLElement;
-  if (rowCompactEl)   rowCompactEl.style.display   = essentialMode ? 'none' : '';
-  if (rowEssentialEl) rowEssentialEl.style.display = compactMode   ? 'none' : '';
-
-  if (essentialMode) {
-    // Modo essencial: mostra apenas conta, gauges, créditos e rodapé
-    historyHeader.style.display  = 'none';
-    historySection.style.display = 'none';
-    extraSectionAllowed = true;
-    footer.style.display = '';
-    groupGeneral.style.display = 'none';
-    groupNotif.style.display   = 'none';
-    groupBackup.style.display  = 'none';
-    if (groupCloudSync) groupCloudSync.style.display = 'none';
-    if (divider) divider.style.display = 'none';
-  } else {
-    historyHeader.style.display  = showChart ? '' : 'none';
-    historySection.style.display = showChart ? '' : 'none';
-    extraSectionAllowed = showExtra;
-    if (!showExtra) extraSection.style.display = 'none';
-    footer.style.display  = showFoot    ? '' : 'none';
-    groupGeneral.style.display = showGeneral ? '' : 'none';
-    groupNotif.style.display   = showNotif   ? '' : 'none';
-    groupBackup.style.display  = showBackup  ? '' : 'none';
-    if (groupCloudSync) groupCloudSync.style.display = showCloudSync ? '' : 'none';
-
-    // Esconde o divisor e a settings-area inteira se todos os grupos estiverem ocultos
-    const anySettingsVisible = showGeneral || showNotif || showBackup || showCloudSync;
-    if (divider) divider.style.display = anySettingsVisible ? '' : 'none';
-  }
+  if (historySection) historySection.style.display = s.showDailyChart ? '' : 'none';
+  if (extraSection)   extraSectionAllowed = s.showExtraBars ?? true;
+  if (!s.showExtraBars && extraSection) extraSection.style.display = 'none';
+  if (footer)         footer.style.display         = s.showFooter     ? '' : 'none';
+  // account bar: only show if both setting and data are present
+  const hasAccount = accountBar && accountBar.dataset.hasProfile === 'true';
+  if (accountBar) accountBar.style.display = (s.showAccountBar && hasAccount) ? '' : 'none';
 
   fitWindow();
 }
@@ -1518,7 +1447,8 @@ function init(): void {
       planEl.className = 'account-plan plan-free';
     }
 
-    bar.style.display = 'flex';
+    bar.dataset.hasProfile = 'true';
+    bar.style.display = showAccountBar ? 'flex' : 'none';
     fitWindow();
   }
 
@@ -1746,42 +1676,37 @@ function init(): void {
     'setting-show-daily-chart',
     'setting-show-extra-bars',
     'setting-show-footer',
-    'setting-show-general',
-    'setting-show-notif',
-    'setting-show-backup',
-    'setting-show-cloud-sync',
+    'setting-show-account-bar',
+    'setting-compact-mode',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
   }
 
-  // Modo compacto: marca → desmarca os 7 outros; desmarca → marca todos os 7
-  document.getElementById('setting-compact-mode')!.addEventListener('change', () => {
-    const compact = (document.getElementById('setting-compact-mode') as HTMLInputElement).checked;
-    const otherIds = [
-      'setting-show-daily-chart', 'setting-show-extra-bars', 'setting-show-footer',
-      'setting-show-general', 'setting-show-notif', 'setting-show-backup', 'setting-show-cloud-sync',
-    ];
-    for (const id of otherIds) {
-      (document.getElementById(id) as HTMLInputElement).checked = !compact;
-    }
-    const layoutOptions = document.getElementById('layout-options') as HTMLElement;
-    if (layoutOptions) layoutOptions.style.display = compact ? 'none' : '';
-    // Esconde a row do modo essencial quando compacto está ativo, e vice-versa
-    const rowEssential = document.getElementById('row-essential-mode') as HTMLElement;
-    if (rowEssential) rowEssential.style.display = compact ? 'none' : '';
-    void saveSettingsFromUI();
+  // Settings modal — abrir/fechar
+  function openSettingsModal(): void {
+    document.getElementById('settings-modal')!.classList.remove('hidden');
+  }
+
+  function closeSettingsModal(): void {
+    document.getElementById('settings-modal')!.classList.add('hidden');
+  }
+
+  document.getElementById('btn-settings')!.addEventListener('click', openSettingsModal);
+  document.getElementById('btn-settings-close')!.addEventListener('click', closeSettingsModal);
+  document.getElementById('settings-modal')!.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('settings-modal')) closeSettingsModal();
   });
 
-  // Modo essencial: ativa → esconde layout-options e row do compacto; desativa → restaura
-  document.getElementById('setting-essential-mode')!.addEventListener('change', () => {
-    const essential = (document.getElementById('setting-essential-mode') as HTMLInputElement).checked;
-    const compact   = (document.getElementById('setting-compact-mode')   as HTMLInputElement).checked;
-    const layoutOptions = document.getElementById('layout-options') as HTMLElement;
-    if (layoutOptions) layoutOptions.style.display = (essential || compact) ? 'none' : '';
-    const rowCompact = document.getElementById('row-compact-mode') as HTMLElement;
-    if (rowCompact) rowCompact.style.display = essential ? 'none' : '';
-    void saveSettingsFromUI();
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = (btn as HTMLElement).dataset.tab!;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active');
+      document.getElementById(tabId)!.classList.remove('hidden');
+    });
   });
 
   document.getElementById('btn-test-notif')!.addEventListener('click', () => {
