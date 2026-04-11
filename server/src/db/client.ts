@@ -4,6 +4,14 @@ import fs from 'fs';
 
 let db: Database.Database | null = null;
 
+function applySchema(instance: Database.Database): void {
+  instance.pragma('journal_mode = WAL');
+  instance.pragma('foreign_keys = ON');
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  const schema = fs.readFileSync(schemaPath, 'utf-8');
+  instance.exec(schema);
+}
+
 export function getDb(): Database.Database {
   if (db) return db;
 
@@ -15,12 +23,24 @@ export function getDb(): Database.Database {
   }
 
   db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-
-  const schemaPath = path.join(__dirname, 'schema.sql');
-  const schema = fs.readFileSync(schemaPath, 'utf-8');
-  db.exec(schema);
+  applySchema(db);
 
   return db;
+}
+
+/** Substitui o singleton por uma instância fornecida. Uso exclusivo em testes. */
+export function setDb(instance: Database.Database): void {
+  db = instance;
+}
+
+/** Reseta o singleton. Uso exclusivo em testes. */
+export function resetDb(): void {
+  db = null;
+}
+
+/** Cria um banco em memória com o schema aplicado. Uso exclusivo em testes. */
+export function createInMemoryDb(): Database.Database {
+  const instance = new Database(':memory:');
+  applySchema(instance);
+  return instance;
 }

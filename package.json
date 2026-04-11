@@ -25,7 +25,8 @@
     "test:coverage": "vitest run --coverage",
     "shared:build": "npm run build --workspace=shared",
     "server:dev": "npm run dev --workspace=server",
-    "server:build": "npm run build --workspace=server"
+    "server:build": "npm run build --workspace=server",
+    "server:test": "npm run test --workspace=server"
   },
   "dependencies": {
     "chart.js": "^4.4.0",
