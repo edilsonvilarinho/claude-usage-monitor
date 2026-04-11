@@ -11,6 +11,7 @@ import { UsageData, ProfileData, UsageSnapshot, DailySnapshot } from './models/u
 import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 import { updateDailySnapshot } from './services/dailySnapshotService';
+import { computeSmartStatus } from './services/smartScheduleService';
 
 /** Arredonda timestamp para o minuto mais próximo — usado para deduplicar janelas de sessão
  *  cujo resetsAt difere por milissegundos devido à precisão variável da API */
@@ -29,6 +30,19 @@ if (!gotTheLock) {
 
 // Required for Windows notifications
 app.setAppUserModelId('com.claudeusage.monitor');
+
+function recomputeAndPushSmartStatus(data?: UsageData): void {
+  const settings = getSettings();
+  const usage = data ?? lastUsageData;
+  const usoSessao = usage ? usage.five_hour.utilization : 0;
+  const resetsAt = usage
+    ? usage.five_hour.resets_at
+    : new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
+  const status = computeSmartStatus(settings.workSchedule, usoSessao, resetsAt);
+  if (popup && !popup.isDestroyed()) {
+    popup.webContents.send('smart-status-updated', status);
+  }
+}
 
 let tray: Tray | null = null;
 let popup: BrowserWindow | null = null;
@@ -380,6 +394,9 @@ async function backupWeeklyData(): Promise<string> {
     dailyHistory,
     timeSeries:     accountData.timeSeries     ?? {},
     sessionWindows: accountData.sessionWindows ?? [],
+    appSettings: {
+      workSchedule: getSettings().workSchedule,
+    },
   };
 
   fs.writeFileSync(filepath, JSON.stringify(payload, null, 2), 'utf-8');
@@ -454,6 +471,16 @@ async function importBackupData(): Promise<{ imported: number; merged: number }>
   mergedWindows.sort((a, b) => a.resetsAt.localeCompare(b.resetsAt));
   const sorted = Array.from(existingDaily.values()).sort((a, b) => a.date.localeCompare(b.date));
   saveAccountData({ dailyHistory: sorted, timeSeries: mergedTimeSeries, sessionWindows: mergedWindows });
+
+  // Restaurar workSchedule do backup, se presente
+  for (const filepath of result.filePaths) {
+    const raw = fs.readFileSync(filepath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (parsed.appSettings?.workSchedule) {
+      saveSettings({ workSchedule: parsed.appSettings.workSchedule });
+      break;
+    }
+  }
 
   return { imported: result.filePaths.length, merged: mergedCount };
 }
@@ -555,6 +582,7 @@ function registerIpcHandlers(): void {
       saveSettings({ settingsUpdatedAt: Date.now() });
       syncService.enqueuePush(getAccountData());
     }
+    recomputeAndPushSmartStatus();
   });
 
   ipcMain.handle('set-startup', async (_event, enabled: boolean) => {
@@ -640,7 +668,12 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('get-current-session-window', () => {
-    return getAccountData().currentSessionWindow ?? null;
+    const w = getAccountData().currentSessionWindow ?? null;
+    if (!w || !lastUsageData) return w;
+    // Para a janela aberta, o peak real é o valor ao vivo: dentro de uma sessão de 5h o uso
+    // só cresce, então o valor atual É o máximo observado. Isso também corrige peaks corrompidos
+    // que foram herdados do valor final da sessão anterior no momento do reset.
+    return { ...w, peak: Math.round(lastUsageData.five_hour.utilization) };
   });
 
   ipcMain.handle('backup-weekly-data', async () => {
@@ -837,6 +870,7 @@ app.whenReady().then(() => {
     // Send to renderer to draw the canvas icon
     if (popup) {
       popup.webContents.send('usage-updated', data);
+      recomputeAndPushSmartStatus(data);
     }
 
     if (Date.now() - cachedProfileAt > 3_600_000) {

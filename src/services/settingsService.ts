@@ -111,6 +111,15 @@ export interface NotificationSettings {
   soundEnabled: boolean;     // play system beep with every notification
 }
 
+export interface WorkSchedule {
+  enabled: boolean;
+  activeDays: number[];   // 0-6, 0=Dom
+  workStart: string;      // "HH:mm"
+  workEnd: string;
+  breakStart: string;
+  breakEnd: string;
+}
+
 export interface AppSettings {
   launchAtStartup: boolean;
   alwaysVisible: boolean;
@@ -142,6 +151,7 @@ export interface AppSettings {
   settingsUpdatedAt: number;
   cloudSync: CloudSyncSettings;
   showCloudSyncSettings: boolean;
+  workSchedule: WorkSchedule;
 }
 
 const defaults: AppSettings = {
@@ -182,6 +192,14 @@ const defaults: AppSettings = {
   essentialMode: false,
   settingsUpdatedAt: 0,
   showCloudSyncSettings: true,
+  workSchedule: {
+    enabled: false,
+    activeDays: [1, 2, 3, 4, 5],
+    workStart: '09:00',
+    workEnd: '18:00',
+    breakStart: '12:00',
+    breakEnd: '13:00',
+  },
   cloudSync: {
     enabled: false,
     serverUrl: '',
@@ -239,6 +257,7 @@ const store = new Store<AppSettings>({
     settingsUpdatedAt: { type: 'number' },
     showCloudSyncSettings: { type: 'boolean' },
     cloudSync: { type: 'object' },
+    workSchedule: { type: 'object' },
   },
 });
 
@@ -274,6 +293,7 @@ export function getSettings(): AppSettings {
     settingsUpdatedAt: store.get('settingsUpdatedAt', 0) as number,
     showCloudSyncSettings: store.get('showCloudSyncSettings', defaults.showCloudSyncSettings),
     cloudSync: store.get('cloudSync', defaults.cloudSync) as CloudSyncSettings,
+    workSchedule: store.get('workSchedule', defaults.workSchedule) as WorkSchedule,
   };
 }
 
@@ -347,6 +367,7 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.settingsUpdatedAt !== undefined) store.set('settingsUpdatedAt', settings.settingsUpdatedAt);
   if (settings.showCloudSyncSettings !== undefined) store.set('showCloudSyncSettings', settings.showCloudSyncSettings);
   if (settings.cloudSync !== undefined) store.set('cloudSync', settings.cloudSync);
+  if (settings.workSchedule !== undefined) store.set('workSchedule', settings.workSchedule);
 }
 
 // ─── Cloud sync secrets (JWT encriptado em store separado) ────────────────────

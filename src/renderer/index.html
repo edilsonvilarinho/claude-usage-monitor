@@ -23,6 +23,9 @@
           <path d="M7 8V10.5M5.5 9.5L7 11L8.5 9.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+        <button id="smart-indicator" class="smart-indicator hidden" data-i18n-title="smartPlan.openDetails">
+          <span class="smart-indicator-dot"></span>
+        </button>
       <button class="icon-btn" id="btn-settings" title="Configurações">⚙</button>
       <button class="icon-btn" id="btn-close" title="Close">✕</button>
     </div>
@@ -236,6 +239,7 @@
         <button class="tab-btn" data-tab="tab-exibicao">Exibição</button>
         <button class="tab-btn" data-tab="tab-notif">Notificações</button>
         <button class="tab-btn" data-tab="tab-backup">Backup / Sync</button>
+          <button class="tab-btn" data-tab="tab-smart-plan" data-i18n="settingsTabSmartPlan">Agenda</button>
       </div>
       <div class="settings-tab-content">
 
@@ -468,9 +472,92 @@
           </div>
         </div>
 
+          <!-- Tab: Smart Plan -->
+          <div id="tab-smart-plan" class="tab-pane hidden">
+            <div id="sp-validation-error" class="form-error hidden" data-i18n="smartPlanValidationError"></div>
+            <div class="settings-group">
+              <div class="settings-row">
+                <label class="toggle">
+                  <input type="checkbox" id="sp-enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span data-i18n="smartPlanEnableLabel">Ativar agenda inteligente</span>
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-row" style="flex-wrap:wrap; gap:4px;">
+                <span data-i18n="smartPlanActiveDays" style="width:100%; margin-bottom:4px;">Dias ativos</span>
+                <label><input type="checkbox" class="sp-day" id="sp-day-0"> <span data-i18n="dayShort0">Dom</span></label>
+                <label><input type="checkbox" class="sp-day" id="sp-day-1"> <span data-i18n="dayShort1">Seg</span></label>
+                <label><input type="checkbox" class="sp-day" id="sp-day-2"> <span data-i18n="dayShort2">Ter</span></label>
+                <label><input type="checkbox" class="sp-day" id="sp-day-3"> <span data-i18n="dayShort3">Qua</span></label>
+                <label><input type="checkbox" class="sp-day" id="sp-day-4"> <span data-i18n="dayShort4">Qui</span></label>
+                <label><input type="checkbox" class="sp-day" id="sp-day-5"> <span data-i18n="dayShort5">Sex</span></label>
+                <label><input type="checkbox" class="sp-day" id="sp-day-6"> <span data-i18n="dayShort6">Sáb</span></label>
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-row">
+                <label data-i18n="smartPlanWorkHours">Horário de trabalho</label>
+              </div>
+              <div class="settings-row">
+                <span class="sp-time-label" data-i18n="smartPlanStart">Início</span>
+                <input type="time" id="sp-work-start" class="sp-time-input">
+                <span>–</span>
+                <span class="sp-time-label" data-i18n="smartPlanEnd">Fim</span>
+                <input type="time" id="sp-work-end" class="sp-time-input">
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="settings-row">
+                <label data-i18n="smartPlanBreakHours">Intervalo</label>
+              </div>
+              <div class="settings-row">
+                <span class="sp-time-label" data-i18n="smartPlanStart">Início</span>
+                <input type="time" id="sp-break-start" class="sp-time-input">
+                <span>–</span>
+                <span class="sp-time-label" data-i18n="smartPlanEnd">Fim</span>
+                <input type="time" id="sp-break-end" class="sp-time-input">
+              </div>
+            </div>
+          </div>
+
       </div><!-- /settings-tab-content -->
     </div><!-- /settings-modal-box -->
   </div><!-- /settings-modal -->
+
+    <!-- Smart Scheduler Modal -->
+    <div id="smart-scheduler-modal" class="modal-overlay hidden">
+      <div class="modal-box smart-scheduler-box">
+        <div id="sp-verdict-header" class="sp-verdict">
+          <span id="sp-verdict-text"></span>
+          <button id="sp-close-btn" class="day-detail-close-btn">✕</button>
+        </div>
+        <div class="sp-donut-wrap">
+          <canvas id="sp-donut"></canvas>
+          <div class="sp-donut-label"><span id="sp-donut-pct">0</span>%</div>
+        </div>
+        <div class="sp-donut-subtitle" data-i18n="spSessionLabel">Sessão (5h)</div>
+        <div id="sp-summary-text" class="sp-summary"></div>
+        <div class="sp-timeline">
+          <div class="sp-timeline-title" data-i18n="spTimelineTitle">Expediente hoje</div>
+          <div class="sp-timeline-track">
+            <div id="sp-break-block" class="sp-break"></div>
+            <div id="sp-now-marker" class="sp-marker-now"></div>
+            <div id="sp-reset-marker" class="sp-marker-reset"></div>
+          </div>
+          <div class="sp-timeline-labels">
+            <span id="sp-timeline-start"></span>
+            <span id="sp-timeline-end"></span>
+          </div>
+          <div class="sp-legend">
+            <span class="sp-legend-item"><span class="sp-legend-now-icon"></span><span data-i18n="spLegendNow">Agora</span></span>
+            <span class="sp-legend-item"><span class="sp-legend-break-icon"></span><span data-i18n="spLegendBreak">Intervalo</span></span>
+            <span class="sp-legend-item"><span id="sp-legend-reset-icon" class="sp-legend-reset-icon">◆</span><span data-i18n="spLegendReset">Reset</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
 
   <script src="app.js"></script>
 </body>

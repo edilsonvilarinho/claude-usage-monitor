@@ -78,9 +78,15 @@ export function updateDailySnapshot(
   if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
 
   // ── Atualizar currentWindow ─────────────────────────────────────────────────
-  const newCurrentWindow: CurrentSessionWindow = (sessionResetOccurred || !currentWindow)
-    ? { resetsAt: newResetsAt, peak: sessionPctInt }                          // nova janela
-    : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt) }; // mesma janela, atualiza pico
+  // Quando há reset: se sessionPctInt >= peak da janela completada, a API ainda está
+  // reportando o valor da sessão anterior — usa 0 para não contaminar o peak da nova janela.
+  // Caso contrário (valor já é menor, portanto genuíno da nova sessão), usa sessionPctInt.
+  // No próximo poll, Math.max atualiza para o valor real.
+  const newCurrentWindow: CurrentSessionWindow = sessionResetOccurred
+    ? { resetsAt: newResetsAt, peak: sessionPctInt >= (completedWindow?.peak ?? 0) ? 0 : sessionPctInt }
+    : !currentWindow
+      ? { resetsAt: newResetsAt, peak: sessionPctInt }                        // primeira janela
+      : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt) }; // mesma janela, atualiza pico
 
   return { dailyHistory, currentWindow: newCurrentWindow, completedWindow };
 }

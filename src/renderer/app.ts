@@ -55,6 +55,14 @@ interface AppSettings {
   showFooter:     boolean;
   showAccountBar: boolean;
   compactMode: boolean;
+  workSchedule?: {
+    enabled: boolean;
+    activeDays: number[];
+    workStart: string;
+    workEnd: string;
+    breakStart: string;
+    breakEnd: string;
+  };
 }
 
 declare global {
@@ -63,6 +71,7 @@ declare global {
       onUsageUpdated: (cb: (data: UsageData) => void) => void;
       onError: (cb: (msg: string) => void) => void;
       onRateLimited: (cb: (until: number, resetAt?: number) => void) => void;
+      onSmartStatusUpdated: (cb: (status: import('./globals').SmartStatus) => void) => void;
       onNextPollAt: (cb: (nextPollAt: number) => void) => void;
       onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void) => void;
       getDayTimeSeries: (date: string) => Promise<{ ts: number; session: number; weekly: number; credits?: number }[]>;
@@ -230,6 +239,35 @@ const translations = {
     syncLabelState:   'Status',
     syncStateSynced:  'Synced',
     syncStateSyncing: 'Sending...',
+    settingsTabSmartPlan: 'Smart Plan',
+    smartPlanEnableLabel: 'Enable smart scheduling',
+    smartPlanActiveDays: 'Active days',
+    smartPlanWorkHours: 'Work hours',
+    smartPlanBreakHours: 'Break',
+    smartPlanValidationError: 'Invalid schedule: break must be within work hours',
+    smartPlanStart: 'From',
+    smartPlanEnd: 'To',
+    'smartPlan.status.blue': 'Free mode / out of work hours',
+    'smartPlan.status.green': 'Safe margin',
+    'smartPlan.status.yellow': 'Collision warning',
+    'smartPlan.status.red': 'Critical risk of block',
+    'smartPlan.openDetails': 'Open smart schedule details',
+    'smartPlan.resetNextDay': '+1 day',
+    dayShort0: 'Sun',
+    dayShort1: 'Mon',
+    dayShort2: 'Tue',
+    dayShort3: 'Wed',
+    dayShort4: 'Thu',
+    dayShort5: 'Fri',
+    dayShort6: 'Sat',
+    spSessionLabel: 'Session (5h)',
+    spTimelineTitle: 'Work schedule today',
+    spSummaryResetAt: 'Session resets at',
+    spSummaryAfterWork: 'after end of work hours',
+    spSummaryBeforeEnd: 'before end of work hours',
+    spLegendNow: 'Now',
+    spLegendBreak: 'Break',
+    spLegendReset: 'Reset',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -348,12 +386,42 @@ const translations = {
     syncLabelState:   'Status',
     syncStateSynced:  'Sincronizado',
     syncStateSyncing: 'Enviando...',
+    settingsTabSmartPlan: 'Agenda',
+    smartPlanEnableLabel: 'Ativar agenda inteligente',
+    smartPlanActiveDays: 'Dias ativos',
+    smartPlanWorkHours: 'Horário de trabalho',
+    smartPlanBreakHours: 'Intervalo',
+    smartPlanValidationError: 'Agenda inválida: intervalo deve estar dentro do expediente',
+    smartPlanStart: 'Início',
+    smartPlanEnd: 'Fim',
+    'smartPlan.status.blue': 'Modo livre / fora do expediente',
+    'smartPlan.status.green': 'Margem segura',
+    'smartPlan.status.yellow': 'Alerta de colisão',
+    'smartPlan.status.red': 'Risco crítico de bloqueio',
+    'smartPlan.openDetails': 'Abrir detalhes da agenda',
+    'smartPlan.resetNextDay': '+1 dia',
+    dayShort0: 'Dom',
+    dayShort1: 'Seg',
+    dayShort2: 'Ter',
+    dayShort3: 'Qua',
+    dayShort4: 'Qui',
+    dayShort5: 'Sex',
+    dayShort6: 'Sáb',
+    spSessionLabel: 'Sessão (5h)',
+    spTimelineTitle: 'Expediente hoje',
+    spSummaryResetAt: 'Sessão reinicia às',
+    spSummaryAfterWork: 'após o fim do expediente',
+    spSummaryBeforeEnd: 'antes do fim do expediente',
+    spLegendNow: 'Agora',
+    spLegendBreak: 'Intervalo',
+    spLegendReset: 'Reset',
   },
 } as const;
 
 type Translations = typeof translations.en;
 
 let currentLang: Lang = 'en';
+let currentSmartStatus: import('./globals').SmartStatus | null = null;
 
 function tr(): Translations {
   return translations[currentLang];
@@ -1217,6 +1285,20 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-show-account-bar')   as HTMLInputElement).checked = showAccBar;
   applySectionVisibility({ showDailyChart, showExtraBars, showFooter, showAccountBar: showAccBar });
 
+  // Smart Plan
+  const ws = (s as AppSettings & { workSchedule?: { enabled: boolean; activeDays: number[]; workStart: string; workEnd: string; breakStart: string; breakEnd: string } }).workSchedule;
+  if (ws) {
+    (document.getElementById('sp-enabled') as HTMLInputElement).checked = ws.enabled;
+    [0,1,2,3,4,5,6].forEach(d => {
+      const cb = document.getElementById(`sp-day-${d}`) as HTMLInputElement;
+      if (cb) cb.checked = ws.activeDays.includes(d);
+    });
+    (document.getElementById('sp-work-start') as HTMLInputElement).value = ws.workStart;
+    (document.getElementById('sp-work-end') as HTMLInputElement).value = ws.workEnd;
+    (document.getElementById('sp-break-start') as HTMLInputElement).value = ws.breakStart;
+    (document.getElementById('sp-break-end') as HTMLInputElement).value = ws.breakEnd;
+  }
+
   // Popula estado inicial da seção Cloud Sync
   void loadCloudSyncStatus();
   setInterval(refreshSyncTimes, 30_000);
@@ -1263,6 +1345,31 @@ async function saveSettingsFromUI(): Promise<void> {
   (document.getElementById('row-auto-backup-folder') as HTMLElement).style.display =
     autoBackupMode === 'never' ? 'none' : '';
 
+  // Smart Plan
+  const spEnabled = (document.getElementById('sp-enabled') as HTMLInputElement).checked;
+  const spActiveDays = [0,1,2,3,4,5,6].filter(d => {
+    const cb = document.getElementById(`sp-day-${d}`) as HTMLInputElement;
+    return cb?.checked;
+  });
+  const spWorkStart = (document.getElementById('sp-work-start') as HTMLInputElement).value;
+  const spWorkEnd = (document.getElementById('sp-work-end') as HTMLInputElement).value;
+  const spBreakStart = (document.getElementById('sp-break-start') as HTMLInputElement).value;
+  const spBreakEnd = (document.getElementById('sp-break-end') as HTMLInputElement).value;
+  const errEl = document.getElementById('sp-validation-error') as HTMLElement;
+
+  const toMin = (tv: string) => { const [h,m] = tv.split(':').map(Number); return h*60+m; };
+  const valid = spWorkStart && spWorkEnd && spBreakStart && spBreakEnd &&
+    toMin(spWorkStart) < toMin(spBreakStart) &&
+    toMin(spBreakEnd) <= toMin(spWorkEnd) &&
+    toMin(spWorkStart) < toMin(spWorkEnd) &&
+    toMin(spBreakStart) < toMin(spBreakEnd);
+
+  if (!valid) {
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
   await window.claudeUsage.saveSettings({
     launchAtStartup: startup,
     alwaysVisible,
@@ -1277,6 +1384,14 @@ async function saveSettingsFromUI(): Promise<void> {
     showFooter,
     showAccountBar: showAccBar,
     compactMode,
+    workSchedule: {
+      enabled: spEnabled,
+      activeDays: spActiveDays,
+      workStart: spWorkStart,
+      workEnd: spWorkEnd,
+      breakStart: spBreakStart,
+      breakEnd: spBreakEnd,
+    },
     notifications: {
       enabled: notifOn,
       soundEnabled,
@@ -1289,6 +1404,114 @@ async function saveSettingsFromUI(): Promise<void> {
   });
 
   await window.claudeUsage.setStartup(startup);
+}
+
+let spDonutChart: Chart | null = null;
+
+function formatMinutes(totalMin: number): string {
+  const h = Math.floor(totalMin / 60) % 24;
+  const m = totalMin % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function openSmartModal(): void {
+  const s = currentSmartStatus;
+  if (!s) return;
+  const modal = document.getElementById('smart-scheduler-modal')!;
+  const t = translations[currentLang] as Record<string, string>;
+
+  // Header
+  const header = document.getElementById('sp-verdict-header')!;
+  header.style.backgroundColor = s.colorHex;
+  (document.getElementById('sp-verdict-text') as HTMLElement).textContent =
+    t[s.messageKey] ?? s.messageKey;
+
+  // Donut
+  if (spDonutChart) { spDonutChart.destroy(); spDonutChart = null; }
+  const canvas = document.getElementById('sp-donut') as HTMLCanvasElement;
+  const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#444';
+  const pct = Math.min(Math.round(s.usoSessao), 100);
+  (document.getElementById('sp-donut-pct') as HTMLElement).textContent = String(pct);
+  spDonutChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [pct, Math.max(0, 100 - pct)],
+        backgroundColor: [s.colorHex, borderColor],
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: false,
+    },
+  });
+
+  // Timeline
+  const totalRange = s.workEndMin - s.workStartMin;
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  const pctOf = (min: number) => clamp((min - s.workStartMin) / totalRange * 100, 0, 100);
+
+  const breakBlock = document.getElementById('sp-break-block') as HTMLElement;
+  breakBlock.style.left = `${pctOf(s.breakStartMin)}%`;
+  breakBlock.style.width = `${pctOf(s.breakEndMin) - pctOf(s.breakStartMin)}%`;
+
+  const nowMarker = document.getElementById('sp-now-marker') as HTMLElement;
+  nowMarker.style.left = `${pctOf(s.minutosAtuais)}%`;
+
+  const resetMarker = document.getElementById('sp-reset-marker') as HTMLElement;
+  resetMarker.style.color = s.colorHex;
+  if (s.resetCrossesDay) {
+    resetMarker.style.left = '100%';
+    resetMarker.title = t['smartPlan.resetNextDay'] ?? '+1d';
+  } else {
+    resetMarker.style.left = `${pctOf(s.momentoDoReset)}%`;
+    resetMarker.title = formatMinutes(s.momentoDoReset);
+  }
+
+  (document.getElementById('sp-timeline-start') as HTMLElement).textContent = formatMinutes(s.workStartMin);
+  (document.getElementById('sp-timeline-end') as HTMLElement).textContent = formatMinutes(s.workEndMin);
+
+  // Summary sentence
+  const resetHHMM = formatMinutes(s.momentoDoReset % (24 * 60));
+  const minBeforeEnd = s.workEndMin - s.momentoDoReset;
+  let summary: string;
+  if (s.resetCrossesDay) {
+    summary = `${t['spSummaryResetAt'] ?? 'Sessão reinicia às'} ${resetHHMM} (+1d) — ${t['spSummaryAfterWork'] ?? 'após o fim do expediente'}`;
+  } else if (minBeforeEnd > 0) {
+    summary = `${t['spSummaryResetAt'] ?? 'Sessão reinicia às'} ${resetHHMM} · ${minBeforeEnd}min ${t['spSummaryBeforeEnd'] ?? 'antes do fim do expediente'}`;
+  } else {
+    summary = `${t['spSummaryResetAt'] ?? 'Sessão reinicia às'} ${resetHHMM}`;
+  }
+  (document.getElementById('sp-summary-text') as HTMLElement).textContent = summary;
+
+  // Legend reset icon color
+  const legendReset = document.getElementById('sp-legend-reset-icon') as HTMLElement | null;
+  if (legendReset) legendReset.style.color = s.colorHex;
+
+  modal.classList.remove('hidden');
+
+  // Close handlers
+  document.getElementById('sp-close-btn')?.addEventListener('click', () => modal.classList.add('hidden'), { once: true });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.add('hidden');
+  }, { once: true });
+}
+
+function applySmartIndicator(s: import('./globals').SmartStatus): void {
+  const btn = document.getElementById('smart-indicator') as HTMLButtonElement | null;
+  if (!btn) return;
+  if (!s.enabled) {
+    btn.classList.add('hidden');
+    return;
+  }
+  btn.classList.remove('hidden');
+  const dot = btn.querySelector('.smart-indicator-dot') as HTMLElement;
+  if (dot) dot.style.background = s.colorHex;
+  const t = tr() as Record<string, string>;
+  const statusText = t[s.messageKey] ?? s.messageKey;
+  btn.title = `Agenda: ${statusText}`;
 }
 
 function applyTheme(theme: AppSettings['theme']): void {
@@ -1547,6 +1770,11 @@ function init(): void {
     if (el) el.textContent = `v${version}`;
   });
 
+  window.claudeUsage.onSmartStatusUpdated((status) => {
+    currentSmartStatus = status;
+    applySmartIndicator(status);
+  });
+
   window.claudeUsage.onUsageUpdated((data) => {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
     updateUI(data);
@@ -1759,6 +1987,10 @@ function init(): void {
     'setting-show-footer',
     'setting-show-account-bar',
     'setting-compact-mode',
+    'sp-enabled',
+    'sp-day-0', 'sp-day-1', 'sp-day-2', 'sp-day-3', 'sp-day-4', 'sp-day-5', 'sp-day-6',
+    'sp-work-start', 'sp-work-end',
+    'sp-break-start', 'sp-break-end',
   ];
   for (const id of settingEls) {
     document.getElementById(id)!.addEventListener('change', () => void saveSettingsFromUI());
@@ -1774,6 +2006,7 @@ function init(): void {
     document.getElementById('settings-modal')!.classList.add('hidden');
   }
 
+  document.getElementById('smart-indicator')?.addEventListener('click', openSmartModal);
   document.getElementById('btn-settings')!.addEventListener('click', openSettingsModal);
   document.getElementById('btn-settings-close')!.addEventListener('click', closeSettingsModal);
   document.getElementById('settings-modal')!.addEventListener('click', (e) => {

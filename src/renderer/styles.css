@@ -1425,3 +1425,173 @@ body {
 .tab-pane.hidden {
   display: none;
 }
+
+/* ── Smart Indicator (header) ── */
+.smart-indicator {
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.smart-indicator:hover {
+  background: var(--surface);
+}
+.smart-indicator-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: background 0.3s;
+}
+.smart-indicator.hidden { display: none; }
+
+/* ── Smart Time Input ── */
+.sp-time-input {
+  background: var(--bg-solid);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 13px;
+}
+
+/* ── Smart Scheduler Modal ── */
+.smart-scheduler-box { width: 320px; }
+.sp-verdict {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.sp-donut-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 12px;
+}
+.sp-donut-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+.sp-timeline { margin-top: 8px; }
+.sp-timeline-track {
+  position: relative;
+  height: 18px;
+  background: var(--border);
+  border-radius: 4px;
+}
+.sp-break {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--text-secondary);
+  opacity: 0.4;
+}
+.sp-marker-now {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 3px;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 0 5px rgba(255,255,255,0.7);
+}
+.sp-marker-reset {
+  position: absolute;
+  top: -6px;
+  width: 12px;
+  height: 30px;
+  background: currentColor;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.sp-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.sp-timeline-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.sp-donut-subtitle {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 2px 0 8px;
+}
+.sp-summary {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+.sp-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  justify-content: center;
+}
+.sp-legend-item { display: flex; align-items: center; gap: 4px; }
+.sp-legend-now-icon {
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  background: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(255,255,255,0.6);
+}
+.sp-legend-break-icon {
+  display: inline-block;
+  width: 10px;
+  height: 8px;
+  background: var(--text-secondary);
+  opacity: 0.5;
+  border-radius: 1px;
+}
+.sp-legend-reset-icon { font-size: 9px; }
+.form-error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 6px;
+}
+.form-error:not(.hidden) {
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid #ef4444;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.sp-time-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 28px;
+}
