@@ -109,6 +109,25 @@ Efeito de desfoque Acrylic nativo do Windows 11 no fundo do popup.
 
 ---
 
+## Cloud Sync (Opcional)
+
+Sincronize o histórico de uso entre múltiplas máquinas usando o backend opcional integrado ao repositório.
+
+**O comportamento padrão não muda** — todos os dados permanecem locais. O Cloud Sync é opt-in.
+
+### Como habilitar
+1. Faça o deploy ou rode o servidor de sync (veja `server/README.md`)
+2. Abra o app → Configurações → Cloud Sync
+3. Informe a URL do servidor e clique em "Sign in & enable"
+4. A autenticação usa suas credenciais OAuth do Claude existentes — sem conta separada
+
+### Privacidade
+O servidor armazena apenas dados agregados de uso (picos diários, janelas de sessão, séries temporais). Nenhum conteúdo de conversa é transmitido.
+
+Consulte [server/README.md](server/README.md) para instruções de self-hosting.
+
+---
+
 ## Como Funciona
 
 O Claude Usage Monitor lê as credenciais diretamente do arquivo `~/.claude/.credentials.json` — o mesmo arquivo usado pelo Claude CLI — e chama a API da Anthropic com seu token OAuth. **Não é necessária nenhuma chave de API**: se você tem o Claude CLI instalado e está logado, o app simplesmente funciona.
