@@ -212,6 +212,24 @@ const translations = {
     showNotifSettingsLabel:   'Notifications panel',
     showBackupSettingsLabel:  'Backup panel',
     showCloudSyncSettingsLabel: 'Cloud Sync panel',
+    syncNever:        'Never',
+    syncJustNow:      'Just now',
+    syncMinAgo:       (n: number) => `${n} min ago`,
+    syncHAgo:         (n: number) => `${n}h ago`,
+    syncDAgo:         (n: number) => `${n}d ago`,
+    syncSoon:         'Soon',
+    syncInMin:        (n: number) => `in ${n} min`,
+    syncInH:          (n: number) => `in ${n}h`,
+    syncNowBtn:       'Sync now',
+    syncSyncingBtn:   'Syncing...',
+    syncDisableBtn:   'Disable',
+    syncWipeBtn:      'Wipe remote',
+    syncLabelAccount: 'Account',
+    syncLabelServer:  'Server',
+    syncLabelLast:    'Last sync',
+    syncLabelNext:    'Next sync',
+    syncLabelPending: 'Pending ops',
+    syncLabelError:   'Last error',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -309,6 +327,24 @@ const translations = {
     showNotifSettingsLabel:   'Painel Notificações',
     showBackupSettingsLabel:  'Painel Backup',
     showCloudSyncSettingsLabel: 'Painel Cloud Sync',
+    syncNever:        'Nunca',
+    syncJustNow:      'Agora mesmo',
+    syncMinAgo:       (n: number) => `${n} min atrás`,
+    syncHAgo:         (n: number) => `${n}h atrás`,
+    syncDAgo:         (n: number) => `${n}d atrás`,
+    syncSoon:         'Em breve',
+    syncInMin:        (n: number) => `em ${n} min`,
+    syncInH:          (n: number) => `em ${n}h`,
+    syncNowBtn:       'Sincronizar',
+    syncSyncingBtn:   'Sincronizando...',
+    syncDisableBtn:   'Desativar',
+    syncWipeBtn:      'Limpar remoto',
+    syncLabelAccount: 'Conta',
+    syncLabelServer:  'Servidor',
+    syncLabelLast:    'Última sync',
+    syncLabelNext:    'Próxima sync',
+    syncLabelPending: 'Ops pendentes',
+    syncLabelError:   'Último erro',
   },
 } as const;
 
@@ -1354,14 +1390,15 @@ function showForceRefreshModal(): void {
 // ── Cloud Sync UI ─────────────────────────────────────────────────────────────
 
 function formatRelativeTime(ts: number): string {
-  if (!ts) return 'Never';
+  const t = tr();
+  if (!ts) return t.syncNever;
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1) return t.syncJustNow;
+  if (mins < 60) return t.syncMinAgo(mins);
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return t.syncHAgo(hrs);
+  return t.syncDAgo(Math.floor(hrs / 24));
 }
 
 function applyCloudSyncStatus(status: {
@@ -1380,6 +1417,8 @@ function applyCloudSyncStatus(status: {
     panel.style.display  = 'none';
     return;
   }
+
+  const t = tr();
 
   setup.style.display  = 'none';
   panel.style.display  = '';
@@ -1404,10 +1443,10 @@ function applyCloudSyncStatus(status: {
   if (nextSyncAt) {
     const diffNext = nextSyncAt - Date.now();
     if (diffNext <= 0) {
-      nextEl.textContent = 'Soon';
+      nextEl.textContent = t.syncSoon;
     } else {
       const minsNext = Math.ceil(diffNext / 60000);
-      nextEl.textContent = minsNext < 60 ? `in ${minsNext} min` : `in ${Math.ceil(minsNext / 60)}h`;
+      nextEl.textContent = minsNext < 60 ? t.syncInMin(minsNext) : t.syncInH(Math.ceil(minsNext / 60));
     }
   } else {
     nextEl.textContent = '—';
@@ -1809,7 +1848,7 @@ function init(): void {
     const errEl = document.getElementById('sync-enabled-error') as HTMLElement;
     errEl.style.display = 'none';
     btn.disabled = true;
-    btn.textContent = 'Syncing...';
+    btn.textContent = tr().syncSyncingBtn;
     try {
       await window.claudeUsage.sync.triggerNow();
       const status = await window.claudeUsage.sync.getStatus();
@@ -1819,7 +1858,7 @@ function init(): void {
       errEl.style.display = '';
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Sync now';
+      btn.textContent = tr().syncNowBtn;
     }
   });
 

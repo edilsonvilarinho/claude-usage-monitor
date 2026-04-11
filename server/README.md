@@ -142,6 +142,132 @@ cd server && npx vitest run
 
 Os testes e2e usam `app.fetch()` in-process com SQLite `:memory:` e `validateAnthropicToken` mockado — sem porta TCP aberta, sem chamadas à API real.
 
+## Deploy DigitalOcean com PM2
+
+Setup inicial no Droplet (Ubuntu 22/24). Execute os comandos via SSH como `root` ou usuário com `sudo`.
+
+### 1. Instalar Node.js 20
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -v  # deve mostrar v20.x
+```
+
+### 2. Instalar PM2
+
+```bash
+sudo npm install -g pm2
+```
+
+### 3. Clonar o repositório
+
+```bash
+git clone <url-do-repo> /opt/claude-usage
+cd /opt/claude-usage
+```
+
+### 4. Instalar dependências e buildar
+
+```bash
+# Shared (necessário para o server)
+cd /opt/claude-usage/shared
+npm install
+npm run build
+
+# Server
+cd /opt/claude-usage/server
+npm install
+npm run build
+```
+
+### 5. Configurar variáveis de ambiente
+
+```bash
+cat > /opt/claude-usage/server/.env << EOF
+PORT=3030
+DB_PATH=/opt/claude-usage/server/data/sync.db
+JWT_SECRET=$(openssl rand -hex 32)
+NODE_ENV=production
+EOF
+```
+
+> **Anote o `JWT_SECRET` gerado** — se perder, todos os JWTs emitidos anteriormente serão invalidados.
+
+### 6. Criar diretório de dados
+
+```bash
+mkdir -p /opt/claude-usage/server/data
+```
+
+### 7. Iniciar com PM2
+
+```bash
+cd /opt/claude-usage/server
+pm2 start dist/index.js --name sync-claude-usage
+pm2 save  # persiste a lista de processos
+```
+
+### 8. Configurar PM2 para iniciar no boot
+
+```bash
+pm2 startup  # mostra um comando — execute-o
+# Exemplo: sudo env PATH=$PATH:/usr/bin pm2 startup systemd -u root --hp /root
+pm2 save
+```
+
+### 9. Abrir a porta no firewall
+
+```bash
+sudo ufw allow 3030/tcp
+sudo ufw status
+```
+
+### 10. Verificar
+
+```bash
+pm2 status
+pm2 logs sync-claude-usage --lines 20
+curl http://localhost:3030/health
+# {"status":"ok","ts":...}
+```
+
+A URL pública será `http://<IP-DO-DROPLET>:3030`.
+
+---
+
+### Deploy de atualizações
+
+```bash
+cd /opt/claude-usage
+git pull
+
+# Rebuildar shared se houver mudanças
+cd shared && npm install && npm run build
+
+# Rebuildar server
+cd ../server && npm install && npm run build
+
+# Reiniciar
+pm2 restart sync-claude-usage
+pm2 logs sync-claude-usage --lines 20
+```
+
+---
+
+### Comandos PM2 úteis
+
+```bash
+pm2 status                        # estado dos processos
+pm2 logs sync-claude-usage        # logs em tempo real
+pm2 logs sync-claude-usage --lines 100  # últimas 100 linhas
+pm2 restart sync-claude-usage     # reinicia
+pm2 stop sync-claude-usage        # para sem remover
+pm2 delete sync-claude-usage      # remove do PM2
+```
+
+---
+
 ## Deploy Fly.io
 
 1. Instalar flyctl: https://fly.io/docs/hands-on/install-flyctl/

@@ -50,6 +50,6 @@ logger.info('Database initialized');
 
 const port = Number(process.env.PORT ?? 3030);
 
-serve({ fetch: app.fetch, port }, (info) => {
+serve({ fetch: app.fetch, port, hostname: '0.0.0.0' }, (info) => {
   logger.info({ port: info.port }, 'Server running');
 });

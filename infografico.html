@@ -26,7 +26,7 @@
     background: var(--bg);
     color: var(--text);
     padding: 48px 32px;
-    max-width: 960px;
+    max-width: 1100px;
     margin: 0 auto;
     line-height: 1.5;
   }
@@ -61,7 +61,7 @@
   .header p {
     font-size: 15px;
     color: var(--muted);
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
   }
 
@@ -111,7 +111,7 @@
   }
 
   /* ────────────────────────────────────────────────
-     BLOCO 1 — GAUGES
+     BLOCO GAUGES
   ──────────────────────────────────────────────── */
   .gauges-block {
     display: flex;
@@ -129,7 +129,6 @@
     min-width: 140px;
   }
 
-  /* SVG gauge */
   .gauge-svg { width: 130px; height: 72px; }
 
   .gauge-label {
@@ -177,7 +176,7 @@
   }
 
   /* ────────────────────────────────────────────────
-     BLOCO 2 — TRAY ICON
+     BLOCO TRAY ICON
   ──────────────────────────────────────────────── */
   .tray-demos {
     display: flex;
@@ -191,35 +190,6 @@
     align-items: center;
     gap: 8px;
   }
-  .tray-icon {
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px;
-    font-weight: 800;
-  }
-  .tray-icon canvas {
-    display: none;
-  }
-  .tray-bg {
-    position: absolute;
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    background: rgba(60,60,60,0.8);
-  }
-  .tray-arc {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    border-radius: 50%;
-  }
-  .tray-text {
-    position: relative;
-    font-size: 11px;
-    font-weight: 800;
-    z-index: 2;
-  }
   .tray-caption {
     font-size: 11px;
     color: var(--muted);
@@ -232,7 +202,7 @@
   }
 
   /* ────────────────────────────────────────────────
-     BLOCO 3 — GRÁFICO DIÁRIO
+     BLOCO GRÁFICO DIÁRIO
   ──────────────────────────────────────────────── */
   .daily-wrap {
     display: flex;
@@ -328,7 +298,7 @@
   .note-box strong { color: var(--text); }
 
   /* ────────────────────────────────────────────────
-     BLOCO 4 — FLUXO DE DADOS
+     BLOCO FLUXO DE DADOS
   ──────────────────────────────────────────────── */
   .flow {
     display: flex;
@@ -391,11 +361,11 @@
   }
 
   /* ────────────────────────────────────────────────
-     BLOCO 5 — POLLING
+     BLOCO POLLING
   ──────────────────────────────────────────────── */
   .poll-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
   }
   .poll-item {
@@ -413,14 +383,14 @@
     color: var(--text);
   }
   .poll-interval {
-    font-size: 12px; font-weight: 800;
+    font-size: 11px; font-weight: 800;
   }
   .poll-desc {
     font-size: 9px; color: var(--muted); line-height: 1.4;
   }
 
   /* ────────────────────────────────────────────────
-     BLOCO 6 — ESTADOS ESPECIAIS
+     BLOCO ESTADOS ESPECIAIS
   ──────────────────────────────────────────────── */
   .states-grid {
     display: grid;
@@ -482,6 +452,153 @@
     background: var(--border);
     margin: 8px 0 20px;
   }
+
+  /* ────────────────────────────────────────────────
+     POPUP MOCKUPS
+  ──────────────────────────────────────────────── */
+  .popup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .popup-scenario { display: flex; flex-direction: column; gap: 8px; }
+  .popup-label { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+  .popup-mockup {
+    width: 100%;
+    min-height: 170px;
+    background: #1a1a1f;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+  .pm-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .pm-title { font-size: 11px; font-weight: 600; color: #f0f0f0; display: flex; align-items: center; gap: 6px; }
+  .pm-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .pm-close { font-size: 10px; color: rgba(200,200,200,0.4); }
+  .pm-banner-rl { background: rgba(245,158,11,0.12); border-bottom: 1px solid rgba(245,158,11,0.25); padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: #f59e0b; }
+  .pm-banner-err { background: rgba(239,68,68,0.10); border-bottom: 1px solid rgba(239,68,68,0.25); padding: 6px 12px; font-size: 10px; color: #ef4444; }
+  .pm-banner-upd { background: rgba(59,130,246,0.10); border-bottom: 1px solid rgba(59,130,246,0.25); padding: 6px 12px; display: flex; align-items: center; gap: 8px; font-size: 10px; color: #3b82f6; }
+  .pm-body { padding: 10px 12px; }
+  .pm-gauges { display: flex; gap: 8px; justify-content: center; margin-bottom: 8px; }
+  .pm-gauge { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+  .pm-gauge-label { font-size: 9px; color: rgba(200,200,200,0.55); }
+  .pm-gauge-val { font-size: 14px; font-weight: 800; }
+  .pm-gauge-reset { font-size: 8px; color: rgba(200,200,200,0.4); }
+  .pm-footer-row { display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: rgba(200,200,200,0.4); margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px; }
+  .pm-cred-modal { background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 10px; min-height: 130px; }
+  .pm-cred-box { background: #1f1f26; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; text-align: center; }
+  .pm-cred-icon { font-size: 18px; color: #f59e0b; margin-bottom: 4px; }
+  .pm-cred-title { font-size: 10px; font-weight: 700; color: #f0f0f0; margin-bottom: 4px; }
+  .pm-cred-desc { font-size: 9px; color: rgba(200,200,200,0.55); }
+  .pm-sync-row { display: flex; justify-content: space-between; font-size: 9px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .pm-sync-label { color: rgba(200,200,200,0.55); }
+  .pm-sync-val { color: #f0f0f0; font-weight: 600; }
+
+  /* ────────────────────────────────────────────────
+     FLUXO CLOUD SYNC
+  ──────────────────────────────────────────────── */
+  .flow-cloud { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .flow-cloud-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+
+  /* ────────────────────────────────────────────────
+     NOTIFICAÇÕES
+  ──────────────────────────────────────────────── */
+  .notif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .notif-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .notif-event { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .notif-detail { font-size: 11px; color: var(--muted); line-height: 1.7; }
+
+  /* ────────────────────────────────────────────────
+     JANELAS DE SESSÃO
+  ──────────────────────────────────────────────── */
+  .session-timeline { display: flex; align-items: flex-end; gap: 2px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 10px; margin-bottom: 12px; }
+  .swin { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .swin-bar { width: 28px; border-radius: 4px 4px 0 0; }
+  .swin-label { font-size: 9px; color: var(--muted); text-align: center; }
+
+  /* ────────────────────────────────────────────────
+     PERSISTÊNCIA (store-table)
+  ──────────────────────────────────────────────── */
+  .store-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .store-table th { text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .store-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .store-table tr:last-child td { border-bottom: none; }
+  .store-name { font-weight: 700; color: var(--blue); font-family: monospace; font-size: 12px; }
+
+  /* ────────────────────────────────────────────────
+     CLOUD SYNC SERVIDOR
+  ──────────────────────────────────────────────── */
+  .server-arch { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .server-block { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .server-block-title { font-size: 11px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .endpoint-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; font-size: 11px; }
+  .ep-method { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; font-family: monospace; }
+  .ep-get { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .ep-post { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .ep-delete { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .ep-path { color: var(--text); font-family: monospace; font-size: 11px; }
+  .ep-desc { color: var(--muted); font-size: 10px; }
+  .merge-rule { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; font-size: 11px; }
+  .merge-icon { flex-shrink: 0; }
+  .badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+  .badge-max { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .badge-ignore { background: rgba(148,163,184,0.15); color: #94a3b8; }
+  .badge-newest { background: rgba(59,130,246,0.15); color: #3b82f6; }
+
+  /* ────────────────────────────────────────────────
+     BARRAS PROGRESS (Seção 5)
+  ──────────────────────────────────────────────── */
+  .progress-row { display: flex; flex-direction: column; gap: 12px; }
+  .progress-item { display: flex; flex-direction: column; gap: 6px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+  .progress-name { font-weight: 700; color: var(--text); }
+  .progress-pct { font-size: 14px; font-weight: 800; }
+  .progress-track { height: 10px; background: rgba(255,255,255,0.07); border-radius: 6px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 6px; }
+  .progress-note { font-size: 10px; color: var(--muted); }
+
+  /* ────────────────────────────────────────────────
+     CREDENCIAIS (Seção 10)
+  ──────────────────────────────────────────────── */
+  .oauth-steps { display: flex; flex-direction: column; gap: 10px; }
+  .oauth-step { display: flex; gap: 12px; align-items: flex-start; }
+  .oauth-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: var(--blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .oauth-content { flex: 1; }
+  .oauth-title { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+  .oauth-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* ────────────────────────────────────────────────
+     AUTH FLOW (Seção 12)
+  ──────────────────────────────────────────────── */
+  .auth-flow { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 16px; font-size: 11px; line-height: 2; font-family: monospace; color: var(--muted); }
+  .auth-flow .highlight { color: var(--blue); }
+  .auth-flow .success { color: var(--green); }
+  .auth-flow .warn { color: var(--amber); }
+
+  /* ────────────────────────────────────────────────
+     MIDDLEWARE STACK (Seção 12)
+  ──────────────────────────────────────────────── */
+  .middleware-stack { display: flex; flex-direction: column; gap: 0; }
+  .mw-layer { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 1px solid var(--border); font-size: 11px; }
+  .mw-layer:first-child { border-radius: 8px 8px 0 0; }
+  .mw-layer:last-child { border-radius: 0 0 8px 8px; }
+  .mw-layer + .mw-layer { border-top: none; }
+  .mw-label { font-weight: 700; min-width: 110px; }
+  .mw-desc { color: var(--muted); }
+  .mw-arrow { font-size: 14px; color: var(--muted); margin-left: auto; }
+
+  /* Tabela de thresholds */
+  .thresh-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+  .thresh-table th { text-align: left; padding: 6px 10px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .thresh-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  .thresh-table tr:last-child td { border-bottom: none; }
+  .thresh-table code { font-family: monospace; font-size: 11px; color: var(--blue); }
+
+  /* Tabela de valores numéricos */
+  .num-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .num-table th { text-align: left; padding: 6px 10px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .num-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  .num-table tr:last-child td { border-bottom: none; }
+  .num-table td:first-child { font-family: monospace; font-size: 11px; color: var(--amber); }
+  .num-table td:last-child { font-weight: 700; color: var(--text); }
+
 </style>
 </head>
 <body>
@@ -492,16 +609,240 @@
 <div class="header">
   <div class="tag">Documentação Visual</div>
   <h1>Claude Usage Monitor</h1>
-  <p>Como o sistema de visualização funciona — gauges, gráficos, ícone na bandeja e fluxo de dados</p>
+  <p>Arquitetura completa, UI, fluxo de dados, polling, notificações, sessões, credenciais, persistência e Cloud Sync</p>
 </div>
 
 
 <!-- ══════════════════════════════════════════
-     1. GAUGES SEMICIRCULARES
+     SEÇÃO 1 — POPUP: CENÁRIOS VISUAIS
 ══════════════════════════════════════════ -->
 <div class="section">
   <div class="section-label">Seção 1</div>
-  <div class="section-title"><span class="num">1</span> Gauges Semicirculares (Medidores de Uso)</div>
+  <div class="section-title"><span class="num">1</span> Popup: Cenários Visuais</div>
+  <div class="divider"></div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:18px;">
+    O popup é uma <code>BrowserWindow</code> posicionada acima do ícone da bandeja. Ocultada por padrão; abre no clique esquerdo. Abaixo: os 6 estados possíveis da interface.
+  </p>
+
+  <div class="popup-grid">
+
+    <!-- Mockup 1: Estado Normal -->
+    <div class="popup-scenario">
+      <div class="popup-label">1 — Normal</div>
+      <div class="popup-mockup">
+        <div class="pm-header">
+          <div class="pm-title"><div class="pm-dot" style="background:#22c55e"></div>Claude Usage</div>
+          <div class="pm-close">✕</div>
+        </div>
+        <div class="pm-body">
+          <div class="pm-gauges">
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">45%</text>
+              </svg>
+              <div class="pm-gauge-label">Sessão (5h)</div>
+              <div class="pm-gauge-reset">reset em 2h14</div>
+            </div>
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">72%</text>
+              </svg>
+              <div class="pm-gauge-label">Semanal (7d)</div>
+              <div class="pm-gauge-reset">reset em 1d 4h</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:flex-end;height:24px;padding:0 4px;margin-top:6px;">
+            <div style="flex:1;background:rgba(34,197,94,0.4);border-radius:2px;height:8px"></div>
+            <div style="flex:1;background:rgba(34,197,94,0.7);border-radius:2px;height:14px"></div>
+            <div style="flex:1;background:rgba(245,158,11,0.7);border-radius:2px;height:18px"></div>
+            <div style="flex:1;background:rgba(239,68,68,0.7);border-radius:2px;height:22px"></div>
+            <div style="flex:1;background:rgba(245,158,11,0.7);border-radius:2px;height:16px"></div>
+            <div style="flex:1;background:rgba(34,197,94,0.7);border-radius:2px;height:12px"></div>
+            <div style="flex:1;background:rgba(34,197,94,0.3);border-radius:2px;height:4px;opacity:0.3"></div>
+          </div>
+          <div class="pm-footer-row">
+            <span>Atualizado 14:32</span>
+            <span>próx. 10min</span>
+            <span>v1.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mockup 2: Rate Limit -->
+    <div class="popup-scenario">
+      <div class="popup-label">2 — Rate Limit</div>
+      <div class="popup-mockup">
+        <div class="pm-header">
+          <div class="pm-title"><div class="pm-dot" style="background:#ef4444"></div>Claude Usage</div>
+          <div class="pm-close">✕</div>
+        </div>
+        <div class="pm-banner-rl">⏱ <span>Rate limit ativo · 23min restantes</span></div>
+        <div class="pm-body">
+          <div class="pm-gauges">
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="16"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">91%</text>
+              </svg>
+              <div class="pm-gauge-label">Sessão (5h)</div>
+              <div class="pm-gauge-reset">reset em 0h22</div>
+            </div>
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="0"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#ef4444">!!!</text>
+              </svg>
+              <div class="pm-gauge-label">Semanal (7d)</div>
+              <div class="pm-gauge-reset">reset em 0d 8h</div>
+            </div>
+          </div>
+          <div class="pm-footer-row">
+            <span>Pausado</span>
+            <span style="color:#f59e0b">⚠ 429</span>
+            <span>v1.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mockup 3: Erro de API -->
+    <div class="popup-scenario">
+      <div class="popup-label">3 — Erro de API</div>
+      <div class="popup-mockup">
+        <div class="pm-header">
+          <div class="pm-title"><div class="pm-dot" style="background:#f59e0b"></div>Claude Usage</div>
+          <div class="pm-close">✕</div>
+        </div>
+        <div class="pm-banner-err">❌ Erro ao buscar dados: timeout após 15s</div>
+        <div class="pm-body">
+          <div class="pm-gauges">
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">45%</text>
+              </svg>
+              <div class="pm-gauge-label">Sessão (5h)</div>
+              <div class="pm-gauge-reset">dado anterior</div>
+            </div>
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">72%</text>
+              </svg>
+              <div class="pm-gauge-label">Semanal (7d)</div>
+              <div class="pm-gauge-reset">dado anterior</div>
+            </div>
+          </div>
+          <div class="pm-footer-row">
+            <span style="color:#ef4444">Falhou 14:35</span>
+            <span>retry 2×</span>
+            <span>v1.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mockup 4: Update disponível -->
+    <div class="popup-scenario">
+      <div class="popup-label">4 — Update disponível</div>
+      <div class="popup-mockup">
+        <div class="pm-header">
+          <div class="pm-title"><div class="pm-dot" style="background:#22c55e"></div>Claude Usage</div>
+          <div class="pm-close">✕</div>
+        </div>
+        <div class="pm-banner-upd">↑ <span>v1.1.0 disponível</span> <button style="margin-left:auto;background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.4);color:#3b82f6;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:Inter,sans-serif">Download</button></div>
+        <div class="pm-body">
+          <div class="pm-gauges">
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="120"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">31%</text>
+              </svg>
+              <div class="pm-gauge-label">Sessão (5h)</div>
+              <div class="pm-gauge-reset">reset em 4h01</div>
+            </div>
+            <div class="pm-gauge">
+              <svg width="70" height="40" viewBox="0 0 130 72">
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
+                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="138"/>
+                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">20%</text>
+              </svg>
+              <div class="pm-gauge-label">Semanal (7d)</div>
+              <div class="pm-gauge-reset">reset em 5d 2h</div>
+            </div>
+          </div>
+          <div class="pm-footer-row">
+            <span>Atualizado 10:12</span>
+            <span>próx. 10min</span>
+            <span style="color:#3b82f6">v1.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mockup 5: Credenciais não encontradas -->
+    <div class="popup-scenario">
+      <div class="popup-label">5 — Sem credenciais</div>
+      <div class="popup-mockup">
+        <div class="pm-header">
+          <div class="pm-title"><div class="pm-dot" style="background:#f59e0b"></div>Claude Usage</div>
+          <div class="pm-close">✕</div>
+        </div>
+        <div class="pm-cred-modal">
+          <div class="pm-cred-box">
+            <div class="pm-cred-icon">⚠</div>
+            <div class="pm-cred-title">Credenciais não encontradas</div>
+            <div class="pm-cred-desc">Execute "claude" no terminal e faça login</div>
+            <div style="margin-top:8px;font-size:9px;background:rgba(0,0,0,0.3);border-radius:4px;padding:4px 6px;color:#94a3b8;font-family:monospace">~/.claude/.credentials.json</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mockup 6: Cloud Sync ativo -->
+    <div class="popup-scenario">
+      <div class="popup-label">6 — Cloud Sync</div>
+      <div class="popup-mockup">
+        <div class="pm-header">
+          <div class="pm-title"><div class="pm-dot" style="background:#3b82f6"></div>Claude Usage</div>
+          <div class="pm-close">✕</div>
+        </div>
+        <div class="pm-body">
+          <div style="font-size:10px;font-weight:700;color:rgba(200,200,200,0.55);margin-bottom:6px;">☁ Cloud Sync</div>
+          <div class="pm-sync-row"><span class="pm-sync-label">Account</span><span class="pm-sync-val">user@email.com</span></div>
+          <div class="pm-sync-row"><span class="pm-sync-label">Server</span><span class="pm-sync-val">https://sync.example.com</span></div>
+          <div class="pm-sync-row"><span class="pm-sync-label">Último sync</span><span class="pm-sync-val" style="color:#22c55e">há 2 min</span></div>
+          <div class="pm-sync-row"><span class="pm-sync-label">Próx. sync</span><span class="pm-sync-val">em 8 min</span></div>
+          <div class="pm-sync-row"><span class="pm-sync-label">Ops pendentes</span><span class="pm-sync-val">0</span></div>
+          <div class="pm-footer-row">
+            <span style="color:#3b82f6">☁ conectado</span>
+            <span>2 devices</span>
+            <span>v1.0.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SEÇÃO 2 — GAUGES SEMICIRCULARES
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 2</div>
+  <div class="section-title"><span class="num">2</span> Gauges Semicirculares (Medidores de Uso)</div>
   <div class="divider"></div>
   <div class="card">
     <div class="gauges-block">
@@ -563,7 +904,6 @@
           <span style="color:#ef4444;font-weight:600;">Vermelho</span>
           <span class="color-range">≥ 80%</span>
         </div>
-
         <div style="margin-top:12px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;">
           <strong style="color:var(--text)">Acima de 100%</strong><br>
           Gauge trava em 100% visualmente.<br>
@@ -577,15 +917,15 @@
 
 
 <!-- ══════════════════════════════════════════
-     2. ÍCONE DA BANDEJA
+     SEÇÃO 3 — ÍCONE DA BANDEJA
 ══════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-label">Seção 2</div>
-  <div class="section-title"><span class="num">2</span> Ícone na Bandeja do Sistema</div>
+  <div class="section-label">Seção 3</div>
+  <div class="section-title"><span class="num">3</span> Ícone na Bandeja do Sistema</div>
   <div class="divider"></div>
   <div class="card">
     <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-      Gerado em <code>&lt;canvas&gt;</code> oculto (32×32px). Usa o <strong>maior valor</strong> entre sessão e semanal para cor e arco.
+      Gerado em <code>&lt;canvas&gt;</code> oculto (32×32px). Usa o <strong>maior valor</strong> entre sessão e semanal para cor e arco. PNG enviado via <code>ipcRenderer.send('tray-icon-data', ...)</code>.
     </p>
     <div class="tray-demos">
 
@@ -646,7 +986,8 @@
         🔵 <strong style="color:var(--text)">Fundo</strong> — círculo cinza (adapta ao tema)<br>
         🟢 <strong style="color:var(--text)">Arco</strong> — proporcional ao maior % (sessão ou semanal)<br>
         🔤 <strong style="color:var(--text)">Texto</strong> — valor numérico central (<code>!!!</code> se ≥ 100%)<br>
-        🎨 <strong style="color:var(--text)">Cor</strong> — mesma paleta dos gauges
+        🎨 <strong style="color:var(--text)">Cor</strong> — mesma paleta dos gauges<br>
+        📐 <strong style="color:var(--text)">Tamanho</strong> — 32×32px, enviado como PNG via IPC
       </div>
 
     </div>
@@ -655,11 +996,11 @@
 
 
 <!-- ══════════════════════════════════════════
-     3. GRÁFICO DIÁRIO
+     SEÇÃO 4 — GRÁFICO DE BARRAS DIÁRIO
 ══════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-label">Seção 3</div>
-  <div class="section-title"><span class="num">3</span> Gráfico de Barras Diário (7 dias)</div>
+  <div class="section-label">Seção 4</div>
+  <div class="section-title"><span class="num">4</span> Gráfico de Barras Diário (7 dias)</div>
   <div class="divider"></div>
   <div class="card">
     <div class="daily-wrap">
@@ -676,7 +1017,7 @@
           <div class="day-col">
             <div class="bars-group">
               <div class="bar session" style="height:14px"></div>
-              <div class="bar weekly ok" style="height:20px"></div>
+              <div class="bar weekly" style="height:20px"></div>
             </div>
             <div class="day-label">Seg</div>
           </div>
@@ -731,7 +1072,7 @@
           </div>
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:right;">
-          ↑ pico máximo do dia &nbsp;|&nbsp; altura máx = 40px (100%)
+          ↑ pico máximo do dia &nbsp;|&nbsp; altura máx = 48px (100%)
         </div>
       </div>
 
@@ -747,14 +1088,14 @@
           Exibidos sem barras. Dia atual destacado com rótulo em azul.
         </div>
         <div class="note-box">
-          <strong>Resets de sessão</strong><br>
+          <strong>Janelas de sessão</strong><br>
           A janela de 5h pode resetar várias vezes/dia.<br>
-          <code>sessionResets</code>: nº de janelas abertas<br>
+          <code>sessionWindowCount</code>: nº de janelas abertas<br>
           <code>sessionAccum</code>: uso acumulado das anteriores
         </div>
         <div class="note-box">
           <strong>Barra de créditos</strong><br>
-          Exibida apenas se o usuário tem plano de créditos (<code>maxCredits</code> presente no histórico).
+          Exibida apenas se <code>extra_usage.is_enabled</code> e <code>monthly_limit &gt; 0</code> presente no histórico.
         </div>
       </div>
 
@@ -764,33 +1105,96 @@
 
 
 <!-- ══════════════════════════════════════════
-     4. FLUXO DE DADOS
+     SEÇÃO 5 — BARRAS SONNET + CRÉDITOS
 ══════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-label">Seção 4</div>
-  <div class="section-title"><span class="num">4</span> Fluxo de Dados</div>
+  <div class="section-label">Seção 5</div>
+  <div class="section-title"><span class="num">5</span> Barras de Progresso: Sonnet e Créditos Extras</div>
   <div class="divider"></div>
   <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">
+      Além dos dois gauges principais, o popup exibe barras horizontais para Sonnet 3.5 (janela semanal) e créditos extras. Cada barra é calculada a partir do payload da API.
+    </p>
+    <div class="progress-row">
+
+      <!-- Barra Sonnet -->
+      <div class="progress-item">
+        <div class="progress-header">
+          <div class="progress-name">Sonnet</div>
+          <div class="progress-pct" style="color:#f59e0b">52%</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:52%;background:linear-gradient(90deg,rgba(245,158,11,0.6),#f59e0b)"></div>
+        </div>
+        <div class="progress-note">Calculado via <code>seven_day_sonnet.utilization × 100</code> &nbsp;·&nbsp; janela independente de 7 dias</div>
+      </div>
+
+      <!-- Barra Créditos -->
+      <div class="progress-item">
+        <div class="progress-header">
+          <div class="progress-name">Créditos Extras</div>
+          <div class="progress-pct" style="color:#3b82f6">28%</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:28%;background:linear-gradient(90deg,rgba(59,130,246,0.6),#3b82f6)"></div>
+        </div>
+        <div class="progress-note">Calculado via <code>(extra_usage.used_credits / extra_usage.monthly_limit) × 100</code></div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="note-box">
+        <strong>Quando a barra Sonnet aparece</strong><br>
+        Sempre que o payload contém <code>seven_day_sonnet</code> com <code>utilization</code> definido. Mostra uso do modelo Sonnet especificamente, separado do limite global.
+      </div>
+      <div class="note-box">
+        <strong>Quando a barra Créditos aparece</strong><br>
+        Apenas se <code>extra_usage.is_enabled === true</code> e <code>monthly_limit &gt; 0</code>. Usuários sem plano de créditos não veem essa barra.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SEÇÃO 6 — FLUXO DE DADOS COMPLETO
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 6</div>
+  <div class="section-title"><span class="num">6</span> Fluxo de Dados Completo</div>
+  <div class="divider"></div>
+  <div class="card">
+
+    <!-- Fluxo principal -->
     <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;">
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);">🔑</div>
+        <div class="flow-name">credentialService</div>
+        <div class="flow-sub">~/.claude/<br>.credentials.json</div>
+      </div>
+      <div class="flow-arrow">→</div>
 
       <div class="flow-step">
         <div class="flow-icon" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);">🌐</div>
         <div class="flow-name">API Anthropic</div>
-        <div class="flow-sub">/api/oauth/usage</div>
+        <div class="flow-sub">/api/oauth/usage<br>timeout 15s</div>
       </div>
       <div class="flow-arrow">→</div>
 
       <div class="flow-step">
         <div class="flow-icon" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);">🔌</div>
         <div class="flow-name">usageApiService</div>
-        <div class="flow-sub">GET + retry 5xx<br>429 → rate limit</div>
+        <div class="flow-sub">retry 3× (5xx)<br>429 → rate limit</div>
       </div>
       <div class="flow-arrow">→</div>
 
       <div class="flow-step">
         <div class="flow-icon" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);">⏱</div>
         <div class="flow-name">pollingService</div>
-        <div class="flow-sub">Normal / Fast / Idle<br>backoff rate limit</div>
+        <div class="flow-sub">adaptive intervals<br>pause/resume</div>
       </div>
       <div class="flow-arrow">→</div>
 
@@ -821,92 +1225,534 @@
       </div>
 
     </div>
+
+    <!-- Ramo Cloud Sync -->
+    <div class="flow-cloud">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Ramo Cloud Sync (feat/cloud-sync)</div>
+      <div class="flow-cloud-row">
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;">☁</div>
+        <span style="color:var(--muted)">pollingService</span>
+        <span style="color:var(--muted)">→</span>
+        <div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;">🔄</div>
+        <span style="color:var(--text);font-weight:600;">syncService</span>
+        <span style="color:var(--muted)">→ POST /sync/push (Hono server)</span>
+      </div>
+      <div class="flow-cloud-row" style="margin-left:36px;">
+        <span style="color:var(--muted);font-family:monospace;font-size:11px;">← GET /sync/pull?since=&lt;ts&gt; (delta incremental)</span>
+      </div>
+      <div class="flow-cloud-row" style="margin-left:36px;">
+        <span style="color:var(--muted);font-family:monospace;font-size:11px;">← GET /sync/snapshot (dump completo)</span>
+      </div>
+      <div style="margin-top:4px;font-size:10px;color:var(--muted);padding:8px 12px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;">
+        O sync roda de forma independente do polling principal. Intervalo padrão: 10 min. Em caso de falha, usa backoff [1, 2, 5, 10, 30] min.
+      </div>
+    </div>
+
   </div>
 </div>
 
 
 <!-- ══════════════════════════════════════════
-     5. INTERVALOS DE POLLING
+     SEÇÃO 7 — INTERVALOS DE POLLING
 ══════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-label">Seção 5</div>
-  <div class="section-title"><span class="num">5</span> Intervalos de Polling</div>
+  <div class="section-label">Seção 7</div>
+  <div class="section-title"><span class="num">7</span> Intervalos de Polling (pollingService)</div>
   <div class="divider"></div>
   <div class="card">
     <div class="poll-grid">
-      <div class="poll-item" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;">
+      <div class="poll-item" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);">
         <div class="poll-icon">🟢</div>
         <div class="poll-name">Normal</div>
         <div class="poll-interval" style="color:#22c55e">10 min</div>
-        <div class="poll-desc">Uso estável</div>
+        <div class="poll-desc">Padrão.<br>Uso estável.</div>
       </div>
-      <div class="poll-item" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;">
+      <div class="poll-item" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
         <div class="poll-icon">⚡</div>
         <div class="poll-name">Fast</div>
         <div class="poll-interval" style="color:#f59e0b">7 min</div>
-        <div class="poll-desc">Spike &gt;1%<br>detectado</div>
+        <div class="poll-desc">Spike &gt;1%<br>1 ciclo (FAST_<br>CYCLES=1)</div>
       </div>
-      <div class="poll-item" style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);border-radius:12px;">
+      <div class="poll-item" style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);">
         <div class="poll-icon">💤</div>
         <div class="poll-name">Idle</div>
         <div class="poll-interval" style="color:#94a3b8">30 min</div>
-        <div class="poll-desc">Sem atividade<br>recente</div>
+        <div class="poll-desc">Sistema inativo<br>&gt; 10 min</div>
       </div>
-      <div class="poll-item" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;">
+      <div class="poll-item" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);">
+        <div class="poll-icon">💥</div>
+        <div class="poll-name">Error</div>
+        <div class="poll-interval" style="color:#ef4444;font-size:9px;">1→2→4→8→16<br>(cap 20 min)</div>
+        <div class="poll-desc">Falha API (5xx)<br>backoff expo-<br>nencial</div>
+      </div>
+      <div class="poll-item" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);">
         <div class="poll-icon">🚫</div>
         <div class="poll-name">Rate Limit</div>
-        <div class="poll-interval" style="color:#ef4444">5→60 min</div>
-        <div class="poll-desc">Backoff duplo<br>a cada limite</div>
+        <div class="poll-interval" style="color:#f59e0b;font-size:10px;">5→10 min<br>(cap 10 min)</div>
+        <div class="poll-desc">429. Respeita<br>Retry-After<br>se disponível</div>
       </div>
-      <div class="poll-item" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:12px;">
+      <div class="poll-item" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);">
         <div class="poll-icon">⚙️</div>
         <div class="poll-name">Custom</div>
-        <div class="poll-interval" style="color:#a855f7">config</div>
-        <div class="poll-desc">Usuário define<br>via settings</div>
+        <div class="poll-interval" style="color:#a855f7">1–60 min</div>
+        <div class="poll-desc">Usuário define<br>via settings<br>setCustomInterval</div>
       </div>
+    </div>
+
+    <div style="margin-top:14px;font-size:11px;color:var(--muted);padding:10px 14px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.18);border-radius:8px;line-height:1.7;">
+      <strong style="color:var(--text)">Persistência do Rate Limit:</strong>
+      O estado de rate limit (<code>rateLimitedUntil</code>, <code>rateLimitCount</code>) é persistido em disco (<code>accounts.json</code>). No startup, <code>main.ts</code> chama <code>pollingService.restoreRateLimit(until, count)</code> antes de <code>start()</code>, garantindo que um rate limit ativo sobreviva a reinicializações do app.
     </div>
   </div>
 </div>
 
 
 <!-- ══════════════════════════════════════════
-     6. ESTADOS ESPECIAIS
+     SEÇÃO 8 — SISTEMA DE NOTIFICAÇÕES
 ══════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-label">Seção 6</div>
-  <div class="section-title"><span class="num">6</span> Estados Especiais da Interface</div>
+  <div class="section-label">Seção 8</div>
+  <div class="section-title"><span class="num">8</span> Sistema de Notificações</div>
   <div class="divider"></div>
-  <div class="states-grid">
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      O <code>notificationService</code> usa debounce para evitar re-notificações excessivas. Cada alerta tem condição de disparo, condição de reset e configuração independente.
+    </p>
 
-    <div class="state-card rate-limit">
-      <div class="state-icon">⏸</div>
-      <div class="state-title" style="color:#f59e0b">Rate Limit</div>
-      <div class="state-desc">
-        API retornou 429.<br>
-        Faixa laranja com contagem regressiva.<br>
-        <code>triggerNow()</code> bloqueado até expirar.<br>
-        Backoff: 5→10→20→40→60 min.
+    <div class="notif-grid">
+
+      <div class="notif-card">
+        <div class="notif-event" style="color:#ef4444">Alerta de Sessão</div>
+        <div class="notif-detail">
+          <strong style="color:var(--text)">Dispara quando:</strong> <code>sessionPct ≥ sessionThreshold</code> (padrão 80%)<br>
+          <strong style="color:var(--text)">Debounce:</strong> não re-notifica até <code>sessionPct &lt; resetThreshold</code> (padrão 50%)<br>
+          <strong style="color:var(--text)">Configurável:</strong> toggle on/off + som ativável via settings
+        </div>
+      </div>
+
+      <div class="notif-card">
+        <div class="notif-event" style="color:#f59e0b">Alerta Semanal</div>
+        <div class="notif-detail">
+          <strong style="color:var(--text)">Dispara quando:</strong> <code>weeklyPct ≥ weeklyThreshold</code> (padrão 80%)<br>
+          <strong style="color:var(--text)">Debounce:</strong> não re-notifica até <code>weeklyPct &lt; resetThreshold</code> (padrão 50%)<br>
+          <strong style="color:var(--text)">Configurável:</strong> independente do alerta de sessão
+        </div>
+      </div>
+
+      <div class="notif-card">
+        <div class="notif-event" style="color:#3b82f6">Reset de Janela (5h)</div>
+        <div class="notif-detail">
+          <strong style="color:var(--text)">Dispara quando:</strong> <code>resets_at</code> muda ≥ 1 hora (nova janela detectada)<br>
+          <strong style="color:var(--text)">Sem debounce</strong> — evento pontual, não acumula<br>
+          <strong style="color:var(--text)">Configurável:</strong> <code>notifyOnWindowReset</code> (padrão: true)
+        </div>
+      </div>
+
+      <div class="notif-card">
+        <div class="notif-event" style="color:#22c55e">Queda de Uso</div>
+        <div class="notif-detail">
+          <strong style="color:var(--text)">Dispara quando:</strong> uso cai abaixo de <code>resetThreshold</code> após alerta ter sido enviado<br>
+          <strong style="color:var(--text)">Reset do debounce:</strong> zera a flag de "já notificou"<br>
+          <strong style="color:var(--text)">Configurável:</strong> <code>notifyOnReset</code> (padrão: false)
+        </div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Thresholds configuráveis</div>
+      <table class="thresh-table">
+        <thead>
+          <tr>
+            <th>Threshold</th>
+            <th>Padrão</th>
+            <th>Range</th>
+            <th>Persistência</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>sessionThreshold</code></td>
+            <td>80%</td>
+            <td>1 – 100</td>
+            <td><code>config.json</code></td>
+          </tr>
+          <tr>
+            <td><code>weeklyThreshold</code></td>
+            <td>80%</td>
+            <td>1 – 100</td>
+            <td><code>config.json</code></td>
+          </tr>
+          <tr>
+            <td><code>resetThreshold</code></td>
+            <td>50%</td>
+            <td>1 – 99</td>
+            <td><code>config.json</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SEÇÃO 9 — JANELAS DE SESSÃO
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 9</div>
+  <div class="section-title"><span class="num">9</span> Janelas de Sessão (5h) e Detecção de Reset</div>
+  <div class="divider"></div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      A janela de sessão da Anthropic dura 5 horas. Várias janelas podem ocorrer no mesmo dia. O sistema detecta cada transição e acumula os dados.
+    </p>
+
+    <!-- Timeline visual -->
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;">
+      <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Exemplo: 3 janelas no mesmo dia</div>
+      <!-- Janela 1 -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;">08:00</div>
+        <div style="flex:1;position:relative;height:28px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:6px;display:flex;align-items:center;padding:0 10px;">
+          <span style="font-size:10px;color:#22c55e;font-weight:700;">Janela 1 &nbsp;·&nbsp; peak 65%</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);width:40px;flex-shrink:0;">13:00</div>
+        <div style="font-size:10px;color:var(--amber);font-weight:700;flex-shrink:0;">reset</div>
+      </div>
+      <!-- Janela 2 -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;">13:00</div>
+        <div style="flex:1;position:relative;height:28px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:6px;display:flex;align-items:center;padding:0 10px;">
+          <span style="font-size:10px;color:#ef4444;font-weight:700;">Janela 2 &nbsp;·&nbsp; peak 88%</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);width:40px;flex-shrink:0;">18:00</div>
+        <div style="font-size:10px;color:var(--amber);font-weight:700;flex-shrink:0;">reset</div>
+      </div>
+      <!-- Janela 3 -->
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;">18:00</div>
+        <div style="flex:0.45;position:relative;height:28px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:6px;display:flex;align-items:center;padding:0 10px;">
+          <span style="font-size:10px;color:#3b82f6;font-weight:700;">Janela 3 &nbsp;·&nbsp; atual 40%</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);flex:0.55;padding-left:10px;">em progresso → reset em 23:00</div>
       </div>
     </div>
 
-    <div class="state-card error">
-      <div class="state-icon">❌</div>
-      <div class="state-title" style="color:#ef4444">Erro de API</div>
-      <div class="state-desc">
-        Falha na requisição (não 429).<br>
-        Banner vermelho visível na UI.<br>
-        Retry apenas em erros 5xx;<br>
-        4xx (exceto 429) não retenta.
+    <!-- Regras -->
+    <div class="daily-notes">
+      <div class="note-box">
+        <strong>Detecção de nova janela</strong><br>
+        <code>|newResetsAt − storedResetsAt| ≥ 30 minutos</code><br>
+        Evita falsos positivos por flutuação da API.
+      </div>
+      <div class="note-box">
+        <strong>Ao detectar nova janela</strong><br>
+        <code>sessionAccum += completedWindow.peak</code><br>
+        <code>sessionWindowCount++</code><br>
+        <code>maxSession</code> reseta para a nova janela
+      </div>
+      <div class="note-box">
+        <strong>Histórico</strong><br>
+        8 dias de dados mantidos (<code>splice</code> automático).<br>
+        Cada entrada: <code>{ date, peak, resetsAtMinute }</code>
+      </div>
+      <div class="note-box">
+        <strong>Deduplicação</strong><br>
+        Por minuto: <code>resets_at_minute = floor(resetsAt / 60000)</code><br>
+        Evita duplicar a mesma janela em polls consecutivos.
       </div>
     </div>
 
-    <div class="state-card resetting">
-      <div class="state-icon">🔄</div>
-      <div class="state-title" style="color:#3b82f6">Reiniciando</div>
-      <div class="state-desc">
-        <code>resets_at</code> está no passado.<br>
-        Exibe "Reiniciando..." até o<br>próximo update da API confirmar<br>os novos valores da janela.
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SEÇÃO 10 — CREDENCIAIS OAUTH
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 10</div>
+  <div class="section-title"><span class="num">10</span> Credenciais OAuth (credentialService)</div>
+  <div class="divider"></div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:18px;">
+      O app lê o token de acesso diretamente do arquivo de credenciais da CLI do Claude. Nenhuma senha é armazenada; o CLI gerencia a autenticação inicial.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+      <!-- Fluxo em 4 passos -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Fluxo de leitura e refresh</div>
+        <div class="oauth-steps">
+          <div class="oauth-step">
+            <div class="oauth-num">1</div>
+            <div class="oauth-content">
+              <div class="oauth-title">Lê o arquivo de credenciais</div>
+              <div class="oauth-desc"><code>~/.claude/.credentials.json</code><br>No Windows com WSL: tenta também caminhos <code>/mnt/c/Users/…</code> e <code>\\wsl$\…</code></div>
+            </div>
+          </div>
+          <div class="oauth-step">
+            <div class="oauth-num">2</div>
+            <div class="oauth-content">
+              <div class="oauth-title">Extrai e verifica o token</div>
+              <div class="oauth-desc">Lê <code>claudeAiOauth.accessToken</code> e compara <code>expiresAt</code> com <code>Date.now()</code></div>
+            </div>
+          </div>
+          <div class="oauth-step">
+            <div class="oauth-num">3</div>
+            <div class="oauth-content">
+              <div class="oauth-title">Refresh automático se necessário</div>
+              <div class="oauth-desc">Se expira em &lt; 5 min: POST <code>console.anthropic.com/v1/oauth/token</code> com grant <code>refresh_token</code></div>
+            </div>
+          </div>
+          <div class="oauth-step">
+            <div class="oauth-num">4</div>
+            <div class="oauth-content">
+              <div class="oauth-title">Atualiza expiração</div>
+              <div class="oauth-desc"><code>expiresAt = Date.now() + expires_in × 1000</code><br>Grava de volta no arquivo</div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- Estrutura do arquivo JSON -->
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Estrutura do arquivo</div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:monospace;font-size:11px;line-height:1.8;color:var(--muted);">
+          <span style="color:rgba(200,200,200,0.3);">{</span><br>
+          &nbsp;&nbsp;<span style="color:#3b82f6">"claudeAiOauth"</span><span style="color:rgba(200,200,200,0.3);">: {</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"accessToken"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#22c55e">"sk-ant-oat01-…"</span><span style="color:rgba(200,200,200,0.3);">,</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"refreshToken"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#22c55e">"…"</span><span style="color:rgba(200,200,200,0.3);">,</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"expiresAt"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#f59e0b">1712345678000</span><span style="color:rgba(200,200,200,0.3);">,</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"scopes"</span><span style="color:rgba(200,200,200,0.3);">: [</span><span style="color:#22c55e">"…"</span><span style="color:rgba(200,200,200,0.3);">],</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"subscriptionType"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#22c55e">"pro"</span><br>
+          &nbsp;&nbsp;<span style="color:rgba(200,200,200,0.3);">}</span><br>
+          <span style="color:rgba(200,200,200,0.3);">}</span>
+        </div>
+        <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.7;padding:8px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:8px;">
+          <strong style="color:var(--text)">Fallback WSL:</strong> No Windows, o app tenta detectar instâncias WSL e lê o arquivo <code>.credentials.json</code> do sistema de arquivos Linux montado, permitindo uso sem instalar o CLI nativo do Windows.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SEÇÃO 11 — PERSISTÊNCIA (electron-store)
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 11</div>
+  <div class="section-title"><span class="num">11</span> Persistência com electron-store</div>
+  <div class="divider"></div>
+  <div class="card">
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      Todos os dados do app são persistidos via <code>electron-store</code> (JSON no sistema de arquivos). Quatro stores separados, cada um com schema validado.
+    </p>
+
+    <table class="store-table">
+      <thead>
+        <tr>
+          <th>Arquivo</th>
+          <th>Localização</th>
+          <th>Conteúdo principal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="store-name">config.json</span></td>
+          <td style="font-size:10px;color:var(--muted);">%APPDATA%\Claude Usage Monitor\</td>
+          <td style="font-size:11px;color:var(--muted);">theme, language, windowSize, sessionThreshold (80%), weeklyThreshold (80%), resetThreshold (50%), notifications (enabled/sound), autoRefresh, pollIntervalMinutes, cloudSync settings</td>
+        </tr>
+        <tr>
+          <td><span class="store-name">accounts.json</span></td>
+          <td style="font-size:10px;color:var(--muted);">mesmo diretório</td>
+          <td style="font-size:11px;color:var(--muted);">usageHistory, dailyHistory (8 dias), timeSeries (por data), sessionWindows[], currentSessionWindow, <strong style="color:var(--amber)">rateLimitedUntil</strong>, <strong style="color:var(--amber)">rateLimitCount</strong></td>
+        </tr>
+        <tr>
+          <td><span class="store-name">cloud-sync.json</span></td>
+          <td style="font-size:10px;color:var(--muted);">mesmo diretório</td>
+          <td style="font-size:11px;color:var(--muted);">jwt (criptografado), jwtExpiresAt</td>
+        </tr>
+        <tr>
+          <td><span class="store-name">sync-outbox.json</span></td>
+          <td style="font-size:10px;color:var(--muted);">mesmo diretório</td>
+          <td style="font-size:11px;color:var(--muted);">operações de sync pendentes (enviadas quando o servidor ficar disponível)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="note-box">
+        <strong>Dev vs Prod</strong><br>
+        Dev: <code>%APPDATA%\Electron\config.json</code><br>
+        Prod: <code>%APPDATA%\Claude Usage Monitor\config.json</code>
+      </div>
+      <div class="note-box" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04);">
+        <strong style="color:#ef4444">Regra de schema</strong><br>
+        <strong>Nunca</strong> apertar <code>minimum</code>/<code>maximum</code> em campos existentes sem uma migration — o electron-store crasha no startup se o valor salvo violar o schema.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     SEÇÃO 12 — CLOUD SYNC: SERVIDOR
+══════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">Seção 12</div>
+  <div class="section-title"><span class="num">12</span> Cloud Sync: Servidor (Hono + SQLite)</div>
+  <div class="divider"></div>
+  <div class="card">
+
+    <!-- Autenticação -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Fluxo de Autenticação (/auth/exchange)</div>
+      <div class="auth-flow">
+        <span class="highlight">[Electron App]</span> → POST /auth/exchange<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="highlight">accessToken</span> (Anthropic), <span class="highlight">deviceId</span>, <span class="highlight">deviceLabel</span> }<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="warn">validateAnthropicToken()</span> → GET /api/oauth/usage (valida token)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upsert users + devices (SQLite)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="success">signJwt(email, deviceId)</span> → 24h, HS256<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        <span class="highlight">[Electron App]</span> ← { <span class="success">jwt</span>, <span class="success">expiresAt</span>, <span class="success">email</span> }
+      </div>
+    </div>
+
+    <div class="server-arch">
+
+      <!-- Endpoints -->
+      <div class="server-block">
+        <div class="server-block-title">Endpoints</div>
+        <div class="endpoint-row">
+          <span class="ep-method ep-post">POST</span>
+          <div><div class="ep-path">/auth/exchange</div><div class="ep-desc">público · troca token Anthropic por JWT</div></div>
+        </div>
+        <div class="endpoint-row">
+          <span class="ep-method ep-post">POST</span>
+          <div><div class="ep-path">/sync/push</div><div class="ep-desc">JWT · envia dados do cliente</div></div>
+        </div>
+        <div class="endpoint-row">
+          <span class="ep-method ep-get">GET</span>
+          <div><div class="ep-path">/sync/pull?since=ts</div><div class="ep-desc">JWT · puxa deltas incrementais</div></div>
+        </div>
+        <div class="endpoint-row">
+          <span class="ep-method ep-get">GET</span>
+          <div><div class="ep-path">/sync/snapshot</div><div class="ep-desc">JWT · dump completo dos dados</div></div>
+        </div>
+        <div class="endpoint-row">
+          <span class="ep-method ep-delete">DELETE</span>
+          <div><div class="ep-path">/sync/account</div><div class="ep-desc">JWT · apaga todos os dados do usuário</div></div>
+        </div>
+        <div class="endpoint-row">
+          <span class="ep-method ep-get">GET</span>
+          <div><div class="ep-path">/health</div><div class="ep-desc">público · health check</div></div>
+        </div>
+      </div>
+
+      <!-- Estratégia de Merge -->
+      <div class="server-block">
+        <div class="server-block-title">Estratégia de Merge (push)</div>
+        <div class="merge-rule">
+          <span class="merge-icon">📅</span>
+          <div>
+            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">daily_snapshots</code> <span class="badge badge-max">MAX</span></div>
+            <div style="font-size:10px;color:var(--muted);">MAX(max_weekly, max_session, session_accum, session_window_count) — conserva máximos</div>
+          </div>
+        </div>
+        <div class="merge-rule">
+          <span class="merge-icon">🪟</span>
+          <div>
+            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">session_windows</code> <span class="badge badge-max">MAX(peak)</span></div>
+            <div style="font-size:10px;color:var(--muted);">ON CONFLICT(email, date, resets_at_minute) → dedup por minuto</div>
+          </div>
+        </div>
+        <div class="merge-rule">
+          <span class="merge-icon">📈</span>
+          <div>
+            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">time_series_points</code> <span class="badge badge-ignore">IGNORE</span></div>
+            <div style="font-size:10px;color:var(--muted);">INSERT OR IGNORE — imutável por timestamp</div>
+          </div>
+        </div>
+        <div class="merge-rule">
+          <span class="merge-icon">📸</span>
+          <div>
+            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">usage_snapshots</code> <span class="badge badge-ignore">IGNORE</span></div>
+            <div style="font-size:10px;color:var(--muted);">INSERT OR IGNORE — imutável por timestamp</div>
+          </div>
+        </div>
+        <div class="merge-rule">
+          <span class="merge-icon">🔄</span>
+          <div>
+            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">currentWindow</code> <span class="badge badge-newest">NEWEST</span></div>
+            <div style="font-size:10px;color:var(--muted);">resetsAt mais recente vence; mesma janela → MAX(peak)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Middleware Stack -->
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Middleware Stack</div>
+      <div class="middleware-stack">
+        <div class="mw-layer" style="background:rgba(59,130,246,0.06);">
+          <div class="mw-label" style="color:#3b82f6;">CORS</div>
+          <div class="mw-desc"><code>process.env.CORS_ORIGIN ?? '*'</code></div>
+          <div class="mw-arrow">↓</div>
+        </div>
+        <div class="mw-layer" style="background:rgba(148,163,184,0.05);">
+          <div class="mw-label" style="color:#94a3b8;">Logger</div>
+          <div class="mw-desc">method + path + status + response time</div>
+          <div class="mw-arrow">↓</div>
+        </div>
+        <div class="mw-layer" style="background:rgba(245,158,11,0.06);">
+          <div class="mw-label" style="color:#f59e0b;">Rate Limit</div>
+          <div class="mw-desc">60 req / 60s por email ou IP → 429 se exceder</div>
+          <div class="mw-arrow">↓</div>
+        </div>
+        <div class="mw-layer" style="background:rgba(239,68,68,0.06);">
+          <div class="mw-label" style="color:#ef4444;">Auth Guard</div>
+          <div class="mw-desc">/sync/* only · verifica Bearer JWT → 401 se inválido</div>
+          <div class="mw-arrow">↓</div>
+        </div>
+        <div class="mw-layer" style="background:rgba(34,197,94,0.06);">
+          <div class="mw-label" style="color:#22c55e;">Route Handler</div>
+          <div class="mw-desc">lógica de negócio + acesso ao SQLite</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Valores Numéricos -->
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Valores Numéricos de Referência</div>
+      <table class="num-table">
+        <thead>
+          <tr>
+            <th>Parâmetro</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Port padrão</td><td>3030</td></tr>
+          <tr><td>JWT expiry</td><td>24h (86400s)</td></tr>
+          <tr><td>JWT algorithm</td><td>HS256</td></tr>
+          <tr><td>JWT refresh buffer (cliente)</td><td>5 min antes de expirar</td></tr>
+          <tr><td>Rate limit window</td><td>60 segundos</td></tr>
+          <tr><td>Rate limit max requests</td><td>60 req / janela</td></tr>
+          <tr><td>Retry backoff (cliente)</td><td>[1, 2, 5, 10, 30] min</td></tr>
+          <tr><td>Timeout API Anthropic</td><td>15s</td></tr>
+        </tbody>
+      </table>
     </div>
 
   </div>
@@ -915,8 +1761,7 @@
 
 <!-- ── Footer ── -->
 <div class="footer">
-  Claude Usage Monitor · Electron + TypeScript · Chart.js ·
-  <span style="color:var(--blue)">src/renderer/app.ts</span>
+  Claude Usage Monitor · Electron v34 + TypeScript · Hono + SQLite (servidor) · Chart.js · electron-store
 </div>
 
 </body>
