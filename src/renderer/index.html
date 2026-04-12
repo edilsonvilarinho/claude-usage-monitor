@@ -77,6 +77,7 @@
         </div>
         <span class="gauge-reset" id="reset-session">—</span>
         <span class="gauge-reset-at" id="reset-at-session">—</span>
+        <span class="burn-rate-line" id="burn-rate-line"></span>
       </div>
       <div class="gauge-card">
         <span class="gauge-label" data-i18n="weeklyLabel">Weekly (7d)</span>
@@ -196,6 +197,7 @@
       </div>
       <div id="report-stats" class="report-stats"></div>
       <div id="report-windows" class="report-windows"></div>
+      <div id="report-analytics" class="report-analytics"></div>
     </div>
   </div>
 
@@ -566,6 +568,17 @@
         </div>
       </div>
     </div>
+
+  <div id="day-curve-popup" class="day-curve-popup hidden">
+    <div class="day-curve-header">
+      <span id="day-curve-title" class="day-curve-title"></span>
+      <button id="day-curve-close" class="icon-btn" style="font-size:10px;padding:2px 5px;">✕</button>
+    </div>
+    <div class="day-curve-chart-wrap">
+      <canvas id="day-curve-canvas"></canvas>
+    </div>
+    <div id="day-curve-empty" class="day-curve-empty hidden">Sem dados</div>
+  </div>
 
   <script src="app.js"></script>
 </body>

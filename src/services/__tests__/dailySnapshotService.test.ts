@@ -29,7 +29,8 @@ describe('updateDailySnapshot', () => {
 
     expect(dailyHistory).toHaveLength(1);
     expect(dailyHistory[0]).toMatchObject({ date: TODAY, maxSession: 30, maxWeekly: 50, sessionWindowCount: 1, sessionAccum: 0 });
-    expect(currentWindow).toEqual({ resetsAt: RESET_A, peak: 30, date: TODAY });
+    expect(currentWindow).toMatchObject({ resetsAt: RESET_A, peak: 30, date: TODAY });
+    expect(currentWindow.peakTs).toBeDefined();
     expect(completedWindow).toBeNull();
   });
 
@@ -181,5 +182,51 @@ describe('updateDailySnapshot', () => {
     expect(dailyHistory).toHaveLength(8);
     expect(dailyHistory[dailyHistory.length - 1].date).toBe(TODAY);
     expect(dailyHistory.find(d => d.date === '2026-03-01')).toBeUndefined();
+  });
+
+  // ── peakTs ───────────────────────────────────────────────────────────────────
+
+  it('peakTs: definido na primeira janela (primeiro poll)', () => {
+    const FAKE_NOW = 1_700_000_000_000;
+    const { currentWindow } = updateDailySnapshot([], TODAY, makeUsageData(30, 50, RESET_A), null, FAKE_NOW);
+    expect(currentWindow.peakTs).toBe(FAKE_NOW);
+  });
+
+  it('peakTs: atualizado quando há novo pico', () => {
+    const FAKE_NOW1 = 1_700_000_000_000;
+    const FAKE_NOW2 = 1_700_000_001_000;
+    const { currentWindow: w1 } = updateDailySnapshot([], TODAY, makeUsageData(30, 50, RESET_A), null, FAKE_NOW1);
+    expect(w1.peakTs).toBe(FAKE_NOW1);
+    const history = [{ date: TODAY, maxWeekly: 50, maxSession: 30, sessionWindowCount: 1, sessionAccum: 0 }];
+    const { currentWindow: w2 } = updateDailySnapshot(history, TODAY, makeUsageData(60, 50, RESET_A), w1, FAKE_NOW2);
+    expect(w2.peakTs).toBe(FAKE_NOW2);
+  });
+
+  it('peakTs: NÃO muda quando novo valor é menor que o pico', () => {
+    const FAKE_NOW1 = 1_700_000_000_000;
+    const FAKE_NOW2 = 1_700_000_001_000;
+    const window80 = makeWindow(RESET_A, 80);
+    (window80 as CurrentSessionWindow & { peakTs: number }).peakTs = FAKE_NOW1;
+    const history = [{ date: TODAY, maxWeekly: 50, maxSession: 80, sessionWindowCount: 1, sessionAccum: 0 }];
+    const { currentWindow } = updateDailySnapshot(history, TODAY, makeUsageData(20, 50, RESET_A), window80, FAKE_NOW2);
+    expect(currentWindow.peakTs).toBe(FAKE_NOW1);
+  });
+
+  it('peakTs: propagado para completedWindow ao resetar', () => {
+    const FAKE_NOW = 1_700_000_000_000;
+    const window70 = makeWindow(RESET_A, 70);
+    (window70 as CurrentSessionWindow & { peakTs: number }).peakTs = FAKE_NOW;
+    const history = [{ date: TODAY, maxWeekly: 50, maxSession: 70, sessionWindowCount: 1, sessionAccum: 0 }];
+    const { completedWindow } = updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), window70);
+    expect(completedWindow?.peakTs).toBe(FAKE_NOW);
+  });
+
+  it('peakTs: undefined após reset (nova janela sem pico ainda)', () => {
+    const FAKE_NOW = 1_700_000_000_000;
+    const window70 = makeWindow(RESET_A, 70);
+    (window70 as CurrentSessionWindow & { peakTs: number }).peakTs = FAKE_NOW;
+    const history = [{ date: TODAY, maxWeekly: 50, maxSession: 70, sessionWindowCount: 1, sessionAccum: 0 }];
+    const { currentWindow } = updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), window70);
+    expect(currentWindow.peakTs).toBeUndefined();
   });
 });

@@ -811,7 +811,7 @@ app.whenReady().then(() => {
 
     // ── Snapshot diário + session window tracking ───────────────────────────────
     const { dailyHistory: updatedDailyHistory, currentWindow, completedWindow } =
-      updateDailySnapshot(accountData.dailyHistory ?? [], today, data, accountData.currentSessionWindow);
+      updateDailySnapshot(accountData.dailyHistory ?? [], today, data, accountData.currentSessionWindow, now);
 
     const updatedSessionWindows = [...(accountData.sessionWindows ?? [])];
     if (completedWindow) {

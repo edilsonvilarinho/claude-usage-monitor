@@ -24,6 +24,7 @@ export function updateDailySnapshot(
   today: string,
   data: UsageData,
   currentWindow: CurrentSessionWindow | null,
+  now: number = Date.now(),
 ): UpdateSnapshotResult {
   const weeklyPctInt  = Math.round(data.seven_day.utilization);
   const sessionPctInt = Math.round(data.five_hour.utilization);
@@ -57,11 +58,11 @@ export function updateDailySnapshot(
       if (windowDate && windowDate < today && dailyHistory.length > 0) {
         const prevDay = dailyHistory.find(d => d.date === windowDate)
           ?? dailyHistory[dailyHistory.length - 1];
-        completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date };
+        completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date, peakTs: currentWindow.peakTs };
         prevDay.sessionAccum = (prevDay.sessionAccum ?? 0) + peak;
         // sessionWindowCount não incrementa: a janela já foi contada como o "1" inicial do dia anterior
       } else {
-        completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: today };
+        completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: today, peakTs: currentWindow.peakTs };
         existingDay.sessionAccum  = (existingDay.sessionAccum  ?? 0) + peak;
         existingDay.sessionWindowCount = (existingDay.sessionWindowCount ?? 1) + 1;
       }
@@ -78,7 +79,7 @@ export function updateDailySnapshot(
     if (sessionResetOccurred && currentWindow && dailyHistory.length > 0) {
       const prevDay = dailyHistory[dailyHistory.length - 1];
       const peak = currentWindow.peak;
-      completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date };
+      completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date, peakTs: currentWindow.peakTs };
       prevDay.sessionAccum = (prevDay.sessionAccum ?? 0) + peak;
       // sessionWindowCount não incrementa: a janela já foi contada como o "1" inicial do dia anterior
     }
@@ -101,10 +102,10 @@ export function updateDailySnapshot(
   // Caso contrário (valor já é menor, portanto genuíno da nova sessão), usa sessionPctInt.
   // No próximo poll, Math.max atualiza para o valor real.
   const newCurrentWindow: CurrentSessionWindow = sessionResetOccurred
-    ? { resetsAt: newResetsAt, peak: sessionPctInt >= (completedWindow?.peak ?? 0) ? 0 : sessionPctInt, date: today }
+    ? { resetsAt: newResetsAt, peak: sessionPctInt >= (completedWindow?.peak ?? 0) ? 0 : sessionPctInt, date: today, peakTs: undefined }
     : !currentWindow
-      ? { resetsAt: newResetsAt, peak: sessionPctInt, date: today }           // primeira janela
-      : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt), date: currentWindow.date ?? today }; // mesma janela, atualiza pico
+      ? { resetsAt: newResetsAt, peak: sessionPctInt, date: today, peakTs: now }           // primeira janela
+      : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt), date: currentWindow.date ?? today, peakTs: sessionPctInt > currentWindow.peak ? now : currentWindow.peakTs }; // mesma janela, atualiza pico
 
   return { dailyHistory, currentWindow: newCurrentWindow, completedWindow };
 }
