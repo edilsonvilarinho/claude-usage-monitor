@@ -1641,7 +1641,7 @@ function openSmartModal(): void {
   const timelineEndMin = Math.max(
     s.workEndMin,
     s.minutosAtuais,
-    s.resetCrossesDay ? s.workEndMin : s.momentoDoReset
+    s.momentoDoReset
   );
   const totalRange = timelineEndMin - timelineStartMin;
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
