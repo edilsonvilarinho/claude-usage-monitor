@@ -23,6 +23,7 @@ export interface SessionWindowRecord {
 export interface CurrentSessionWindow {
   resetsAt: string; // five_hour.resets_at atual da API
   peak: number;     // maior utilization visto nesta janela até agora
+  date?: string;    // YYYY-MM-DD — dia em que esta janela começou
 }
 
 export interface DailySnapshot {
