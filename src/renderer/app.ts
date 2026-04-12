@@ -253,7 +253,7 @@ const translations = {
     'smartPlan.status.red': 'Imminent block. Avoid sending large prompts. Focus on purely manual refactoring, PR reviews, or documentation until the reset.',
     'smartPlan.status.purple': "Bio-Rhythm Synchronization: To avoid 'dead resets', we suggest sending your first message at {time} so your reset aligns perfectly with your break. Protect your focus.",
     'smartPlan.openDetails': 'Open smart schedule details',
-    'smartPlan.resetNextDay': '+1 day',
+    'smartPlan.resetNextDay': '+1 day at {time}',
     dayShort0: 'Sun',
     dayShort1: 'Mon',
     dayShort2: 'Tue',
@@ -401,7 +401,7 @@ const translations = {
     'smartPlan.status.red': 'Bloqueio iminente. Evite enviar prompts grandes. Concentre-se em refatorações puramente manuais, revisão de PRs ou documentação até o reset.',
     'smartPlan.status.purple': "Sincronização de Bio-Ritmo: Para evitar 'resets mortos', sugerimos disparar sua primeira mensagem às {time} para que seu reset alinhe perfeitamente com seu intervalo. Proteja seu foco.",
     'smartPlan.openDetails': 'Abrir detalhes da agenda',
-    'smartPlan.resetNextDay': '+1 dia',
+    'smartPlan.resetNextDay': '+1 dia às {time}',
     dayShort0: 'Dom',
     dayShort1: 'Seg',
     dayShort2: 'Ter',
@@ -1473,13 +1473,22 @@ function openSmartModal(): void {
   nowMarker.style.left = `${pctOf(s.minutosAtuais)}%`;
 
   const resetMarker = document.getElementById('sp-reset-marker') as HTMLElement;
+  const resetLabel = document.getElementById('sp-reset-label') as HTMLElement;
   resetMarker.style.color = s.colorHex;
   if (s.resetCrossesDay) {
+    const crossDayHHMM = formatMinutes(s.momentoDoReset % (24 * 60));
+    const labelTemplate = t['smartPlan.resetNextDay'] ?? '+1d {time}';
+    const label = labelTemplate.replace('{time}', crossDayHHMM);
     resetMarker.style.left = '100%';
-    resetMarker.title = t['smartPlan.resetNextDay'] ?? '+1d';
+    resetMarker.title = label;
+    resetLabel.textContent = label;
+    resetLabel.style.left = '100%';
+    resetLabel.style.color = s.colorHex;
+    resetLabel.style.display = 'block';
   } else {
     resetMarker.style.left = `${pctOf(s.momentoDoReset)}%`;
     resetMarker.title = formatMinutes(s.momentoDoReset);
+    resetLabel.style.display = 'none';
   }
 
   (document.getElementById('sp-timeline-start') as HTMLElement).textContent = formatMinutes(s.workStartMin);

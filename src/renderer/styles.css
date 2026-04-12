@@ -1548,6 +1548,16 @@ body {
   background: currentColor;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
+.sp-reset-label {
+  position: absolute;
+  top: 26px;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 600;
+  pointer-events: none;
+  display: none;
+  transform: translateX(-100%);
+}
 .sp-timeline-labels {
   display: flex;
   justify-content: space-between;
