@@ -1198,8 +1198,10 @@ async function updateBurnRate(): Promise<void> {
   const today = new Date().toLocaleDateString('sv');
   const points = await window.claudeUsage.getDayTimeSeries(today);
   if (points.length < 2) { el.textContent = ''; return; }
-  const oldest = points[points.length - 2];
   const newest = points[points.length - 1];
+  const minWindowMs = 10 * 60_000;
+  const oldest = [...points].slice(0, -1).reverse().find(p => newest.ts - p.ts >= minWindowMs)
+    ?? points[points.length - 2];
   const currentSession = newest.session;
   if (currentSession < 5) { el.textContent = ''; return; }
   const deltaPct = newest.session - oldest.session;
@@ -1225,8 +1227,10 @@ async function updateWeeklyBurnRate(): Promise<void> {
   const today = new Date().toLocaleDateString('sv');
   const points = await window.claudeUsage.getDayTimeSeries(today);
   if (points.length < 2) { el.textContent = ''; return; }
-  const oldest = points[points.length - 2];
   const newest = points[points.length - 1];
+  const minWindowMs = 10 * 60_000;
+  const oldest = [...points].slice(0, -1).reverse().find(p => newest.ts - p.ts >= minWindowMs)
+    ?? points[points.length - 2];
   const currentWeekly = newest.weekly;
   if (currentWeekly < 5) { el.textContent = ''; return; }
   const deltaPct = newest.weekly - oldest.weekly;
