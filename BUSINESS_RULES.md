@@ -195,9 +195,11 @@ estTime    = newest.ts + hoursLeft * 3_600_000
 
 Exibição: `↑ X.X%/h · esgota ~HH:MM` (pt-BR) ou `↑ X.X%/h · exhausts ~HH:MM` (en), na linha abaixo do gauge de sessão.
 
-### Popup de Curva Diária
+### Modal de Histórico Diário (Curva de Consumo)
 
-Ao clicar em uma coluna do gráfico Ciclo Semanal, abre um popup flutuante inline (`#day-curve-popup`) com um mini gráfico de linha da série temporal do dia clicado. Clicar novamente na mesma coluna fecha o popup (toggle). Fechado automaticamente ao esconder a janela (`visibilitychange`).
+Ao clicar em uma coluna do gráfico Ciclo Semanal, abre o modal `#day-detail-modal` (`openDayDetailModal(date)`) com o gráfico de linha completo da série temporal do dia clicado — exibe Sessão (5h) e Semanal (7d) ao longo das horas. Fechado com o botão X (`#day-detail-close`) ou ao esconder a janela (`visibilitychange`).
+
+> **Regra:** o clique em `.daily-col` DEVE chamar `openDayDetailModal`. Não substituir por popup inline — o modal completo é a única visualização de curva diária.
 
 ### Resumo Analítico (Painel de Janelas)
 
