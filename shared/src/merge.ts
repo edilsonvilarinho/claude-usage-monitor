@@ -54,7 +54,8 @@ export function mergeDailySnapshots(
 /**
  * Merge de SessionWindows.
  * Chave de deduplicação: (date, resetsAtMinute).
- * Em colisão, mantém peak máximo.
+ * Em colisão, peak vence pelo updatedAt mais recente (LWW).
+ * Quando updatedAt iguais, mantém peak máximo (tie-break para comutatividade).
  * Comutativo, idempotente e associativo.
  */
 export function mergeSessionWindows(
@@ -78,7 +79,9 @@ export function mergeSessionWindows(
         date: w.date,
         resetsAt: existing.updatedAt >= w.updatedAt ? existing.resetsAt : w.resetsAt,
         resetsAtMinute: w.resetsAtMinute,
-        peak: Math.max(existing.peak, w.peak),
+        peak: existing.updatedAt !== w.updatedAt
+          ? (existing.updatedAt > w.updatedAt ? existing.peak : w.peak)
+          : Math.max(existing.peak, w.peak),
         updatedAt: Math.max(existing.updatedAt, w.updatedAt),
       });
     }
@@ -93,8 +96,9 @@ export function mergeSessionWindows(
 /**
  * Merge de CurrentSessionWindow.
  * Último resetsAt (por ISO string) vence.
- * Peak: max apenas quando mesma janela (resetsAt iguais); caso contrário só o peak da janela vencedora.
- * Isso evita que o peak de uma janela antiga contamine a janela corrente.
+ * Peak (mesma janela): LWW pelo updatedAt — fonte mais recente vence.
+ * Quando updatedAt iguais, mantém peak máximo (tie-break para comutatividade).
+ * Isso evita que dados obsoletos do cloud contaminem o peak local.
  */
 export function mergeCurrentWindow(
   a: SyncCurrentWindow | undefined | null,
@@ -108,7 +112,11 @@ export function mergeCurrentWindow(
   const sameWindow = a.resetsAt === b.resetsAt;
   return {
     resetsAt: aWins ? a.resetsAt : b.resetsAt,
-    peak: sameWindow ? Math.max(a.peak, b.peak) : (aWins ? a.peak : b.peak),
+    peak: sameWindow
+      ? (a.updatedAt !== b.updatedAt
+         ? (a.updatedAt > b.updatedAt ? a.peak : b.peak)
+         : Math.max(a.peak, b.peak))
+      : (aWins ? a.peak : b.peak),
     updatedAt: Math.max(a.updatedAt, b.updatedAt),
   };
 }

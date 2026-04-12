@@ -503,9 +503,13 @@ A lógica de merge é implementada no pacote `@claude-usage/shared` com funçõe
 
 Para **`currentSessionWindow`**:
 
-Regra: `resetsAt` mais novo vence. Quando as duas janelas são a **mesma** (`resetsAt` idênticos), o peak é `max(a.peak, b.peak)` — dois dispositivos podem ter observado valores diferentes da mesma janela. Quando os `resetsAt` são **diferentes** (janelas distintas), o peak vem **exclusivamente** da janela vencedora — o peak de uma janela antiga nunca deve contaminar a contagem da janela nova.
+Regra: `resetsAt` mais novo vence. Quando as duas janelas são a **mesma** (`resetsAt` idênticos), o peak é resolvido por **LWW (Last Write Wins)** via `updatedAt` — a fonte com `updatedAt` maior vence. Em caso de empate (`updatedAt` idênticos), usa-se `max(a.peak, b.peak)` como tie-break para garantir comutatividade. Quando os `resetsAt` são **diferentes** (janelas distintas), o peak vem **exclusivamente** da janela vencedora — o peak de uma janela antiga nunca deve contaminar a contagem da janela nova.
 
-**Por que não `max` incondicional?** Um dispositivo remoto que ficou offline durante vários resets pode ter um `currentWindow` stale com peak alto de uma janela muito anterior. Se o merge pegasse `max(local.peak, remote.peak)` sem verificar se são a mesma janela, o peak incorreto seria gravado e propagado no fechamento da janela corrente.
+**Por que LWW e não `max` incondicional para mesma janela?** O cloud pode conter um `peak=100` obsoleto de uma sincronização anterior enquanto o local já observou um valor menor e mais recente. Como o `syncService` sempre estampa `updatedAt: Date.now()` ao construir o payload de push, o local é sempre a fonte mais recente — LWW garante que o dado local vença sobre dados obsoletos do cloud, enquanto ainda permite que um dispositivo genuinamente mais recente (outro aparelho) vença quando seu `updatedAt` for maior.
+
+Para **`sessionWindows`** (janelas históricas fechadas):
+
+A mesma lógica LWW se aplica à resolução de `peak` em colisão de chave `(date, resetsAtMinute)`. A entrada com `updatedAt` maior vence; quando `updatedAt` é igual, usa-se `max` como tie-break. Isso previne que um push stale do cloud com `peak=100` contamine janelas históricas locais que já possuem o valor correto.
 
 ### Outbox: garantia de entrega
 

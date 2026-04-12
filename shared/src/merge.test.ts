@@ -150,10 +150,20 @@ describe('mergeDailySnapshots', () => {
 // ─── mergeSessionWindows ─────────────────────────────────────────────────────
 
 describe('mergeSessionWindows', () => {
-  it('mantém peak máximo em colisão', () => {
+  it('peak do updatedAt mais recente vence em colisão', () => {
     const result = mergeSessionWindows([win1], [win2]);
     expect(result).toHaveLength(1);
     expect(result[0].peak).toBe(80);
+  });
+
+  it('previne contaminação: updatedAt local mais recente com peak menor vence sobre cloud com peak maior', () => {
+    const local: SyncSessionWindow = { ...win1, peak: 79, updatedAt: 3000 };
+    const cloud: SyncSessionWindow = { ...win1, peak: 100, updatedAt: 1000 };
+    const result = mergeSessionWindows([local], [cloud]);
+    expect(result[0].peak).toBe(79);
+    // commutativo: mesmo se cloud vier primeiro
+    const result2 = mergeSessionWindows([cloud], [local]);
+    expect(result2[0].peak).toBe(79);
   });
 
   it('comutativo: merge(a,b) === merge(b,a)', () => {
@@ -200,10 +210,20 @@ describe('mergeCurrentWindow', () => {
   });
 
   it('mesma janela: peak = max dos dois', () => {
+    // updatedAt iguais → tie-break por max
     const a: SyncCurrentWindow = { ...curWin1, peak: 90 };
     const b: SyncCurrentWindow = { ...curWin1, peak: 40 };
     const result = mergeCurrentWindow(a, b);
     expect(result?.peak).toBe(90);
+  });
+
+  it('mesma janela: LWW — updatedAt mais recente vence (previne contaminação do cloud)', () => {
+    const local: SyncCurrentWindow = { ...curWin1, peak: 79, updatedAt: 3000 };
+    const cloud: SyncCurrentWindow = { ...curWin1, peak: 100, updatedAt: 1000 };
+    // local mais recente → local vence com peak menor
+    expect(mergeCurrentWindow(local, cloud)?.peak).toBe(79);
+    // comutativo: mesmo ordem inversa, quem tem updatedAt maior vence
+    expect(mergeCurrentWindow(cloud, local)?.peak).toBe(79);
   });
 
   it('comutativo', () => {
