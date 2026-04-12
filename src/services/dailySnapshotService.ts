@@ -64,6 +64,14 @@ export function updateDailySnapshot(
       existingDay.maxCredits = Math.max(existingDay.maxCredits ?? 0, creditsPctInt);
     }
   } else {
+    // Novo dia: se houve reset na fronteira do dia, acumula o pico no dia anterior
+    if (sessionResetOccurred && currentWindow && dailyHistory.length > 0) {
+      const prevDay = dailyHistory[dailyHistory.length - 1];
+      const peak = currentWindow.peak;
+      completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date };
+      prevDay.sessionAccum = (prevDay.sessionAccum ?? 0) + peak;
+      // sessionWindowCount não incrementa: a janela já foi contada como o "1" inicial do dia anterior
+    }
     dailyHistory.push({
       date: today,
       maxWeekly: weeklyPctInt,
