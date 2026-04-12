@@ -634,35 +634,53 @@ function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const size = 32;
+  // Render at 64×64 for crisp downscaling by the OS (looks sharp at 16–32px tray sizes)
+  const size = 64;
+  const cx = size / 2;
+  const cy = size / 2;
   ctx.clearRect(0, 0, size, size);
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const bgColor = isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(230, 230, 230, 0.92)';
+  const bgColor = isDark ? 'rgba(28, 28, 28, 0.90)' : 'rgba(235, 235, 235, 0.95)';
   const textColor = isDark ? '#ffffff' : '#111111';
+  const trackColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)';
 
+  // Background circle
   ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2 - 1, 0, Math.PI * 2);
+  ctx.arc(cx, cy, size / 2 - 1, 0, Math.PI * 2);
   ctx.fillStyle = bgColor;
   ctx.fill();
 
   const maxPct = Math.max(sessionPct, weeklyPct);
-  const color = colorForPct(maxPct);
-  const startAngle = -Math.PI / 2;
-  const endAngle = startAngle + (maxPct / 100) * Math.PI * 2;
+  const arcRadius = size / 2 - 7;  // 25px at 64px canvas
+  const arcWidth = 8;
 
+  // Track (empty arc)
   ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2 - 3, startAngle, endAngle);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
+  ctx.arc(cx, cy, arcRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = trackColor;
+  ctx.lineWidth = arcWidth;
   ctx.stroke();
 
+  // Progress arc
+  const color = colorForPct(maxPct);
+  const startAngle = -Math.PI / 2;
+  const endAngle = startAngle + (Math.min(maxPct, 100) / 100) * Math.PI * 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, arcRadius, startAngle, endAngle);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = arcWidth;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Center label
   ctx.fillStyle = textColor;
   const label = maxPct > 100 ? '!!!' : `${maxPct}`;
-  ctx.font = `bold ${maxPct > 99 ? 7 : 9}px sans-serif`;
+  const fontSize = maxPct > 99 ? 17 : 22;
+  ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label, size / 2, size / 2);
+  ctx.fillText(label, cx, cy + 1);
 
   lastRenderedData = { session: sessionPct, weekly: weeklyPct };
 
