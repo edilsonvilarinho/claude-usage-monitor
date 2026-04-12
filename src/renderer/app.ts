@@ -470,7 +470,7 @@ function fitWindow(): void {
     const accountBar = document.getElementById('account-bar') as HTMLElement;
     const content    = document.querySelector('.content') as HTMLElement;
     const accountBarH = (accountBar?.style.display !== 'none' ? accountBar?.offsetHeight : 0) ?? 0;
-    const h = header.offsetHeight + accountBarH + content.scrollHeight + 8;
+    const h = header.offsetHeight + accountBarH + content.scrollHeight + 30;
     window.claudeUsage.setWindowHeight(h);
   });
 }
@@ -1502,10 +1502,25 @@ function openSmartModal(): void {
 
   modal.classList.remove('hidden');
 
+  // Resize popup to fit modal content
+  requestAnimationFrame(() => {
+    const box = modal.querySelector('.modal-box') as HTMLElement;
+    const hdr = document.querySelector('.header') as HTMLElement;
+    if (box && hdr) {
+      const h = hdr.offsetHeight + box.offsetHeight + 48;
+      window.claudeUsage.setWindowHeight(h);
+    }
+  });
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+    fitWindow();
+  };
+
   // Close handlers
-  document.getElementById('sp-close-btn')?.addEventListener('click', () => modal.classList.add('hidden'), { once: true });
+  document.getElementById('sp-close-btn')?.addEventListener('click', closeModal, { once: true });
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.classList.add('hidden');
+    if (e.target === modal) closeModal();
   }, { once: true });
 }
 
