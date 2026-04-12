@@ -92,7 +92,9 @@ export function mergeSessionWindows(
 
 /**
  * Merge de CurrentSessionWindow.
- * Último resetsAt (por ISO string) vence; peak = max.
+ * Último resetsAt (por ISO string) vence.
+ * Peak: max apenas quando mesma janela (resetsAt iguais); caso contrário só o peak da janela vencedora.
+ * Isso evita que o peak de uma janela antiga contamine a janela corrente.
  */
 export function mergeCurrentWindow(
   a: SyncCurrentWindow | undefined | null,
@@ -103,9 +105,10 @@ export function mergeCurrentWindow(
   if (!b) return a;
 
   const aWins = a.resetsAt >= b.resetsAt;
+  const sameWindow = a.resetsAt === b.resetsAt;
   return {
     resetsAt: aWins ? a.resetsAt : b.resetsAt,
-    peak: Math.max(a.peak, b.peak),
+    peak: sameWindow ? Math.max(a.peak, b.peak) : (aWins ? a.peak : b.peak),
     updatedAt: Math.max(a.updatedAt, b.updatedAt),
   };
 }

@@ -190,9 +190,18 @@ describe('mergeCurrentWindow', () => {
     expect(result?.resetsAt).toBe(curWin2.resetsAt);
   });
 
-  it('peak = max dos dois', () => {
+  it('janelas diferentes: peak da janela mais nova vence (não contamina)', () => {
+    // a é janela ANTIGA com peak alto; b é janela NOVA com peak menor
     const a: SyncCurrentWindow = { ...curWin1, peak: 90 };
     const b: SyncCurrentWindow = { ...curWin2, peak: 40 };
+    const result = mergeCurrentWindow(a, b);
+    // peak deve ser 40 (da janela nova), não 90 da janela antiga
+    expect(result?.peak).toBe(40);
+  });
+
+  it('mesma janela: peak = max dos dois', () => {
+    const a: SyncCurrentWindow = { ...curWin1, peak: 90 };
+    const b: SyncCurrentWindow = { ...curWin1, peak: 40 };
     const result = mergeCurrentWindow(a, b);
     expect(result?.peak).toBe(90);
   });

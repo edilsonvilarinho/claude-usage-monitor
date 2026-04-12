@@ -485,6 +485,12 @@ A lógica de merge é implementada no pacote `@claude-usage/shared` com funçõe
 
 **Por que union e não last-write-wins para histórico?** Histórico é aditivo por natureza — dois dispositivos usam Claude em momentos diferentes. Um merge por union garante que o histórico completo de todos os dispositivos seja preservado, em vez de um dispositivo sobrescrever o outro.
 
+Para **`currentSessionWindow`**:
+
+Regra: `resetsAt` mais novo vence. Quando as duas janelas são a **mesma** (`resetsAt` idênticos), o peak é `max(a.peak, b.peak)` — dois dispositivos podem ter observado valores diferentes da mesma janela. Quando os `resetsAt` são **diferentes** (janelas distintas), o peak vem **exclusivamente** da janela vencedora — o peak de uma janela antiga nunca deve contaminar a contagem da janela nova.
+
+**Por que não `max` incondicional?** Um dispositivo remoto que ficou offline durante vários resets pode ter um `currentWindow` stale com peak alto de uma janela muito anterior. Se o merge pegasse `max(local.peak, remote.peak)` sem verificar se são a mesma janela, o peak incorreto seria gravado e propagado no fechamento da janela corrente.
+
 ### Outbox: garantia de entrega
 
 Dados a serem enviados são enfileirados no `sync-outbox.json` antes do push. O push é tentado imediatamente após o enqueue. Em caso de falha, o outbox persiste entre restarts — na próxima tentativa de sync (periódica ou manual), o push é retentado.
