@@ -1,20 +1,8 @@
 # /fix — Bug Fix Workflow
 
-Structured workflow optimized for token efficiency.
+Workflow estruturado: issue → branch → fix → test → commit → PR.
 
----
-
-## Step 0 — Assess complexity BEFORE spawning any agent
-
-Read the user's bug report and classify:
-
-**SIMPLE** (root cause is clear, fix is in ≤3 files):
-→ Skip Plan Mode and Explore agents. Read the relevant files directly, apply the fix, proceed to Step 1.
-
-**COMPLEX** (root cause is unclear, touches many files, regression risk is high):
-→ Use Plan Mode. Launch at most 1 Explore agent to diagnose root cause. Present diagnosis + fix plan. Wait for approval.
-
-> Default to SIMPLE. Most bugs have an obvious root cause once you read the file.
+> **Antes de começar**: SIMPLE (causa raiz clara, ≤3 arquivos) → corrige direto, sem subagentes. COMPLEX (causa incerta, muitos arquivos) → Plan Mode com 1 Explore agent, aguardar aprovação.
 
 ---
 
@@ -37,9 +25,7 @@ EOF
 )"
 ```
 
-Note the issue number (e.g. #7).
-
----
+Note o número do issue.
 
 ## Step 2 — Create Fix Branch
 
@@ -47,32 +33,14 @@ Note the issue number (e.g. #7).
 git checkout -b fix/<slug>#<issue-number>
 ```
 
----
-
 ## Step 3 — Apply Fix
 
-**SIMPLE:** Apply the fix directly (read → edit → build). No subagent needed for small fixes.
-
-**COMPLEX:** Delegate to `@implementer` with root cause and fix plan.
-
-The implementer will:
-- Read every file to be modified before changing anything
-- Apply the minimal fix — no unrelated cleanup
-- Run `npm run build` to confirm clean exit
-- Report what changed
-
----
+- **SIMPLE**: read → edit → `npm run build`. Sem subagente. Correção mínima, sem cleanup não relacionado.
+- **COMPLEX**: delegar ao `@implementer` com causa raiz e plano. Deve rodar `npm run build` e reportar o que mudou.
 
 ## Step 4 — Validate (OPTIONAL)
 
-Only delegate to `@tester` if:
-- The fix touches complex logic or shared state
-- There's a real regression risk
-- The user asked for validation
-
-For obvious, isolated fixes: **skip this step**.
-
----
+Delegar ao `@tester` apenas se: fix toca lógica complexa ou estado compartilhado, risco real de regressão, ou usuário pediu. Pular para fixes óbvios e isolados.
 
 ## Step 5 — Commit
 
@@ -81,8 +49,6 @@ fix: <short description> (closes #<issue>)
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
-
----
 
 ## Step 6 — Open Pull Request
 
@@ -108,4 +74,4 @@ EOF
 )"
 ```
 
-Share the PR URL with the user.
+Compartilhar a URL do PR com o usuário.

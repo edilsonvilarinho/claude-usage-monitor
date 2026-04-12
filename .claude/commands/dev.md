@@ -1,118 +1,66 @@
 # /dev — Unified Development Command
 
-> **Token cost notice:** Este skill adiciona ~2.000 tokens de contexto ao carregar. Use `/dev` apenas para tarefas que envolvem execução de código (bug fix, feature, refactor, release). Para perguntas de análise, investigação ou explicação — pergunte diretamente sem o `/dev`.
+> Use `/dev` apenas para execução de código. Análises e explicações — pergunte diretamente sem o `/dev` (~1k tokens economizados).
 
-Comando único para qualquer tarefa de desenvolvimento. Você descreve o que quer — eu decido como executar da forma mais eficiente possível.
-
----
-
-## Como usar
-
-```
-/dev <descrição da tarefa>
-```
-
-Exemplos:
-- `/dev corrige o bug onde o countdown some ao trocar idioma`
-- `/dev adiciona suporte a tema claro no popup`
-- `/dev release minor`
-- `/dev refatora o pollingService para expor nextPollAt`
+Classifica automaticamente o tipo e complexidade, então executa.
 
 ---
 
-## Decisão interna (transparente para você)
+## Tipo da tarefa
 
-Ao receber o pedido, avalio automaticamente:
-
-### 1. Tipo da tarefa
-
-| Sinal no pedido | Tipo detectado |
+| Sinal | Tipo |
 |---|---|
-| "corrige", "bug", "erro", "não funciona", "quebrado" | BUG FIX |
+| "corrige", "bug", "erro", "quebrado" | BUG FIX |
 | "adiciona", "novo", "implementa", "cria", "exibe" | FEATURE |
 | "refatora", "renomeia", "reorganiza", "simplifica" | REFACTOR |
 | "release", "versão", "publica", "lança" | RELEASE |
-| "analisa", "explica", "por que", "como funciona" | ANALYSIS |
-| "verifica", "testa", "mostra", "lista", "quanto", "o que é" | ANALYSIS |
+| "analisa", "explica", "por que", "como funciona", "verifica", "lista" | ANALYSIS |
 
-### 2. Complexidade
+## Complexidade
 
-**SIMPLES** — Execução direta (sem subagentes, sem Plan Mode):
-- Escopo está claro na descrição
-- ≤ 3 arquivos envolvidos
-- Sem decisões arquiteturais
+**SIMPLES** — escopo claro, ≤3 arquivos, sem decisões arquiteturais → execução direta.
+**COMPLEXA** — escopo incerto, muitos arquivos, decisões de design → Plan Mode + issue + branch + PR.
 
-**COMPLEXA** — Workflow estruturado (Plan Mode + issue + branch + PR):
-- Escopo incerto ou amplo
-- Muitos arquivos ou efeitos colaterais
-- Decisões de design necessárias
-
-> Antes de spawnar Explore agent, tente 2–3 buscas Glob/Grep diretas. Use Explore só se o escopo ainda não estiver claro.
+> Tente 2–3 Glob/Grep antes de spawnar Explore agent. Use Explore só se escopo genuinamente incerto.
 
 ---
 
 ## Caminhos de execução
 
-### SIMPLES (BUG FIX, FEATURE ou REFACTOR)
-```
-1. Ler os arquivos relevantes diretamente
-2. Aplicar a mudança
-3. npm run build (confirmar exit 0)
-4. Atualizar ARCHITECTURE.md se fluxo de dados, serviços ou build pipeline mudaram
-5. git add + commit + push para master (automático)
-```
-Sem issue, sem branch, sem PR — a menos que você peça.
+**SIMPLES (BUG FIX / FEATURE / REFACTOR)**
+1. Ler arquivos relevantes
+2. Aplicar mudança
+3. `npm run build` (confirmar exit 0)
+4. `git add + commit + push` para master — sem issue, sem branch, sem PR
 
-### COMPLEXA (BUG FIX, FEATURE ou REFACTOR)
-```
-1. Plan Mode (1 Explore agent se necessário)
-2. Aguardar aprovação do plano
-3. gh issue create
-4. git checkout -b <tipo>/<slug>#<issue>
-5. @implementer executa
-6. npm run build (confirmar exit 0)
-7. @tester (só se mudança for arriscada)
-8. Atualizar ARCHITECTURE.md se fluxo de dados, serviços ou build pipeline mudaram
-9. commit + PR
-```
+**COMPLEXA (BUG FIX / FEATURE / REFACTOR)**
+1. Plan Mode (1 Explore agent se necessário) → aguardar aprovação
+2. `gh issue create`
+3. `git checkout -b <tipo>/<slug>#<issue>`
+4. @implementer executa
+5. `npm run build` (confirmar exit 0)
+6. @tester (só se lógica crítica: IPC, state, polling, credentials)
+7. commit + PR
 
-### REFACTOR
-- **SIMPLES** se: renomeia, extrai função, move arquivo, sem mudança de contrato
-- **COMPLEXA** se: reestrutura módulos, altera interfaces, afeta múltiplos serviços
+**REFACTOR**: SIMPLES se renomeia/extrai/move sem mudar contratos. COMPLEXA se reestrutura módulos ou altera interfaces.
 
-### RELEASE
-```
-1. Perguntar tipo de bump se não informado (patch/minor/major)
-2. Bump version no package.json
-3. npm run dist
-4. git tag + push
-5. gh release create com changelog
-```
-Sem Plan Mode.
+**RELEASE**: bump version → `npm run dist` → tag → push → `gh release create`. Sem Plan Mode.
 
-### ANALYSIS
-```
-1. Avisar: "Esta pergunta não precisava do /dev — para análises, pergunte diretamente (economiza ~2k tokens)"
-2. Responder diretamente. Sem código, sem agents, sem Plan Mode.
-```
+**ANALYSIS**: avisar que não precisava do `/dev`, responder diretamente sem código, agents ou Plan Mode.
 
 ---
 
-## Regras de ouro
+## Regras
 
-- **Padrão é SIMPLES** — só escalo para COMPLEXA se genuinamente necessário
-- **Explore agents**: só 1, só quando o escopo é genuinamente incerto
-- **@tester**: só para mudanças em lógica crítica (IPC, state, polling, credentials)
-- **Plan Mode**: só para decisões arquiteturais, nunca para tarefas mecânicas
-- Sempre informo qual caminho escolhi e por quê antes de executar
-
----
+- Padrão é SIMPLES — só escala para COMPLEXA se genuinamente necessário
+- @tester: só para lógica crítica (IPC, state, polling, credentials)
+- Plan Mode: só para decisões arquiteturais, nunca para tarefas mecânicas
 
 ## Transparência
 
-Antes de executar, confirmo em uma linha:
-> `→ [SIMPLES FEATURE] implementando direto em 2 arquivos, commit para master`
+Confirmo em uma linha antes de executar:
+> `→ [SIMPLES BUG FIX] lendo 2 arquivos, commit para master`
 > `→ [COMPLEXA FEATURE] abrindo plan mode — escopo envolve 5+ arquivos`
 > `→ [RELEASE minor] 3.1.0 → 3.2.0, sem plan mode`
 
-Se a escolha estiver errada, você corrige antes de eu começar.
+Se a classificação estiver errada, corrija antes de eu começar.
