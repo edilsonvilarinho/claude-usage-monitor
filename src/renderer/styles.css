@@ -1556,6 +1556,15 @@ body {
   background: currentColor;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
+.sp-marker-label {
+  position: absolute;
+  top: 26px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
 .sp-reset-label {
   position: absolute;
   top: 26px;
@@ -1564,7 +1573,6 @@ body {
   font-weight: 600;
   pointer-events: none;
   display: none;
-  transform: translateX(-100%);
 }
 .sp-timeline-labels {
   display: flex;

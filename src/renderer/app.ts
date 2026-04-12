@@ -1481,6 +1481,9 @@ function openSmartModal(): void {
 
   const nowMarker = document.getElementById('sp-now-marker') as HTMLElement;
   nowMarker.style.left = `${pctOf(s.minutosAtuais)}%`;
+  const nowLabel = document.getElementById('sp-now-label') as HTMLElement;
+  nowLabel.style.left = `${pctOf(s.minutosAtuais)}%`;
+  nowLabel.textContent = formatMinutes(s.minutosAtuais);
 
   const resetMarker = document.getElementById('sp-reset-marker') as HTMLElement;
   const resetLabel = document.getElementById('sp-reset-label') as HTMLElement;
@@ -1493,12 +1496,18 @@ function openSmartModal(): void {
     resetMarker.title = label;
     resetLabel.textContent = label;
     resetLabel.style.left = '100%';
+    resetLabel.style.transform = 'translateX(-100%)';
     resetLabel.style.color = s.colorHex;
     resetLabel.style.display = 'block';
   } else {
+    const resetHHMMInline = formatMinutes(s.momentoDoReset % (24 * 60));
     resetMarker.style.left = `${pctOf(s.momentoDoReset)}%`;
-    resetMarker.title = formatMinutes(s.momentoDoReset);
-    resetLabel.style.display = 'none';
+    resetMarker.title = resetHHMMInline;
+    resetLabel.textContent = resetHHMMInline;
+    resetLabel.style.left = `${pctOf(s.momentoDoReset)}%`;
+    resetLabel.style.transform = 'translateX(-50%)';
+    resetLabel.style.color = s.colorHex;
+    resetLabel.style.display = 'block';
   }
 
   (document.getElementById('sp-timeline-start') as HTMLElement).textContent = formatMinutes(timelineStartMin);
