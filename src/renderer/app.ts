@@ -1184,7 +1184,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, li
   container.querySelectorAll<HTMLElement>('.daily-col:not(.future)[data-date]').forEach(col => {
     col.addEventListener('click', () => {
       const date = col.dataset.date;
-      if (date) void openDayCurvePopup(date, col);
+      if (date) void openDayDetailModal(date);
     });
   });
 
