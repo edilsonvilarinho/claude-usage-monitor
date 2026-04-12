@@ -2,8 +2,6 @@
 
 > Use `/dev` apenas para execução de código. Análises e explicações — pergunte diretamente sem o `/dev` (~1k tokens economizados).
 
-Classifica automaticamente o tipo e complexidade, então executa.
-
 ---
 
 ## Tipo da tarefa
@@ -14,7 +12,6 @@ Classifica automaticamente o tipo e complexidade, então executa.
 | "adiciona", "novo", "implementa", "cria", "exibe" | FEATURE |
 | "refatora", "renomeia", "reorganiza", "simplifica" | REFACTOR |
 | "release", "versão", "publica", "lança" | RELEASE |
-| "analisa", "explica", "por que", "como funciona", "verifica", "lista" | ANALYSIS |
 
 ## Complexidade
 
@@ -63,9 +60,7 @@ A atualização do `BUSINESS_RULES.md` vai no **mesmo commit** da mudança de c�
 8. commit + PR
 
 **REFACTOR**: SIMPLES se renomeia/extrai/move sem mudar contratos. COMPLEXA se reestrutura módulos ou altera interfaces.
-
 **RELEASE**: bump version → `npm run dist` → tag → push → `gh release create`. Sem Plan Mode.
-
 **ANALYSIS**: avisar que não precisava do `/dev`, responder diretamente sem código, agents ou Plan Mode.
 
 ---
@@ -78,10 +73,8 @@ A atualização do `BUSINESS_RULES.md` vai no **mesmo commit** da mudança de c�
 - Plan Mode: só para decisões arquiteturais, nunca para tarefas mecânicas
 
 ## Transparência
-
 Confirmo em uma linha antes de executar:
 > `→ [SIMPLES BUG FIX] lendo 2 arquivos, commit para master`
 > `→ [COMPLEXA FEATURE] abrindo plan mode — escopo envolve 5+ arquivos`
-> `→ [RELEASE minor] 3.1.0 → 3.2.0, sem plan mode`
 
 Se a classificação estiver errada, corrija antes de eu começar.

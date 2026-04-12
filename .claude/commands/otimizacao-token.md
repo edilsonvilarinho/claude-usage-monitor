@@ -46,7 +46,6 @@ Depois:
 ---
 
 ## Modo padrão (sem `--fix`)
-
 Produza tabelas de:
 1. **Inventário auto-loaded**: arquivo | chars | tokens estimados | total fixo por sessão
 2. **Custo por skill**: comando | linhas | tokens estimados
@@ -60,19 +59,16 @@ Finalize perguntando quais problemas o usuário quer corrigir.
 ## Modo `--fix` — correções automáticas de baixo risco
 
 Execute após a auditoria, sem pedir confirmação entre cada item:
-
 **Correções elegíveis (baixo risco — sem aprovação):**
 1. **Frontmatter extra** — remover campos além de `name`, `description`, `type` de arquivos de memória
 2. **Drift de versão** — atualizar versão em `project_*.md` para bater com `package.json`
 3. **CLAUDE.md >60 linhas** — remover seções cujo conteúdo é derivável direto do código (Renderer, Build pipeline detalhado, serviços triviais). Preservar: comandos de build/test, arquitetura não-óbvia, key notes críticos
 4. **Memória verbosa (>30 linhas)** — condensar corpo para ≤15 linhas mantendo `name`, `description`, `type` e o núcleo da regra/fato
-
 **Correções que exigem confirmação explícita (alto risco):**
 - Deletar arquivo de memória `project_*` (perda de histórico)
 - Remover tool `Agent` de agentes (pode quebrar fluxo)
 - Alterar `model:` de agentes
 - Condensar commands (pode alterar comportamento)
-
 **Fluxo de execução no modo `--fix`:**
 1. Auditar (igual ao modo padrão)
 2. Aplicar todas as correções de baixo risco em sequência
