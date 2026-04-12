@@ -1712,6 +1712,8 @@ function openSmartModal(): void {
   const tlEnd = document.getElementById('sp-timeline-end') as HTMLElement;
   tlEnd.textContent = formatMinutes(s.workEndMin);
   tlEnd.style.left = `${pctOf(s.workEndMin)}%`;
+  // Esconde tlEnd quando está muito próximo do nowLabel para evitar sobreposição
+  tlEnd.style.visibility = Math.abs(pctOf(s.workEndMin) - pctOf(s.minutosAtuais)) < 8 ? 'hidden' : '';
 
   // Summary sentence
   const resetHHMM = formatMinutes(s.momentoDoReset % (24 * 60));
