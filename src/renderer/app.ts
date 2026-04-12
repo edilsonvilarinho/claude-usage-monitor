@@ -1676,6 +1676,7 @@ function openSmartModal(): void {
     resetLabel.textContent = label;
     resetLabel.style.left = '100%';
     resetLabel.style.transform = 'translateX(-100%)';
+    resetLabel.style.top = '-14px'; // acima do track para não sobrepor nowLabel e tlEnd
     resetLabel.style.color = s.colorHex;
     resetLabel.style.display = 'block';
   } else {
