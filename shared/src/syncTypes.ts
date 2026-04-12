@@ -1,5 +1,14 @@
 /** Tipos compartilhados entre o cliente Electron e o servidor Hono */
 
+export interface WorkSchedule {
+  enabled: boolean;
+  activeDays: number[];
+  workStart: string;
+  workEnd: string;
+  breakStart: string;
+  breakEnd: string;
+}
+
 export interface SyncNotifications {
   enabled?: boolean;
   sessionThreshold?: number;
@@ -53,6 +62,7 @@ export interface SyncSettings {
   theme?: 'system' | 'dark' | 'light';
   language?: 'en' | 'pt-BR';
   notifications?: SyncNotifications;
+  workSchedule?: WorkSchedule;
   updatedAt: number;         // unix ms
 }
 

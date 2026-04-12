@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-monitor",
-  "version": "7.4.0-beta.3",
+  "version": "7.4.0-beta.4",
   "description": "Windows system tray app to monitor Claude AI usage limits",
   "author": {
     "name": "Edilson Vilarinho",

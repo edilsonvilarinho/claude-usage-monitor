@@ -15,6 +15,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.on('rate-limited', (_event, until: number, resetAt?: number) => cb(until, resetAt));
   },
 
+  onSmartStatusUpdated: (cb: (status: import('./services/smartScheduleService').SmartStatus) => void) => {
+    ipcRenderer.on('smart-status-updated', (_e, s) => cb(s));
+  },
+
   getSettings: (): Promise<AppSettings> => {
     return ipcRenderer.invoke('get-settings');
   },

@@ -1,19 +1,18 @@
 # /test — Test Workflow
 
-Structured workflow: plan → issue → branch → implement → PR.
-Lead agent is @tester, with @implementer supporting if test code needs to be written.
+Workflow estruturado: plan → issue → branch → tester → implementer → commit → PR.
+Lead agent é @tester, com @implementer suportando se código de teste precisar ser escrito.
 
 ---
 
-## Step 1 — Plan Mode (you, the orchestrator)
+## Step 1 — Plan Mode (você, o orquestrador)
 
-Enter plan mode. Present to the user:
-- What will be tested (scope, which service or behavior)
-- Type of testing: unit, integration, manual smoke, edge cases
-- What tooling or setup is needed
-- What is explicitly out of scope
+Entre no Plan Mode. Apresente ao usuário:
+- O que será testado (escopo, qual serviço ou comportamento)
+- Tipo de teste: unit, integration, smoke manual, edge cases
+- O que está fora do escopo
 
-**Do NOT proceed until the user approves the plan.**
+**NÃO prossiga até o usuário aprovar o plano.**
 
 ---
 
@@ -29,21 +28,13 @@ gh issue create \
 
 ## Scenarios to Cover
 - [ ] <scenario 1>
-- [ ] <scenario 2>
 - [ ] <edge case>
 
 ## Out of Scope
-<what will NOT be tested in this task>
-
-## Plan
-<key steps from approved plan>
+<what will NOT be tested>
 EOF
 )"
 ```
-
-Note the issue number.
-
----
 
 ## Step 3 — Create Test Branch
 
@@ -51,27 +42,17 @@ Note the issue number.
 git checkout -b test/<slug>#<issue-number>
 ```
 
----
-
 ## Step 4 — Delegate to @tester
 
-Hand off to the `tester` agent with the full approved plan.
+Passar ao `tester` o plano aprovado completo. O tester irá:
+- Analisar o código-alvo para todos os cenários testáveis
+- Produzir checklist de smoke test manual
+- Implementar testes automatizados onde viável (sem chamadas de rede reais, sem timers reais)
+- Reportar cobertura e gaps
 
-The tester will:
-- Analyze the target code for all testable scenarios
-- Produce a concrete manual smoke test checklist
-- Implement automated tests where feasible (no real network calls, no real timers)
-- Report what is covered and what gaps remain
+## Step 5 — Delegate to @implementer (se necessário)
 
----
-
-## Step 5 — Delegate implementation to @implementer (if needed)
-
-If the tester identified test code to be written (new test files, test utilities, mocks), hand off to the `implementer` agent to write and wire it up.
-
-The implementer will run `npm run build` to confirm nothing broke.
-
----
+Se o tester identificou código de teste a escrever (novos arquivos de teste, utilitários, mocks), passar ao `implementer` para escrever e conectar. Deve rodar `npm run build`.
 
 ## Step 6 — Commit
 
@@ -81,35 +62,12 @@ test: <short description> (closes #<issue>)
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
----
-
 ## Step 7 — Open Pull Request
 
 ```bash
 gh pr create \
   --title "test: <short description>" \
-  --body "$(cat <<'EOF'
-## Summary
-<what was tested and how>
-
-## Scenarios Covered
-- <scenario 1>
-- <scenario 2>
-
-## Coverage Gaps
-<what still needs manual verification or future automation>
-
-## Related
-Closes #<issue>
-
-## Test plan
-- [ ] `npm run build` exits cleanly
-- [ ] All new tests pass
-- [ ] Manual checklist verified
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+  --body "## Summary\n<what was tested>\n\n## Scenarios Covered\n- <scenario>\n\n## Coverage Gaps\n<gaps>\n\nCloses #<issue>\n\n- [ ] \`npm run build\` exits cleanly\n- [ ] All new tests pass\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
 
-Share the PR URL with the user.
+Compartilhar a URL do PR com o usuário.

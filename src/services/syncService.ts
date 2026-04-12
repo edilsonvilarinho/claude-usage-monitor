@@ -374,6 +374,7 @@ class SyncService extends EventEmitter {
           ...(data.settings.theme !== undefined ? { theme: data.settings.theme } : {}),
           ...(data.settings.language !== undefined ? { language: data.settings.language } : {}),
           ...(data.settings.notifications !== undefined ? { notifications: data.settings.notifications as NotificationSettings } : {}),
+          ...(data.settings.workSchedule !== undefined ? { workSchedule: data.settings.workSchedule } : {}),
           settingsUpdatedAt: data.settings.updatedAt,
         });
       }
@@ -497,6 +498,7 @@ class SyncService extends EventEmitter {
       theme: appSettings.theme,
       language: appSettings.language,
       notifications: appSettings.notifications,
+      workSchedule: appSettings.workSchedule,
       updatedAt: appSettings.settingsUpdatedAt,
     } : undefined;
 
