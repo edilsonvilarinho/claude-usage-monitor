@@ -1510,8 +1510,13 @@ function openSmartModal(): void {
     resetLabel.style.display = 'block';
   }
 
-  (document.getElementById('sp-timeline-start') as HTMLElement).textContent = formatMinutes(timelineStartMin);
-  (document.getElementById('sp-timeline-end') as HTMLElement).textContent = formatMinutes(timelineEndMin);
+  const tlStart = document.getElementById('sp-timeline-start') as HTMLElement;
+  tlStart.textContent = formatMinutes(s.workStartMin);
+  tlStart.style.left = `${pctOf(s.workStartMin)}%`;
+
+  const tlEnd = document.getElementById('sp-timeline-end') as HTMLElement;
+  tlEnd.textContent = formatMinutes(s.workEndMin);
+  tlEnd.style.left = `${pctOf(s.workEndMin)}%`;
 
   // Summary sentence
   const resetHHMM = formatMinutes(s.momentoDoReset % (24 * 60));

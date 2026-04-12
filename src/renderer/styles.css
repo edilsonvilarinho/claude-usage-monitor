@@ -1575,11 +1575,16 @@ body {
   display: none;
 }
 .sp-timeline-labels {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 16px;
   font-size: 11px;
   color: var(--text-secondary);
   margin-top: 4px;
+}
+.sp-timeline-labels span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 .sp-timeline-title {
   font-size: 10px;
