@@ -528,13 +528,19 @@ body {
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────── */
-.content::-webkit-scrollbar {
+.content::-webkit-scrollbar,
+.settings-tab-content::-webkit-scrollbar,
+.report-modal-box::-webkit-scrollbar {
   width: 4px;
 }
-.content::-webkit-scrollbar-track {
+.content::-webkit-scrollbar-track,
+.settings-tab-content::-webkit-scrollbar-track,
+.report-modal-box::-webkit-scrollbar-track {
   background: transparent;
 }
-.content::-webkit-scrollbar-thumb {
+.content::-webkit-scrollbar-thumb,
+.settings-tab-content::-webkit-scrollbar-thumb,
+.report-modal-box::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 99px;
 }

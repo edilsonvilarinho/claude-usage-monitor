@@ -466,11 +466,13 @@ function applyTranslations(): void {
 
 function fitWindow(): void {
   requestAnimationFrame(() => {
-    const header     = document.querySelector('.header') as HTMLElement;
-    const accountBar = document.getElementById('account-bar') as HTMLElement;
-    const content    = document.querySelector('.content') as HTMLElement;
+    const header      = document.querySelector('.header') as HTMLElement;
+    const accountBar  = document.getElementById('account-bar') as HTMLElement;
+    const smartRecBar = document.getElementById('smart-rec-bar') as HTMLElement;
+    const content     = document.querySelector('.content') as HTMLElement;
+    const footer      = document.querySelector('.footer') as HTMLElement;
     const accountBarH = (accountBar?.style.display !== 'none' ? accountBar?.offsetHeight : 0) ?? 0;
-    const h = header.offsetHeight + accountBarH + content.scrollHeight + 30;
+    const h = header.offsetHeight + accountBarH + (smartRecBar?.offsetHeight ?? 0) + content.scrollHeight + (footer?.offsetHeight ?? 0);
     window.claudeUsage.setWindowHeight(h);
   });
 }
