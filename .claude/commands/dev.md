@@ -30,7 +30,14 @@ Classifica automaticamente o tipo e complexidade, então executa.
 **Antes de qualquer alteração de código** (bug fix, feature, refactor), ler as seções relevantes do `BUSINESS_RULES.md` e verificar:
 - A mudança não viola nenhuma regra de negócio documentada
 - Se alterar polling, credenciais, smart scheduler, sync ou persistência: ler o módulo correspondente integralmente
-- Se a mudança exigir atualizar uma regra, atualizar o `BUSINESS_RULES.md` no mesmo commit
+
+**Após qualquer alteração de código**, atualizar o `BUSINESS_RULES.md` se a mudança:
+- Adicionar nova lógica, threshold, intervalo ou comportamento
+- Remover ou substituir uma regra existente
+- Modificar fórmulas, condições ou fluxos documentados
+- Introduzir novo módulo ou serviço com lógica de domínio
+
+A atualização do `BUSINESS_RULES.md` vai no **mesmo commit** da mudança de código — nunca em commit separado posterior.
 
 > Não pule este passo mesmo em mudanças "triviais" — regressões de lógica geralmente ocorrem em alterações que parecem seguras.
 
@@ -65,7 +72,7 @@ Classifica automaticamente o tipo e complexidade, então executa.
 
 ## Regras
 
-- **BUSINESS_RULES.md é lei** — nenhuma mudança pode violar as regras documentadas sem atualizar o documento primeiro
+- **BUSINESS_RULES.md é lei** — nenhuma mudança viola regras existentes sem atualizar o documento; nenhuma regra nova entra no código sem entrar no documento
 - Padrão é SIMPLES — só escala para COMPLEXA se genuinamente necessário
 - @tester: só para lógica crítica (IPC, state, polling, credentials)
 - Plan Mode: só para decisões arquiteturais, nunca para tarefas mecânicas
