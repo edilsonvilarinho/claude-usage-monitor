@@ -75,8 +75,8 @@ declare global {
       onNextPollAt: (cb: (nextPollAt: number) => void) => void;
       onLastResponse: (cb: (info: { ok: boolean; code?: number; message?: string; time: number }) => void) => void;
       getDayTimeSeries: (date: string) => Promise<{ ts: number; session: number; weekly: number; credits?: number }[]>;
-      getSessionWindows: () => Promise<{ resetsAt: string; peak: number; date: string }[]>;
-      getCurrentSessionWindow: () => Promise<{ resetsAt: string; peak: number } | null>;
+      getSessionWindows: () => Promise<{ resetsAt: string; peak: number; date: string; peakTs?: number }[]>;
+      getCurrentSessionWindow: () => Promise<{ resetsAt: string; peak: number; peakTs?: number } | null>;
       getSettings: () => Promise<AppSettings>;
       saveSettings: (s: Partial<AppSettings>) => Promise<void>;
       setStartup: (v: boolean) => Promise<void>;
@@ -730,6 +730,8 @@ let lastSessionPct: number | null = null;
 let currentDailyHistory: DailySnapshot[] = [];
 let dayDetailChart: Chart | null = null;
 let reportChart: Chart | null = null;
+let dayCurveChart: Chart | null = null;
+let dayCurveOpenDate: string | null = null;
 
 async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
@@ -852,7 +854,7 @@ async function openReportModal(): Promise<void> {
   const isPtBR = currentLang === 'pt-BR';
   const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 
-  const buildRow = (resetsAt: string, peak: number, index: number, isOpen: boolean) => {
+  const buildRow = (resetsAt: string, peak: number, index: number, isOpen: boolean, peakTs?: number) => {
     const endDt   = new Date(resetsAt);
     const startDt = new Date(endDt.getTime() - 5 * 60 * 60 * 1000);
     const fmtDate = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
@@ -866,21 +868,64 @@ async function openReportModal(): Promise<void> {
     const badge = isOpen
       ? `<span class="window-badge open">${isPtBR ? 'Aberta' : 'Open'}</span>`
       : `<span class="window-badge closed">${isPtBR ? 'Fechada' : 'Closed'}</span>`;
+    const peakTimeStr = peakTs
+      ? new Date(peakTs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : null;
+    const peakTimeHtml = peakTimeStr
+      ? `<span class="window-peak-time">${isPtBR ? 'pico' : 'peak at'} ${peakTimeStr}</span>`
+      : '';
     return `<div class="report-window-row">
       <span class="report-window-label">${label} ${badge}</span>
       <span class="report-window-date">${rangeStr}</span>
-      <span class="report-window-peak" style="color:${color}">${pct}%</span>
+      <span class="report-window-peak" style="color:${color}">${pct}%${peakTimeHtml}</span>
     </div>`;
   };
 
   let windowRows = '';
   let idx = 1;
   if (currentWindow) {
-    windowRows += buildRow(currentWindow.resetsAt, currentWindow.peak, idx++, true);
+    windowRows += buildRow(currentWindow.resetsAt, currentWindow.peak, idx++, true, currentWindow.peakTs);
   }
-  windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, idx++, false)).join('');
+  windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, idx++, false, w.peakTs)).join('');
 
   windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` + windowRows;
+
+  // Resumo analítico
+  const analyticsEl = document.getElementById('report-analytics');
+  if (analyticsEl) {
+    const today = new Date().toLocaleDateString('sv');
+    const allW = [...recentWindows] as { resetsAt: string; peak: number; date: string; peakTs?: number }[];
+    if (currentWindow) allW.push({ resetsAt: currentWindow.resetsAt, peak: currentWindow.peak, date: today, peakTs: currentWindow.peakTs });
+
+    const byDate = new Map<string, number>();
+    allW.forEach(w => byDate.set(w.date, (byDate.get(w.date) ?? 0) + 1));
+    const avgPerDay = byDate.size > 0
+      ? (Array.from(byDate.values()).reduce((a, b) => a + b, 0) / byDate.size).toFixed(1)
+      : '—';
+
+    const withPeak = allW.filter(w => w.peakTs != null);
+    let peakInterval = '—';
+    if (withPeak.length > 0) {
+      const hourBuckets = new Array(24).fill(0) as number[];
+      withPeak.forEach(w => hourBuckets[new Date(w.peakTs!).getHours()]++);
+      const peakHour = hourBuckets.indexOf(Math.max(...hourBuckets));
+      peakInterval = `${String(peakHour).padStart(2,'0')}h–${String(peakHour+1).padStart(2,'0')}h`;
+    }
+
+    const sortedDH = [...dailyHistory].sort((a, b) => a.date.localeCompare(b.date));
+    let streak = 0;
+    for (let i = sortedDH.length - 1; i >= 0; i--) {
+      if (sortedDH[i].maxSession >= 80) streak++;
+      else break;
+    }
+
+    analyticsEl.innerHTML = `
+      <div class="analytics-title">${isPtBR ? 'Resumo' : 'Summary'}</div>
+      <div class="stat-card"><div class="stat-value">${avgPerDay}</div><div class="stat-label">${isPtBR ? 'Janelas/dia' : 'Windows/day'}</div></div>
+      <div class="stat-card"><div class="stat-value">${peakInterval}</div><div class="stat-label">${isPtBR ? 'Pico comum' : 'Common peak'}</div></div>
+      <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">${isPtBR ? 'Dias >80%' : 'Days >80%'}</div></div>
+    `;
+  }
 }
 
 async function openDayDetailModal(date: string): Promise<void> {
@@ -1146,6 +1191,103 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, li
   fitWindow();
 }
 
+
+async function updateBurnRate(): Promise<void> {
+  const el = document.getElementById('burn-rate-line');
+  if (!el) return;
+  const today = new Date().toLocaleDateString('sv');
+  const points = await window.claudeUsage.getDayTimeSeries(today);
+  if (points.length < 2) { el.textContent = ''; return; }
+  const recent = points.slice(-3);
+  if (recent.length < 2) { el.textContent = ''; return; }
+  const oldest = recent[0];
+  const newest = recent[recent.length - 1];
+  const currentSession = newest.session;
+  if (currentSession < 5) { el.textContent = ''; return; }
+  const deltaPct = newest.session - oldest.session;
+  const deltaHours = (newest.ts - oldest.ts) / 3_600_000;
+  if (deltaHours <= 0) { el.textContent = ''; return; }
+  const burnRate = deltaPct / deltaHours;
+  if (burnRate <= 0) { el.textContent = ''; return; }
+  const remainingPct = 100 - currentSession;
+  const hoursUntilFull = remainingPct / burnRate;
+  if (hoursUntilFull > 6) { el.textContent = ''; return; }
+  const estTime = new Date(newest.ts + hoursUntilFull * 3_600_000);
+  const timeStr = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const rateStr = burnRate.toFixed(1);
+  const isPtBR = document.documentElement.lang === 'pt-BR' || navigator.language.startsWith('pt');
+  el.textContent = isPtBR
+    ? `↑ ${rateStr}%/h · esgota ~${timeStr}`
+    : `↑ ${rateStr}%/h · exhausts ~${timeStr}`;
+}
+
+async function openDayCurvePopup(date: string, anchorEl: HTMLElement): Promise<void> {
+  const popup = document.getElementById('day-curve-popup') as HTMLElement;
+  const titleEl = document.getElementById('day-curve-title') as HTMLElement;
+  const emptyEl = document.getElementById('day-curve-empty') as HTMLElement;
+  const closeBtn = document.getElementById('day-curve-close') as HTMLElement;
+
+  if (dayCurveOpenDate === date && !popup.classList.contains('hidden')) {
+    closeDayCurvePopup();
+    return;
+  }
+
+  const rect = anchorEl.getBoundingClientRect();
+  popup.style.left = `${Math.min(rect.left, window.innerWidth - 250)}px`;
+  popup.style.top = `${rect.bottom + 4}px`;
+
+  titleEl.textContent = new Date(date + 'T12:00:00').toLocaleDateString([], { day: '2-digit', month: 'short' });
+  popup.classList.remove('hidden');
+  dayCurveOpenDate = date;
+
+  if (dayCurveChart) { dayCurveChart.destroy(); dayCurveChart = null; }
+
+  const points = await window.claudeUsage.getDayTimeSeries(date);
+
+  if (points.length < 2) {
+    document.querySelector('.day-curve-chart-wrap')!.setAttribute('style', 'display:none');
+    emptyEl.classList.remove('hidden');
+  } else {
+    document.querySelector('.day-curve-chart-wrap')!.setAttribute('style', '');
+    emptyEl.classList.add('hidden');
+    const labels = points.map(p => new Date(p.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    const canvas = document.getElementById('day-curve-canvas') as HTMLCanvasElement;
+    dayCurveChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data: points.map(p => Math.min(p.session, 100)),
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76,175,80,0.15)',
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: {
+          x: { display: false },
+          y: { display: false, min: 0, max: 100 },
+        },
+        animation: false,
+      },
+    });
+  }
+
+  closeBtn.onclick = closeDayCurvePopup;
+}
+
+function closeDayCurvePopup(): void {
+  const popup = document.getElementById('day-curve-popup');
+  if (popup) popup.classList.add('hidden');
+  if (dayCurveChart) { dayCurveChart.destroy(); dayCurveChart = null; }
+  dayCurveOpenDate = null;
+}
 
 function updateUI(data: UsageData): void {
   const sessionPct = Math.round(data.five_hour.utilization);
@@ -1851,6 +1993,7 @@ function init(): void {
   window.claudeUsage.onUsageUpdated((data) => {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
     updateUI(data);
+    void updateBurnRate();
   });
 
   // Atualizar gráfico quando receber dados novos
@@ -1947,7 +2090,10 @@ function init(): void {
 
   // Fecha modais abertos quando a janela é reexibida (popup hide → show não recria o DOM)
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') closeDayDetailModal();
+    if (document.visibilityState === 'visible') {
+      closeDayDetailModal();
+      closeDayCurvePopup();
+    }
   });
 
   window.claudeUsage.onRateLimited((until, resetAt) => {

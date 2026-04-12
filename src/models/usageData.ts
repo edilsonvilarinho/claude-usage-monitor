@@ -17,6 +17,7 @@ export interface SessionWindowRecord {
   resetsAt: string; // ISO datetime — quando esta janela resetou
   peak: number;     // pico de utilization observado (inteiro, pode ser > 100)
   date: string;     // YYYY-MM-DD — dia ao qual esta janela pertence
+  peakTs?: number;  // unix ms — quando o pico foi observado
 }
 
 /** Estado da janela de sessão corrente — persistido para detectar resets após restart */
@@ -24,6 +25,7 @@ export interface CurrentSessionWindow {
   resetsAt: string; // five_hour.resets_at atual da API
   peak: number;     // maior utilization visto nesta janela até agora
   date?: string;    // YYYY-MM-DD — dia em que esta janela começou
+  peakTs?: number;  // unix ms — quando o pico foi observado
 }
 
 export interface DailySnapshot {

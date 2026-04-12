@@ -156,9 +156,60 @@ interface DailySnapshot {
 
 **`sessionAccum`:** Soma apenas janelas *completadas*. A janela em curso é excluída para evitar dupla contagem — ela já está refletida no `maxSession`. Ao computar métricas de "uso total do dia", o cálculo correto é `sessionAccum + maxSession`.
 
+### Campo `peakTs` — rastreamento temporal do pico
+
+`SessionWindowRecord` e `CurrentSessionWindow` possuem o campo opcional `peakTs?: number` (unix ms) que registra o instante exato em que o pico de utilização foi observado.
+
+**Regras de rastreamento:**
+- **Primeiro poll da janela** (`!currentWindow`): `peakTs = now`
+- **Mesma janela, novo valor maior** (`sessionPctInt > currentWindow.peak`): `peakTs = now`
+- **Mesma janela, valor menor ou igual** (pico não mudou): `peakTs` preservado
+- **Após reset** (nova janela): `peakTs = undefined` — nova janela ainda não tem pico registrado
+- **Ao completar a janela** (`completedWindow`): herda `peakTs` da `currentWindow`
+
+**Por que opcional?** Compatibilidade com janelas históricas persistidas antes da introdução do campo. `peakTs === undefined` é tratado graciosamente na UI (exibe `—` ou omite).
+
+**Passo `now`:** `updateDailySnapshot` aceita `now: number = Date.now()` como parâmetro, permitindo injeção nos testes.
+
 **Retenção:** O `dailyHistory` mantém no máximo 8 dias. Entradas além desse limite são removidas das mais antigas. Isso garante que a série temporal não cresça indefinidamente no electron-store local.
 
 **Fronteira de meia-noite:** Se uma janela de 5h começa num dia e termina no seguinte (ex.: começou às 22h, resetou às 03h), o pico é atribuído ao dia em que a janela *começou*, não ao dia do reset. O campo `currentWindow.date` armazena o dia de início para esse caso.
+
+### Burn Rate e Previsão de Esgotamento
+
+Calculado no renderer (`updateBurnRate()`) após cada `onUsageUpdated`. Usa os últimos 3 pontos da série temporal do dia corrente.
+
+**Fórmula:**
+```
+burnRate   = (newest.session - oldest.session) / deltaHours   [%/h]
+hoursLeft  = (100 - currentSession) / burnRate
+estTime    = newest.ts + hoursLeft * 3_600_000
+```
+
+**Condições de supressão** (resultado ocultado):
+- Menos de 2 pontos na série do dia
+- Sessão atual < 5% (sem uso relevante)
+- `deltaHours <= 0` (pontos no mesmo instante)
+- `burnRate <= 0` (uso decrescendo)
+- `hoursLeft > 6` (muito longe para ser útil)
+
+Exibição: `↑ X.X%/h · esgota ~HH:MM` (pt-BR) ou `↑ X.X%/h · exhausts ~HH:MM` (en), na linha abaixo do gauge de sessão.
+
+### Modal de Histórico Diário (Curva de Consumo)
+
+Ao clicar em uma coluna do gráfico Ciclo Semanal, abre o modal `#day-detail-modal` (`openDayDetailModal(date)`) com o gráfico de linha completo da série temporal do dia clicado — exibe Sessão (5h) e Semanal (7d) ao longo das horas. Fechado com o botão X (`#day-detail-close`) ou ao esconder a janela (`visibilitychange`).
+
+> **Regra:** o clique em `.daily-col` DEVE chamar `openDayDetailModal`. Não substituir por popup inline — o modal completo é a única visualização de curva diária.
+
+### Resumo Analítico (Painel de Janelas)
+
+Exibido no final do modal de Relatório de Uso (`#report-analytics`), calculado sobre as janelas recentes mais a janela corrente:
+
+| Métrica | Cálculo |
+|---------|---------|
+| Janelas/dia | Média de janelas por dia único no histórico de janelas |
+| Pico comum | Hora do dia com maior frequência de `peakTs` (bucket de 1h) |
+| Dias >80% | Streak contínuo de dias com `maxSession >= 80` (do mais recente para o mais antigo) |
 
 ---
 
