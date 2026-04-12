@@ -66,13 +66,18 @@ export function computeSmartStatus(
     return { ...base, statusId: 'blue', colorHex: '#3b82f6', messageKey: 'smartPlan.status.blue' };
   }
 
-  // 2. PURPLE — dentro do expediente, sessão ainda não iniciada
+  // 2. PURPLE — dentro do expediente, sessão ainda não iniciada, dentro da janela de 90min antes do horário ideal
+  // Não exibe sugestão se estivermos muito antes do horário ideal (ex: 02:40 sugerindo 08:00).
   if (usoSessao === 0) {
     const idealMin = Math.max(workStartMin, breakStartMin - 300);
-    const idealH = Math.floor(idealMin / 60) % 24;
-    const idealM = idealMin % 60;
-    const idealStartTime = `${String(idealH).padStart(2, '0')}:${String(idealM).padStart(2, '0')}`;
-    return { ...base, statusId: 'purple', colorHex: '#a855f7', messageKey: 'smartPlan.status.purple', idealStartTime };
+    const isNearIdealWindow = minutosAtuais >= idealMin - 90 && minutosAtuais <= idealMin;
+    if (isNearIdealWindow) {
+      const idealH = Math.floor(idealMin / 60) % 24;
+      const idealM = idealMin % 60;
+      const idealStartTime = `${String(idealH).padStart(2, '0')}:${String(idealM).padStart(2, '0')}`;
+      return { ...base, statusId: 'purple', colorHex: '#a855f7', messageKey: 'smartPlan.status.purple', idealStartTime };
+    }
+    // Fora da janela de sugestão acionável → cai para VERDE (pode iniciar quando precisar)
   }
 
   // 3. GREEN

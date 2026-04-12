@@ -286,6 +286,8 @@ OR minutosAtuais > workEndMin        // após o expediente
 
 ```
 usoSessao === 0   (sessão ainda não iniciada, dentro do expediente)
+AND minutosAtuais >= idealMin - 90   (dentro da janela de 90 min antes do horário ideal)
+AND minutosAtuais <= idealMin        (não passou do horário ideal)
 ```
 
 **Cálculo do horário ideal:**
@@ -300,6 +302,8 @@ idealM   = idealMin % 60
 **Por que `max(workStartMin, ...)`?** Garante que o horário sugerido não seja anterior ao início do expediente. Se o almoço é às 12h (breakStartMin = 720), `720 - 300 = 420 = 07h`. Mas o trabalho começa às 09h (540 min), então o ideal é 09h.
 
 **`% 24` na hora:** Protege contra edge cases onde `idealMin >= 1440` (agendas atípicas) — a hora exibida nunca ultrapassa 23h.
+
+**Janela de 90 minutos:** A sugestão ROXO só é exibida quando a hora atual está dentro de 90 min antes do `idealMin`. Se o usuário está muito antes (ex: 02:40 com ideal às 08:00), a sugestão não é acionável — nesse caso cai para VERDE. Se já passou do `idealMin`, também cai para VERDE (inicie agora).
 
 ---
 
