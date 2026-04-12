@@ -63,7 +63,10 @@ export function computeSmartStatus(
 
   // 1. BLUE
   if (!enabled || !activeDays.includes(diaAtual) || minutosAtuais < workStartMin || minutosAtuais > workEndMin) {
-    return { ...base, statusId: 'blue', colorHex: '#3b82f6', messageKey: 'smartPlan.status.blue' };
+    const messageKey = (enabled && !activeDays.includes(diaAtual))
+      ? 'smartPlan.status.blue.offday'
+      : 'smartPlan.status.blue';
+    return { ...base, statusId: 'blue', colorHex: '#3b82f6', messageKey };
   }
 
   // 2. PURPLE — dentro do expediente, sessão ainda não iniciada, dentro da janela de 90min antes do horário ideal
