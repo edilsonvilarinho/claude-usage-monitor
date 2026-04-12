@@ -1688,22 +1688,22 @@ function openSmartModal(): void {
     const endPct    = pctOf(s.workEndMin);
     const startPct  = pctOf(s.workStartMin);
     const nowPct    = pctOf(s.minutosAtuais);
-    const PROXIMITY = 10; // % do range — se label estiver a menos disso de outro marcador, inverte lado
+    const PROXIMITY = 10; // % do range — threshold de colisão com outros marcadores
 
-    let resetTransform = 'translateX(-50%)'; // padrão: centralizado
-    if (Math.abs(resetPct - endPct) < PROXIMITY || resetPct > 100 - PROXIMITY) {
-      resetTransform = 'translateX(-100%)'; // próximo do fim → empurra label para esquerda
-    } else if (Math.abs(resetPct - startPct) < PROXIMITY || resetPct < PROXIMITY) {
-      resetTransform = 'translateX(0%)'; // próximo do início → empurra label para direita
-    } else if (Math.abs(resetPct - nowPct) < PROXIMITY) {
-      resetTransform = resetPct > nowPct ? 'translateX(0%)' : 'translateX(-100%)';
-    }
+    const collidesWithOther =
+      Math.abs(resetPct - endPct) < PROXIMITY ||
+      Math.abs(resetPct - startPct) < PROXIMITY ||
+      Math.abs(resetPct - nowPct) < PROXIMITY ||
+      resetPct > 100 - PROXIMITY ||
+      resetPct < PROXIMITY;
 
     resetMarker.style.left = `${resetPct}%`;
     resetMarker.title = resetHHMMInline;
     resetLabel.textContent = resetHHMMInline;
     resetLabel.style.left = `${resetPct}%`;
-    resetLabel.style.transform = resetTransform;
+    // Se colidir: sobe o label para cima do track; senão: fica abaixo centralizado
+    resetLabel.style.top = collidesWithOther ? '-14px' : '26px';
+    resetLabel.style.transform = 'translateX(-50%)';
     resetLabel.style.color = s.colorHex;
     resetLabel.style.display = 'block';
   }
