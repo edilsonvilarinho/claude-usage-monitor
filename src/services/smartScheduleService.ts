@@ -67,9 +67,24 @@ export function computeSmartStatus(
   }
 
   // 2. PURPLE — dentro do expediente, sessão ainda não iniciada, dentro da janela de 90min antes do horário ideal
-  // Não exibe sugestão se estivermos muito antes do horário ideal (ex: 02:40 sugerindo 08:00).
+  // Hierarquia de turno para calcular idealMin:
+  //   P1: reset após fim do expediente → sugere início do próximo dia útil (workStart)
+  //   P2: reset iminente (≤90 min) e ainda dentro do expediente → sugere max(resetTime, breakEnd)
+  //   P3: sessão fresca → alinhamento original com intervalo de almoço (max(workStart, breakStart - 300))
+  // O ROXO só é exibido se estivermos dentro da janela de 90min antes do horário ideal (sugestão acionável).
   if (usoSessao === 0) {
-    const idealMin = Math.max(workStartMin, breakStartMin - 300);
+    let idealMin: number;
+    if (momentoDoReset >= workEndMin) {
+      // Reset acontece após o expediente → próximo dia útil
+      idealMin = workStartMin;
+    } else if (minutosParaReset <= 90) {
+      // Reset iminente dentro do expediente → retomar após reset ou após fim do intervalo
+      idealMin = Math.max(momentoDoReset, breakEndMin);
+    } else {
+      // Sessão fresca → alinhamento com almoço (cálculo original)
+      idealMin = Math.max(workStartMin, breakStartMin - 300);
+    }
+
     const isNearIdealWindow = minutosAtuais >= idealMin - 90 && minutosAtuais <= idealMin;
     if (isNearIdealWindow) {
       const idealH = Math.floor(idealMin / 60) % 24;

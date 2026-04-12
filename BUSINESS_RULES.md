@@ -290,20 +290,36 @@ AND minutosAtuais >= idealMin - 90   (dentro da janela de 90 min antes do horár
 AND minutosAtuais <= idealMin        (não passou do horário ideal)
 ```
 
-**Cálculo do horário ideal:**
+**Cálculo do horário ideal — hierarquia de turno:**
+
 ```
-idealMin = max(workStartMin, breakStartMin - 300)
-idealH   = floor(idealMin / 60) % 24
-idealM   = idealMin % 60
+P1 (reset após expediente):
+  momentoDoReset >= workEndMin  →  idealMin = workStartMin
+
+P2 (reset iminente dentro do expediente):
+  minutosParaReset <= 90  →  idealMin = max(momentoDoReset, breakEndMin)
+
+P3 (sessão fresca — alinhamento com almoço):
+  default  →  idealMin = max(workStartMin, breakStartMin - 300)
+
+idealH = floor(idealMin / 60) % 24
+idealM = idealMin % 60
 ```
 
-**Por que `breakStartMin - 300`?** A sessão dura 5 horas = 300 minutos. Iniciar exatamente 5h antes do almoço faz o reset coincidir com o início do intervalo — o usuário termina o período da manhã com tokens zerados e retorna do almoço com sessão fresca.
+**P1 — Reset após expediente:** O usuário não terá turno produtivo após o reset. Sugerir o início do próximo dia útil (`workStart`, ex: 08:00).
 
-**Por que `max(workStartMin, ...)`?** Garante que o horário sugerido não seja anterior ao início do expediente. Se o almoço é às 12h (breakStartMin = 720), `720 - 300 = 420 = 07h`. Mas o trabalho começa às 09h (540 min), então o ideal é 09h.
+**P2 — Reset iminente (≤90 min):** O reset ocorrerá em breve dentro do expediente. Sugerir `max(resetTime, breakEnd)` — se o reset cai antes do fim do almoço, o usuário retoma após o intervalo; se cai depois, retoma logo quando o reset acontece.
 
-**`% 24` na hora:** Protege contra edge cases onde `idealMin >= 1440` (agendas atípicas) — a hora exibida nunca ultrapassa 23h.
+**P3 — Sessão fresca:** A sessão tem ~5h pela frente. Calcular quando iniciar para que o reset coincida com o almoço: `breakStartMin - 300`. `max(workStartMin, ...)` garante que a sugestão não seja anterior ao início do expediente.
 
-**Janela de 90 minutos:** A sugestão ROXO só é exibida quando a hora atual está dentro de 90 min antes do `idealMin`. Se o usuário está muito antes (ex: 02:40 com ideal às 08:00), a sugestão não é acionável — nesse caso cai para VERDE. Se já passou do `idealMin`, também cai para VERDE (inicie agora).
+**`% 24` na hora:** Protege contra edge cases onde `idealMin >= 1440` (agendas atípicas).
+
+**Janela de 90 minutos:** O ROXO só é exibido quando `minutosAtuais >= idealMin - 90 AND minutosAtuais <= idealMin`. Se o usuário está muito antes do ideal (ex: 02:40 com ideal às 08:00) ou já passou do ideal, cai para VERDE.
+
+**Exemplos:**
+- 12:10, reset às 12:15, breakEnd=13:00, workEnd=18:00 → P2: `max(735, 780) = 780 = 13:00`, janela [690-780] → ROXO "retome às 13:00"
+- 17:30, reset às 18:00, workEnd=18:00 → P1 (`1080 >= 1080`): `idealMin = workStart = 08:00`, janela [390-480] → não ativa (17:30 fora) → VERDE
+- 02:40, reset às 07:40, workEnd=18:00 → P3: `idealMin = 08:00`, janela [390-480] → não ativa → VERDE
 
 ---
 
