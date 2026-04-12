@@ -1475,6 +1475,9 @@ function openSmartModal(): void {
   workBlock.style.left = `${pctOf(s.workStartMin)}%`;
   workBlock.style.width = `${pctOf(s.workEndMin) - pctOf(s.workStartMin)}%`;
 
+  (document.getElementById('sp-work-start-tick') as HTMLElement).style.left = `${pctOf(s.workStartMin)}%`;
+  (document.getElementById('sp-work-end-tick') as HTMLElement).style.left = `${pctOf(s.workEndMin)}%`;
+
   const breakBlock = document.getElementById('sp-break-block') as HTMLElement;
   breakBlock.style.left = `${pctOf(s.breakStartMin)}%`;
   breakBlock.style.width = `${pctOf(s.breakEndMin) - pctOf(s.breakStartMin)}%`;

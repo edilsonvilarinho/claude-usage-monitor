@@ -1532,6 +1532,16 @@ body {
   opacity: 0.2;
   border-radius: 4px;
 }
+.sp-tick {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--text-secondary);
+  opacity: 0.6;
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
 .sp-break {
   position: absolute;
   top: 0;
@@ -1585,6 +1595,8 @@ body {
   position: absolute;
   transform: translateX(-50%);
   white-space: nowrap;
+  color: var(--text);
+  font-weight: 600;
 }
 .sp-timeline-title {
   font-size: 10px;
