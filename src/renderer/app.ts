@@ -1221,6 +1221,44 @@ async function updateBurnRate(): Promise<void> {
     : `↑ ${rateStr}%/h · exhausts ~${timeStr}`;
 }
 
+async function updateWeeklyBurnRate(): Promise<void> {
+  const el = document.getElementById('burn-rate-line-weekly');
+  if (!el) return;
+  const today = new Date().toLocaleDateString('sv');
+  const points = await window.claudeUsage.getDayTimeSeries(today);
+  if (points.length < 2) { el.textContent = ''; return; }
+  const recent = points.slice(-3);
+  if (recent.length < 2) { el.textContent = ''; return; }
+  const oldest = recent[0];
+  const newest = recent[recent.length - 1];
+  const currentWeekly = newest.weekly;
+  if (currentWeekly < 5) { el.textContent = ''; return; }
+  const deltaPct = newest.weekly - oldest.weekly;
+  const deltaHours = (newest.ts - oldest.ts) / 3_600_000;
+  if (deltaHours <= 0) { el.textContent = ''; return; }
+  const burnRate = deltaPct / deltaHours;
+  if (burnRate <= 0) { el.textContent = ''; return; }
+  const remainingPct = 100 - currentWeekly;
+  const hoursUntilFull = remainingPct / burnRate;
+  if (hoursUntilFull > 48) { el.textContent = ''; return; }
+  const estTime = new Date(newest.ts + hoursUntilFull * 3_600_000);
+  const isPtBR = document.documentElement.lang === 'pt-BR' || navigator.language.startsWith('pt');
+  const now = new Date();
+  const isToday = estTime.toLocaleDateString('sv') === now.toLocaleDateString('sv');
+  let timeStr: string;
+  if (isToday) {
+    timeStr = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } else {
+    const weekday = estTime.toLocaleDateString(isPtBR ? 'pt-BR' : 'en', { weekday: 'short' });
+    const t = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    timeStr = `${weekday} ${t}`;
+  }
+  const rateStr = burnRate.toFixed(1);
+  el.textContent = isPtBR
+    ? `↑ ${rateStr}%/h · esgota ~${timeStr}`
+    : `↑ ${rateStr}%/h · exhausts ~${timeStr}`;
+}
+
 async function openDayCurvePopup(date: string, anchorEl: HTMLElement): Promise<void> {
   const popup = document.getElementById('day-curve-popup') as HTMLElement;
   const titleEl = document.getElementById('day-curve-title') as HTMLElement;
@@ -1994,6 +2032,7 @@ function init(): void {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
     updateUI(data);
     void updateBurnRate();
+    void updateWeeklyBurnRate();
   });
 
   // Atualizar gráfico quando receber dados novos

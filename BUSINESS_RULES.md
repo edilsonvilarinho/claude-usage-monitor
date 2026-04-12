@@ -177,23 +177,39 @@ interface DailySnapshot {
 
 ### Burn Rate e Previsão de Esgotamento
 
-Calculado no renderer (`updateBurnRate()`) após cada `onUsageUpdated`. Usa os últimos 3 pontos da série temporal do dia corrente.
+Calculado no renderer após cada `onUsageUpdated`. Usa os últimos 3 pontos da série temporal do dia corrente. Duas funções independentes: `updateBurnRate()` (sessão 5h) e `updateWeeklyBurnRate()` (semanal 7d).
 
-**Fórmula:**
+**Fórmula — Sessão (5h):**
 ```
 burnRate   = (newest.session - oldest.session) / deltaHours   [%/h]
 hoursLeft  = (100 - currentSession) / burnRate
 estTime    = newest.ts + hoursLeft * 3_600_000
 ```
 
-**Condições de supressão** (resultado ocultado):
+**Condições de supressão — Sessão:**
 - Menos de 2 pontos na série do dia
 - Sessão atual < 5% (sem uso relevante)
 - `deltaHours <= 0` (pontos no mesmo instante)
 - `burnRate <= 0` (uso decrescendo)
 - `hoursLeft > 6` (muito longe para ser útil)
 
-Exibição: `↑ X.X%/h · esgota ~HH:MM` (pt-BR) ou `↑ X.X%/h · exhausts ~HH:MM` (en), na linha abaixo do gauge de sessão.
+Exibição sessão: `↑ X.X%/h · esgota ~HH:MM` (pt-BR) / `↑ X.X%/h · exhausts ~HH:MM` (en), na linha abaixo do gauge de sessão (`#burn-rate-line`).
+
+**Fórmula — Semanal (7d):**
+```
+burnRate   = (newest.weekly - oldest.weekly) / deltaHours   [%/h]
+hoursLeft  = (100 - currentWeekly) / burnRate
+estTime    = newest.ts + hoursLeft * 3_600_000
+```
+
+**Condições de supressão — Semanal:**
+- Menos de 2 pontos na série do dia
+- Semanal atual < 5% (sem uso relevante)
+- `deltaHours <= 0` (pontos no mesmo instante)
+- `burnRate <= 0` (uso decrescendo)
+- `hoursLeft > 48` (mais de 2 dias — muito longe para ser útil)
+
+Exibição semanal: `↑ X.X%/h · esgota ~HH:MM` se hoje, ou `↑ X.X%/h · esgota ~dom HH:MM` se outro dia (pt-BR). Exibido em `#burn-rate-line-weekly`, abaixo do gauge semanal.
 
 ### Modal de Histórico Diário (Curva de Consumo)
 
