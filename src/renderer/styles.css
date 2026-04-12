@@ -1524,6 +1524,14 @@ body {
   background: var(--border);
   border-radius: 4px;
 }
+.sp-work-shift {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--text-secondary);
+  opacity: 0.2;
+  border-radius: 4px;
+}
 .sp-break {
   position: absolute;
   top: 0;

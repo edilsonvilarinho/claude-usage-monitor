@@ -1460,10 +1460,20 @@ function openSmartModal(): void {
     },
   });
 
-  // Timeline
-  const totalRange = s.workEndMin - s.workStartMin;
+  // Timeline — Dynamic Bounds
+  const timelineStartMin = Math.min(s.workStartMin, s.minutosAtuais);
+  const timelineEndMin = Math.max(
+    s.workEndMin,
+    s.minutosAtuais,
+    s.resetCrossesDay ? s.workEndMin : s.momentoDoReset
+  );
+  const totalRange = timelineEndMin - timelineStartMin;
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-  const pctOf = (min: number) => clamp((min - s.workStartMin) / totalRange * 100, 0, 100);
+  const pctOf = (min: number) => clamp((min - timelineStartMin) / totalRange * 100, 0, 100);
+
+  const workBlock = document.getElementById('sp-work-block') as HTMLElement;
+  workBlock.style.left = `${pctOf(s.workStartMin)}%`;
+  workBlock.style.width = `${pctOf(s.workEndMin) - pctOf(s.workStartMin)}%`;
 
   const breakBlock = document.getElementById('sp-break-block') as HTMLElement;
   breakBlock.style.left = `${pctOf(s.breakStartMin)}%`;
@@ -1491,8 +1501,8 @@ function openSmartModal(): void {
     resetLabel.style.display = 'none';
   }
 
-  (document.getElementById('sp-timeline-start') as HTMLElement).textContent = formatMinutes(s.workStartMin);
-  (document.getElementById('sp-timeline-end') as HTMLElement).textContent = formatMinutes(s.workEndMin);
+  (document.getElementById('sp-timeline-start') as HTMLElement).textContent = formatMinutes(timelineStartMin);
+  (document.getElementById('sp-timeline-end') as HTMLElement).textContent = formatMinutes(timelineEndMin);
 
   // Summary sentence
   const resetHHMM = formatMinutes(s.momentoDoReset % (24 * 60));
