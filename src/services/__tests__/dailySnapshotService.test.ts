@@ -29,7 +29,7 @@ describe('updateDailySnapshot', () => {
 
     expect(dailyHistory).toHaveLength(1);
     expect(dailyHistory[0]).toMatchObject({ date: TODAY, maxSession: 30, maxWeekly: 50, sessionWindowCount: 1, sessionAccum: 0 });
-    expect(currentWindow).toEqual({ resetsAt: RESET_A, peak: 30 });
+    expect(currentWindow).toEqual({ resetsAt: RESET_A, peak: 30, date: TODAY });
     expect(completedWindow).toBeNull();
   });
 
@@ -98,7 +98,7 @@ describe('updateDailySnapshot', () => {
     expect(dailyHistory[0].sessionAccum).toBe(70);  // usa peak, não último valor polled
     expect(dailyHistory[0].sessionWindowCount).toBe(2);
     expect(dailyHistory[0].maxSession).toBe(14);    // reinicia com valor da nova janela
-    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 14 }); // nova janela iniciada
+    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 14, date: TODAY }); // nova janela iniciada
     expect(completedWindow).toMatchObject({ resetsAt: RESET_A, peak: 70, date: TODAY });
   });
 
