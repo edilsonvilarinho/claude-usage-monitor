@@ -1684,11 +1684,26 @@ function openSmartModal(): void {
     resetLabel.style.display = 'block';
   } else {
     const resetHHMMInline = formatMinutes(s.momentoDoReset % (24 * 60));
-    resetMarker.style.left = `${pctOf(s.momentoDoReset)}%`;
+    const resetPct  = pctOf(s.momentoDoReset);
+    const endPct    = pctOf(s.workEndMin);
+    const startPct  = pctOf(s.workStartMin);
+    const nowPct    = pctOf(s.minutosAtuais);
+    const PROXIMITY = 10; // % do range — se label estiver a menos disso de outro marcador, inverte lado
+
+    let resetTransform = 'translateX(-50%)'; // padrão: centralizado
+    if (Math.abs(resetPct - endPct) < PROXIMITY || resetPct > 100 - PROXIMITY) {
+      resetTransform = 'translateX(-100%)'; // próximo do fim → empurra label para esquerda
+    } else if (Math.abs(resetPct - startPct) < PROXIMITY || resetPct < PROXIMITY) {
+      resetTransform = 'translateX(0%)'; // próximo do início → empurra label para direita
+    } else if (Math.abs(resetPct - nowPct) < PROXIMITY) {
+      resetTransform = resetPct > nowPct ? 'translateX(0%)' : 'translateX(-100%)';
+    }
+
+    resetMarker.style.left = `${resetPct}%`;
     resetMarker.title = resetHHMMInline;
     resetLabel.textContent = resetHHMMInline;
-    resetLabel.style.left = `${pctOf(s.momentoDoReset)}%`;
-    resetLabel.style.transform = 'translateX(-50%)';
+    resetLabel.style.left = `${resetPct}%`;
+    resetLabel.style.transform = resetTransform;
     resetLabel.style.color = s.colorHex;
     resetLabel.style.display = 'block';
   }
