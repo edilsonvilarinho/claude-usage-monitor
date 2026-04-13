@@ -11,6 +11,12 @@ npm test         # vitest (197 tests)
 
 **Critical:** Always run `tsc -p tsconfig.main.json` before `electron-builder` — Linux CI fixed this.
 
+**⚠️ IMPORTANTE — After release:** Always upload .exe files to GitHub Release:
+```bash
+gh release upload v10.x.x "dist-build/Claude Usage Monitor 10.x.x.exe" --clobber
+gh release upload v10.x.x "dist-build/Claude Usage Monitor Setup 10.x.x.exe" --clobber
+```
+
 ## Testing
 
 - Run single test: `vitest run src/services/__tests__/pollingService.test.ts`
