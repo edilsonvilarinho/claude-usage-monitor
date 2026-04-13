@@ -1353,16 +1353,26 @@ function updateUI(data: UsageData): void {
   const sessionPct = Math.round(data.five_hour.utilization);
   const weeklyPct  = Math.round(data.seven_day.utilization);
 
-  if (sessionChart) updateGauge(sessionChart, sessionPct);
   if (weeklyPct) updateGauge(weeklyChart, weeklyPct);
+
+  (document.getElementById('pct-weekly') as HTMLElement).textContent =
+    weeklyPct > 100 ? `>${Math.min(weeklyPct, 999)}%` : `${weeklyPct}%`;
 
   const today = new Date().toLocaleDateString('sv');
   window.claudeUsage.getDailyHistory().then(history => {
     const todayData = history.find(d => d.date === today);
     const noSessionData = !todayData || (todayData.maxSession === 0 && todayData.sessionAccum === 0);
-    (document.getElementById('pct-session') as HTMLElement).textContent = noSessionData ? '—' : (sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`);
-    (document.getElementById('reset-session') as HTMLElement).textContent = noSessionData ? '—' : formatResetsIn(data.five_hour.resets_at);
-    (document.getElementById('reset-at-session') as HTMLElement).textContent = noSessionData ? '—' : tr().resetsAt(formatResetAt(data.five_hour.resets_at));
+    if (noSessionData) {
+      (document.getElementById('pct-session') as HTMLElement).textContent = '—';
+      (document.getElementById('reset-session') as HTMLElement).textContent = '—';
+      (document.getElementById('reset-at-session') as HTMLElement).textContent = '—';
+      if (sessionChart) updateGauge(sessionChart, 0);
+    } else {
+      (document.getElementById('pct-session') as HTMLElement).textContent = sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`;
+      (document.getElementById('reset-session') as HTMLElement).textContent = formatResetsIn(data.five_hour.resets_at);
+      (document.getElementById('reset-at-session') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.five_hour.resets_at));
+      if (sessionChart) updateGauge(sessionChart, sessionPct);
+    }
   });
 
   (document.getElementById('pct-weekly') as HTMLElement).textContent =
