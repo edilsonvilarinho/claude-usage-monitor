@@ -3,471 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claude Usage Monitor — Infográfico</title>
+<title>Claude Usage Monitor — Documentação Visual</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
     --green:  #22c55e;
     --amber:  #f59e0b;
     --red:    #ef4444;
     --blue:   #3b82f6;
+    --purple: #a855f7;
     --bg:     #0e0e10;
     --card:   rgba(255,255,255,0.04);
     --border: rgba(255,255,255,0.08);
     --text:   #f0f0f0;
     --muted:  rgba(200,200,200,0.55);
   }
-
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 48px 32px;
-    max-width: 1100px;
-    margin: 0 auto;
-    line-height: 1.5;
-  }
-
-  /* ── Header ── */
-  .header {
-    text-align: center;
-    margin-bottom: 52px;
-  }
-  .header .tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--blue);
-    border: 1px solid rgba(59,130,246,0.35);
-    border-radius: 20px;
-    padding: 4px 14px;
-    margin-bottom: 16px;
-  }
-  .header h1 {
-    font-size: 36px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, #f0f0f0 40%, rgba(240,240,240,0.45));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 10px;
-  }
-  .header p {
-    font-size: 15px;
-    color: var(--muted);
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  /* ── Section labels ── */
-  .section-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
-
-  /* ── Cards ── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 24px;
-  }
-
-  /* ── Grid ── */
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 48px 32px; max-width: 1200px; margin: 0 auto; line-height: 1.5; }
+  .header { text-align: center; margin-bottom: 52px; }
+  .header .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--blue); border: 1px solid rgba(59,130,246,0.35); border-radius: 20px; padding: 4px 14px; margin-bottom: 16px; }
+  .header h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(135deg, #f0f0f0 40%, rgba(240,240,240,0.45)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 10px; }
+  .header p { font-size: 15px; color: var(--muted); max-width: 600px; margin: 0 auto; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; margin-top: 32px; }
+  .section-title .num { width: 22px; height: 22px; border-radius: 50%; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: var(--blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .divider { height: 1px; background: var(--border); margin: 8px 0 20px; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
   .section { margin-bottom: 28px; }
 
-  /* ── Section title ── */
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-title .num {
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    background: rgba(59,130,246,0.2);
-    border: 1px solid rgba(59,130,246,0.4);
-    color: var(--blue);
-    font-size: 11px;
-    font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-
-  /* ────────────────────────────────────────────────
-     BLOCO GAUGES
-  ──────────────────────────────────────────────── */
-  .gauges-block {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .gauge-demo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    flex: 1;
-    min-width: 140px;
-  }
-
-  .gauge-svg { width: 130px; height: 72px; }
-
-  .gauge-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    text-align: center;
-  }
-  .gauge-val {
-    font-size: 22px;
-    font-weight: 800;
-    margin-top: -4px;
-    text-align: center;
-  }
-  .gauge-reset {
-    font-size: 10px;
-    color: var(--muted);
-    text-align: center;
-  }
-
-  .color-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    min-width: 160px;
-    justify-content: center;
-  }
-  .color-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-  }
-  .color-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .color-range {
-    font-size: 11px;
-    color: var(--muted);
-    margin-left: auto;
-    font-weight: 500;
-  }
-
-  /* ────────────────────────────────────────────────
-     BLOCO TRAY ICON
-  ──────────────────────────────────────────────── */
-  .tray-demos {
-    display: flex;
-    gap: 24px;
-    align-items: flex-end;
-    flex-wrap: wrap;
-  }
-  .tray-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  .tray-caption {
-    font-size: 11px;
-    color: var(--muted);
-    text-align: center;
-  }
-  .tray-pct {
-    font-size: 10px;
-    font-weight: 700;
-    text-align: center;
-  }
-
-  /* ────────────────────────────────────────────────
-     BLOCO GRÁFICO DIÁRIO
-  ──────────────────────────────────────────────── */
-  .daily-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .daily-chart {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    padding: 12px 8px 0;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 8px;
-  }
-  .day-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    flex: 1;
-  }
-  .bars-group {
-    display: flex;
-    gap: 3px;
-    align-items: flex-end;
-    height: 48px;
-  }
-  .bar {
-    width: 8px;
-    border-radius: 3px 3px 0 0;
-    min-height: 3px;
-  }
-  .bar.session { background: rgba(34,197,94,0.55); }
-  .bar.weekly  { background: #22c55e; }
-  .bar.credits { background: rgba(59,130,246,0.85); }
-  .bar.crit    { background: rgba(239,68,68,0.85) !important; }
-  .bar.warn    { background: rgba(245,158,11,0.85) !important; }
-  .day-label {
-    font-size: 10px;
-    color: var(--muted);
-    font-weight: 500;
-    margin-top: 4px;
-  }
-  .day-col.today .day-label {
-    color: var(--blue);
-    font-weight: 700;
-  }
-  .day-col.today .bars-group {
-    position: relative;
-  }
-  .day-col.today .bars-group::after {
-    content: 'hoje';
-    position: absolute;
-    top: -18px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 9px;
-    color: var(--blue);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .day-col.future .bar { opacity: 0.15; }
-
-  .legend-row {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .leg {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; color: var(--muted);
-  }
-  .leg-dot {
-    width: 8px; height: 8px; border-radius: 2px;
-  }
-
-  .daily-notes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 4px;
-  }
-  .note-box {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.6;
-  }
-  .note-box strong { color: var(--text); }
-
-  /* ────────────────────────────────────────────────
-     BLOCO FLUXO DE DADOS
-  ──────────────────────────────────────────────── */
-  .flow {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .flow-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    min-width: 90px;
-    text-align: center;
-  }
-  .flow-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  .flow-name {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .flow-sub {
-    font-size: 9px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
-  .flow-arrow {
-    font-size: 18px;
-    color: var(--muted);
-    padding: 0 4px;
-    margin-bottom: 14px;
-    flex-shrink: 0;
-  }
-  .flow-branches {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-left: 4px;
-  }
-  .flow-branch {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .flow-branch-icon {
-    width: 28px; height: 28px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
-  /* ────────────────────────────────────────────────
-     BLOCO POLLING
-  ──────────────────────────────────────────────── */
-  .poll-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-  }
-  .poll-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 8px;
-    border-radius: 12px;
-    text-align: center;
-  }
-  .poll-icon { font-size: 20px; }
-  .poll-name {
-    font-size: 10px; font-weight: 700;
-    color: var(--text);
-  }
-  .poll-interval {
-    font-size: 11px; font-weight: 800;
-  }
-  .poll-desc {
-    font-size: 9px; color: var(--muted); line-height: 1.4;
-  }
-
-  /* ────────────────────────────────────────────────
-     BLOCO ESTADOS ESPECIAIS
-  ──────────────────────────────────────────────── */
-  .states-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-  }
-  .state-card {
-    border-radius: 12px;
-    padding: 14px;
-    border: 1px solid;
-  }
-  .state-card.rate-limit {
-    background: rgba(245,158,11,0.08);
-    border-color: rgba(245,158,11,0.25);
-  }
-  .state-card.error {
-    background: rgba(239,68,68,0.08);
-    border-color: rgba(239,68,68,0.25);
-  }
-  .state-card.resetting {
-    background: rgba(59,130,246,0.08);
-    border-color: rgba(59,130,246,0.25);
-  }
-  .state-icon { font-size: 22px; margin-bottom: 8px; }
-  .state-title {
-    font-size: 12px; font-weight: 700;
-    margin-bottom: 4px;
-  }
-  .state-desc {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  /* ── Footer ── */
-  .footer {
-    text-align: center;
-    margin-top: 48px;
-    font-size: 11px;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-    padding-top: 24px;
-  }
-
-  /* ── Print / PDF — mantém tema dark ── */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-  @media print {
-    body { padding: 24px; }
-    @page { margin: 0; size: A4 landscape; }
-  }
-
-  /* ── Divider ── */
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 8px 0 20px;
-  }
-
-  /* ────────────────────────────────────────────────
-     POPUP MOCKUPS
-  ──────────────────────────────────────────────── */
+  /* Popup mockup */
   .popup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .popup-scenario { display: flex; flex-direction: column; gap: 8px; }
   .popup-label { font-size: 11px; font-weight: 700; color: var(--muted); text-align: center; letter-spacing: 1px; text-transform: uppercase; }
-  .popup-mockup {
-    width: 100%;
-    min-height: 170px;
-    background: #1a1a1f;
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 12px;
-    overflow: hidden;
-    font-family: 'Inter', sans-serif;
-  }
+  .popup-mockup { width: 100%; min-height: 180px; background: #1a1a1f; border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; overflow: hidden; font-family: 'Inter', sans-serif; }
   .pm-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
   .pm-title { font-size: 11px; font-weight: 600; color: #f0f0f0; display: flex; align-items: center; gap: 6px; }
   .pm-dot { width: 7px; height: 7px; border-radius: 50%; }
@@ -482,151 +52,155 @@
   .pm-gauge-val { font-size: 14px; font-weight: 800; }
   .pm-gauge-reset { font-size: 8px; color: rgba(200,200,200,0.4); }
   .pm-footer-row { display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: rgba(200,200,200,0.4); margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px; }
-  .pm-cred-modal { background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 10px; min-height: 130px; }
-  .pm-cred-box { background: #1f1f26; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; text-align: center; }
-  .pm-cred-icon { font-size: 18px; color: #f59e0b; margin-bottom: 4px; }
-  .pm-cred-title { font-size: 10px; font-weight: 700; color: #f0f0f0; margin-bottom: 4px; }
-  .pm-cred-desc { font-size: 9px; color: rgba(200,200,200,0.55); }
+  .pm-daily { display: flex; gap: 3px; align-items: flex-end; padding: 0 4px; height: 20px; margin-bottom: 4px; }
+  .pm-daily-bar { flex: 1; border-radius: 2px 2px 0 0; }
+  .pm-cred-modal { background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; padding: 10px; min-height: 140px; }
+  .pm-cred-box { background: #1f1f26; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; text-align: center; width: 90%; }
+  .pm-cred-icon { font-size: 22px; color: #f59e0b; margin-bottom: 6px; }
+  .pm-cred-title { font-size: 11px; font-weight: 700; color: #f0f0f0; margin-bottom: 6px; }
+  .pm-cred-desc { font-size: 10px; color: rgba(200,200,200,0.55); line-height: 1.5; }
+  .pm-cred-path { margin-top: 8px; font-size: 9px; background: rgba(0,0,0,0.3); border-radius: 4px; padding: 4px 6px; color: #94a3b8; font-family: monospace; }
+  .pm-cred-btn { margin-top: 10px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: #3b82f6; font-size: 10px; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+  .pm-sync-panel { padding: 6px 0; }
   .pm-sync-row { display: flex; justify-content: space-between; font-size: 9px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .pm-sync-label { color: rgba(200,200,200,0.55); }
   .pm-sync-val { color: #f0f0f0; font-weight: 600; }
 
-  /* ────────────────────────────────────────────────
-     FLUXO CLOUD SYNC
-  ──────────────────────────────────────────────── */
-  .flow-cloud { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-  .flow-cloud-row { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+  /* Gauges */
+  .gauges-block { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+  .gauge-demo { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 140px; }
+  .gauge-svg { width: 130px; height: 72px; }
+  .gauge-label { font-size: 11px; font-weight: 600; color: var(--muted); text-align: center; }
+  .gauge-val { font-size: 22px; font-weight: 800; margin-top: -4px; text-align: center; }
+  .gauge-reset { font-size: 10px; color: var(--muted); text-align: center; }
+  .gauge-sub { font-size: 9px; color: rgba(200,200,200,0.35); text-align: center; }
+  .color-legend { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 160px; justify-content: center; }
+  .color-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .color-range { font-size: 11px; color: var(--muted); margin-left: auto; font-weight: 500; }
 
-  /* ────────────────────────────────────────────────
-     NOTIFICAÇÕES
-  ──────────────────────────────────────────────── */
-  .notif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .notif-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-  .notif-event { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
-  .notif-detail { font-size: 11px; color: var(--muted); line-height: 1.7; }
+  /* Daily chart */
+  .daily-wrap { display: flex; flex-direction: column; gap: 16px; }
+  .daily-chart { display: flex; gap: 10px; align-items: flex-end; padding: 12px 8px 8px; border-bottom: 1px solid var(--border); }
+  .day-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bars-group { display: flex; gap: 3px; align-items: flex-end; height: 48px; }
+  .bar { width: 8px; border-radius: 3px 3px 0 0; min-height: 3px; }
+  .bar.session { background: rgba(34,197,94,0.55); }
+  .bar.weekly { background: #22c55e; }
+  .bar.credits { background: rgba(59,130,246,0.85); }
+  .bar.crit { background: rgba(239,68,68,0.85) !important; }
+  .bar.warn { background: rgba(245,158,11,0.85) !important; }
+  .day-label { font-size: 10px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+  .day-col.today .day-label { color: var(--blue); font-weight: 700; }
+  .day-col.today .bars-group::after { content: 'hoje'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; color: var(--blue); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .day-col.today .bars-group { position: relative; }
+  .day-col.future .bar { opacity: 0.15; }
+  .legend-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .leg-dot { width: 8px; height: 8px; border-radius: 2px; }
 
-  /* ────────────────────────────────────────────────
-     JANELAS DE SESSÃO
-  ──────────────────────────────────────────────── */
-  .session-timeline { display: flex; align-items: flex-end; gap: 2px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 10px; margin-bottom: 12px; }
-  .swin { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-  .swin-bar { width: 28px; border-radius: 4px 4px 0 0; }
-  .swin-label { font-size: 9px; color: var(--muted); text-align: center; }
+  /* Extra bars */
+  .extra-section { display: flex; flex-direction: column; gap: 8px; }
+  .extra-row { display: flex; align-items: center; gap: 10px; }
+  .extra-label { font-size: 11px; font-weight: 600; color: var(--muted); width: 70px; }
+  .progress-bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; }
+  .extra-pct { font-size: 11px; font-weight: 700; width: 40px; text-align: right; }
 
-  /* ────────────────────────────────────────────────
-     PERSISTÊNCIA (store-table)
-  ──────────────────────────────────────────────── */
-  .store-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .store-table th { text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-  .store-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .store-table tr:last-child td { border-bottom: none; }
-  .store-name { font-weight: 700; color: var(--blue); font-family: monospace; font-size: 12px; }
+  /* Modais */
+  .modal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .modal-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .modal-title { font-size: 12px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .modal-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .modal-id { font-family: monospace; font-size: 10px; color: var(--amber); background: rgba(245,158,11,0.1); padding: 2px 6px; border-radius: 4px; }
 
-  /* ────────────────────────────────────────────────
-     CLOUD SYNC SERVIDOR
-  ──────────────────────────────────────────────── */
-  .server-arch { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .server-block { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-  .server-block-title { font-size: 11px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-  .endpoint-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; font-size: 11px; }
-  .ep-method { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; font-family: monospace; }
-  .ep-get { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .ep-post { background: rgba(59,130,246,0.15); color: #3b82f6; }
-  .ep-delete { background: rgba(239,68,68,0.15); color: #ef4444; }
-  .ep-path { color: var(--text); font-family: monospace; font-size: 11px; }
-  .ep-desc { color: var(--muted); font-size: 10px; }
-  .merge-rule { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 6px; font-size: 11px; }
-  .merge-icon { flex-shrink: 0; }
-  .badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
-  .badge-max { background: rgba(34,197,94,0.15); color: #22c55e; }
-  .badge-ignore { background: rgba(148,163,184,0.15); color: #94a3b8; }
-  .badge-newest { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  /* Settings tabs */
+  .tabs-demo { display: flex; gap: 4px; margin-bottom: 12px; }
+  .tab-btn-demo { background: transparent; border: none; color: var(--muted); font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+  .tab-btn-demo.active { background: rgba(59,130,246,0.2); color: var(--blue); }
+  .settings-content { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .settings-group { margin-bottom: 16px; }
+  .settings-group:last-child { margin-bottom: 0; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 11px; color: var(--text); }
+  .toggle-demo { width: 36px; height: 20px; background: rgba(255,255,255,0.15); border-radius: 10px; position: relative; }
+  .toggle-demo::after { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 2px; left: 2px; }
 
-  /* ────────────────────────────────────────────────
-     BARRAS PROGRESS (Seção 5)
-  ──────────────────────────────────────────────── */
-  .progress-row { display: flex; flex-direction: column; gap: 12px; }
-  .progress-item { display: flex; flex-direction: column; gap: 6px; }
-  .progress-header { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
-  .progress-name { font-weight: 700; color: var(--text); }
-  .progress-pct { font-size: 14px; font-weight: 800; }
-  .progress-track { height: 10px; background: rgba(255,255,255,0.07); border-radius: 6px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 6px; }
-  .progress-note { font-size: 10px; color: var(--muted); }
+  /* Smart scheduler */
+  .smart-scheduler-box { display: flex; flex-direction: column; gap: 12px; }
+  .sp-verdict { font-size: 12px; font-weight: 700; text-align: center; padding: 8px; background: rgba(59,130,246,0.15); border-radius: 8px; }
+  .sp-donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .sp-donut { width: 100px; height: 100px; }
+  .sp-donut-label { font-size: 24px; font-weight: 800; }
+  .sp-donut-subtitle { font-size: 10px; color: var(--muted); text-align: center; }
+  .sp-summary { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.5; }
+  .sp-timeline { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 12px; }
+  .sp-timeline-title { font-size: 10px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  .sp-timeline-track { height: 24px; background: rgba(255,255,255,0.08); border-radius: 4px; position: relative; margin-bottom: 8px; }
+  .sp-timeline-labels { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); }
 
-  /* ────────────────────────────────────────────────
-     CREDENCIAIS (Seção 10)
-  ──────────────────────────────────────────────── */
-  .oauth-steps { display: flex; flex-direction: column; gap: 10px; }
-  .oauth-step { display: flex; gap: 12px; align-items: flex-start; }
-  .oauth-num { width: 24px; height: 24px; border-radius: 50%; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); color: var(--blue); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-  .oauth-content { flex: 1; }
-  .oauth-title { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
-  .oauth-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  /* Session windows */
+  .window-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 6px; }
+  .window-label { font-size: 11px; font-weight: 600; color: var(--text); }
+  .window-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .window-badge.open { background: rgba(34,197,94,0.2); color: var(--green); }
+  .window-badge.closed { background: rgba(148,163,184,0.2); color: #94a3b8; }
+  .window-date { font-size: 10px; color: var(--muted); flex: 1; }
+  .window-peak { font-size: 12px; font-weight: 700; }
+  .window-peak-time { font-size: 9px; color: var(--muted); margin-left: 4px; }
 
-  /* ────────────────────────────────────────────────
-     AUTH FLOW (Seção 12)
-  ──────────────────────────────────────────────── */
-  .auth-flow { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; padding: 16px; font-size: 11px; line-height: 2; font-family: monospace; color: var(--muted); }
-  .auth-flow .highlight { color: var(--blue); }
-  .auth-flow .success { color: var(--green); }
-  .auth-flow .warn { color: var(--amber); }
+  /* Flow */
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; }
+  .flow-step { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 90px; text-align: center; }
+  .flow-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .flow-name { font-size: 10px; font-weight: 600; color: var(--text); }
+  .flow-sub { font-size: 9px; color: var(--muted); line-height: 1.4; }
+  .flow-arrow { font-size: 18px; color: var(--muted); padding: 0 4px; margin-bottom: 14px; flex-shrink: 0; }
 
-  /* ────────────────────────────────────────────────
-     MIDDLEWARE STACK (Seção 12)
-  ──────────────────────────────────────────────── */
-  .middleware-stack { display: flex; flex-direction: column; gap: 0; }
-  .mw-layer { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 1px solid var(--border); font-size: 11px; }
-  .mw-layer:first-child { border-radius: 8px 8px 0 0; }
-  .mw-layer:last-child { border-radius: 0 0 8px 8px; }
-  .mw-layer + .mw-layer { border-top: none; }
-  .mw-label { font-weight: 700; min-width: 110px; }
-  .mw-desc { color: var(--muted); }
-  .mw-arrow { font-size: 14px; color: var(--muted); margin-left: auto; }
+  /* States */
+  .states-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .state-card { border-radius: 12px; padding: 14px; border: 1px solid; }
+  .state-card.rate-limit { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); }
+  .state-card.error { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+  .state-card.cred { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); }
+  .state-card.resetting { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25); }
+  .state-icon { font-size: 22px; margin-bottom: 8px; }
+  .state-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .state-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
 
-  /* Tabela de thresholds */
-  .thresh-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-  .thresh-table th { text-align: left; padding: 6px 10px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
-  .thresh-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
-  .thresh-table tr:last-child td { border-bottom: none; }
-  .thresh-table code { font-family: monospace; font-size: 11px; color: var(--blue); }
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
+  .data-table th { text-align: left; padding: 8px 12px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .data-table td:first-child { font-family: monospace; color: var(--amber); }
+  .data-table tr:last-child td { border-bottom: none; }
 
-  /* Tabela de valores numéricos */
-  .num-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .num-table th { text-align: left; padding: 6px 10px; background: rgba(255,255,255,0.04); color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
-  .num-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
-  .num-table tr:last-child td { border-bottom: none; }
-  .num-table td:first-child { font-family: monospace; font-size: 11px; color: var(--amber); }
-  .num-table td:last-child { font-weight: 700; color: var(--text); }
-
+  /* Footer */
+  .footer { text-align: center; margin-top: 48px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 24px; }
+  @media print { body { padding: 24px; } @page { margin: 0; size: A4 landscape; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     HEADER
-══════════════════════════════════════════ -->
 <div class="header">
-  <div class="tag">Documentação Visual</div>
+  <div class="tag">Documentação Visual — v9.x</div>
   <h1>Claude Usage Monitor</h1>
-  <p>Arquitetura completa, UI, fluxo de dados, polling, notificações, sessões, credenciais, persistência e Cloud Sync</p>
+  <p>Arquitetura completa, UI, modais, fluxo de dados, polling, notificações, sessões, credenciais e Cloud Sync</p>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 1 — POPUP: CENÁRIOS VISUAIS
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 1: POPUP PRINCIPAL — CENÁRIOS VISUAIS -->
 <div class="section">
   <div class="section-label">Seção 1</div>
-  <div class="section-title"><span class="num">1</span> Popup: Cenários Visuais</div>
+  <div class="section-title"><span class="num">1</span> Popup Principal: 6 Estados Visuais</div>
   <div class="divider"></div>
   <p style="font-size:12px;color:var(--muted);margin-bottom:18px;">
-    O popup é uma <code>BrowserWindow</code> posicionada acima do ícone da bandeja. Ocultada por padrão; abre no clique esquerdo. Abaixo: os 6 estados possíveis da interface.
+    O popup é uma <code>BrowserWindow</code> posicionada acima do ícone da bandeja (460×210px no Windows, com fundo translúcido). Oculta por padrão; abre no clique esquerdo.
   </p>
 
   <div class="popup-grid">
-
-    <!-- Mockup 1: Estado Normal -->
+    <!-- 1: Estado Normal -->
     <div class="popup-scenario">
       <div class="popup-label">1 — Normal</div>
       <div class="popup-mockup">
@@ -637,43 +211,31 @@
         <div class="pm-body">
           <div class="pm-gauges">
             <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">45%</text>
-              </svg>
+              <svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">45%</text></svg>
               <div class="pm-gauge-label">Sessão (5h)</div>
               <div class="pm-gauge-reset">reset em 2h14</div>
             </div>
             <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">72%</text>
-              </svg>
-              <div class="pm-gauge-label">Semanal (7d)</div>
+              <svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">72%</text></svg>
+              <div class="pm-gauge-label">Workflow (7d)</div>
               <div class="pm-gauge-reset">reset em 1d 4h</div>
             </div>
           </div>
-          <div style="display:flex;gap:4px;align-items:flex-end;height:24px;padding:0 4px;margin-top:6px;">
-            <div style="flex:1;background:rgba(34,197,94,0.4);border-radius:2px;height:8px"></div>
-            <div style="flex:1;background:rgba(34,197,94,0.7);border-radius:2px;height:14px"></div>
-            <div style="flex:1;background:rgba(245,158,11,0.7);border-radius:2px;height:18px"></div>
-            <div style="flex:1;background:rgba(239,68,68,0.7);border-radius:2px;height:22px"></div>
-            <div style="flex:1;background:rgba(245,158,11,0.7);border-radius:2px;height:16px"></div>
-            <div style="flex:1;background:rgba(34,197,94,0.7);border-radius:2px;height:12px"></div>
-            <div style="flex:1;background:rgba(34,197,94,0.3);border-radius:2px;height:4px;opacity:0.3"></div>
+          <div class="pm-daily">
+            <div class="pm-daily-bar" style="background:rgba(34,197,94,0.4);height:8px"></div>
+            <div class="pm-daily-bar" style="background:rgba(34,197,94,0.7);height:14px"></div>
+            <div class="pm-daily-bar" style="background:rgba(245,158,11,0.7);height:18px"></div>
+            <div class="pm-daily-bar" style="background:rgba(239,68,68,0.7);height:22px"></div>
+            <div class="pm-daily-bar" style="background:rgba(245,158,11,0.7);height:16px"></div>
+            <div class="pm-daily-bar" style="background:rgba(34,197,94,0.7);height:12px"></div>
+            <div class="pm-daily-bar" style="background:rgba(34,197,94,0.3);height:4px;opacity:0.3"></div>
           </div>
-          <div class="pm-footer-row">
-            <span>Atualizado 14:32</span>
-            <span>próx. 10min</span>
-            <span>v1.0.0</span>
-          </div>
+          <div class="pm-footer-row"><span>Atualizado 14:32</span><span>próx. 10min</span><span>v9.1.1</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Mockup 2: Rate Limit -->
+    <!-- 2: Rate Limit -->
     <div class="popup-scenario">
       <div class="popup-label">2 — Rate Limit</div>
       <div class="popup-mockup">
@@ -684,35 +246,15 @@
         <div class="pm-banner-rl">⏱ <span>Rate limit ativo · 23min restantes</span></div>
         <div class="pm-body">
           <div class="pm-gauges">
-            <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="16"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">91%</text>
-              </svg>
-              <div class="pm-gauge-label">Sessão (5h)</div>
-              <div class="pm-gauge-reset">reset em 0h22</div>
-            </div>
-            <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="0"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#ef4444">!!!</text>
-              </svg>
-              <div class="pm-gauge-label">Semanal (7d)</div>
-              <div class="pm-gauge-reset">reset em 0d 8h</div>
-            </div>
+            <div class="pm-gauge"><svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="16"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">91%</text></svg><div class="pm-gauge-label">Sessão (5h)</div></div>
+            <div class="pm-gauge"><svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="0"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#ef4444">!!!</text></svg><div class="pm-gauge-label">Workflow (7d)</div></div>
           </div>
-          <div class="pm-footer-row">
-            <span>Pausado</span>
-            <span style="color:#f59e0b">⚠ 429</span>
-            <span>v1.0.0</span>
-          </div>
+          <div class="pm-footer-row"><span>Pausado</span><span style="color:#f59e0b">⚠ 429</span><span>v9.1.1</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Mockup 3: Erro de API -->
+    <!-- 3: Erro de API -->
     <div class="popup-scenario">
       <div class="popup-label">3 — Erro de API</div>
       <div class="popup-mockup">
@@ -720,38 +262,18 @@
           <div class="pm-title"><div class="pm-dot" style="background:#f59e0b"></div>Claude Usage</div>
           <div class="pm-close">✕</div>
         </div>
-        <div class="pm-banner-err">❌ Erro ao buscar dados: timeout após 15s</div>
+        <div class="pm-banner-err">❌ Erro ao buscar dados: timeout</div>
         <div class="pm-body">
           <div class="pm-gauges">
-            <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">45%</text>
-              </svg>
-              <div class="pm-gauge-label">Sessão (5h)</div>
-              <div class="pm-gauge-reset">dado anterior</div>
-            </div>
-            <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">72%</text>
-              </svg>
-              <div class="pm-gauge-label">Semanal (7d)</div>
-              <div class="pm-gauge-reset">dado anterior</div>
-            </div>
+            <div class="pm-gauge"><svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">45%</text></svg><div class="pm-gauge-label">Sessão (5h)</div></div>
+            <div class="pm-gauge"><svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">72%</text></svg><div class="pm-gauge-label">Workflow (7d)</div></div>
           </div>
-          <div class="pm-footer-row">
-            <span style="color:#ef4444">Falhou 14:35</span>
-            <span>retry 2×</span>
-            <span>v1.0.0</span>
-          </div>
+          <div class="pm-footer-row"><span style="color:#ef4444">Falhou 14:35</span><span>retry 2×</span><span>v9.1.1</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Mockup 4: Update disponível -->
+    <!-- 4: Update disponível -->
     <div class="popup-scenario">
       <div class="popup-label">4 — Update disponível</div>
       <div class="popup-mockup">
@@ -759,38 +281,18 @@
           <div class="pm-title"><div class="pm-dot" style="background:#22c55e"></div>Claude Usage</div>
           <div class="pm-close">✕</div>
         </div>
-        <div class="pm-banner-upd">↑ <span>v1.1.0 disponível</span> <button style="margin-left:auto;background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.4);color:#3b82f6;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:Inter,sans-serif">Download</button></div>
+        <div class="pm-banner-upd">↑ <span>v9.2.0 disponível</span></div>
         <div class="pm-body">
           <div class="pm-gauges">
-            <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="120"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">31%</text>
-              </svg>
-              <div class="pm-gauge-label">Sessão (5h)</div>
-              <div class="pm-gauge-reset">reset em 4h01</div>
-            </div>
-            <div class="pm-gauge">
-              <svg width="70" height="40" viewBox="0 0 130 72">
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/>
-                <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="138"/>
-                <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="20" font-weight="800" fill="#f0f0f0">20%</text>
-              </svg>
-              <div class="pm-gauge-label">Semanal (7d)</div>
-              <div class="pm-gauge-reset">reset em 5d 2h</div>
-            </div>
+            <div class="pm-gauge"><svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="120"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">31%</text></svg><div class="pm-gauge-label">Sessão (5h)</div></div>
+            <div class="pm-gauge"><svg width="70" height="40" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.2)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="138"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="20" font-weight="800" fill="#f0f0f0">20%</text></svg><div class="pm-gauge-label">Workflow (7d)</div></div>
           </div>
-          <div class="pm-footer-row">
-            <span>Atualizado 10:12</span>
-            <span>próx. 10min</span>
-            <span style="color:#3b82f6">v1.0.0</span>
-          </div>
+          <div class="pm-footer-row"><span>Atualizado 10:12</span><span>próx. 10min</span><span style="color:#3b82f6">v9.1.1</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Mockup 5: Credenciais não encontradas -->
+    <!-- 5: Sem credenciais (401 ou arquivo não encontrado) -->
     <div class="popup-scenario">
       <div class="popup-label">5 — Sem credenciais</div>
       <div class="popup-mockup">
@@ -803,13 +305,14 @@
             <div class="pm-cred-icon">⚠</div>
             <div class="pm-cred-title">Credenciais não encontradas</div>
             <div class="pm-cred-desc">Execute "claude" no terminal e faça login</div>
-            <div style="margin-top:8px;font-size:9px;background:rgba(0,0,0,0.3);border-radius:4px;padding:4px 6px;color:#94a3b8;font-family:monospace">~/.claude/.credentials.json</div>
+            <div class="pm-cred-path">~/.claude/.credentials.json</div>
+            <button class="pm-cred-btn">Tentar novamente</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Mockup 6: Cloud Sync ativo -->
+    <!-- 6: Cloud Sync ativo -->
     <div class="popup-scenario">
       <div class="popup-label">6 — Cloud Sync</div>
       <div class="popup-mockup">
@@ -819,949 +322,437 @@
         </div>
         <div class="pm-body">
           <div style="font-size:10px;font-weight:700;color:rgba(200,200,200,0.55);margin-bottom:6px;">☁ Cloud Sync</div>
-          <div class="pm-sync-row"><span class="pm-sync-label">Account</span><span class="pm-sync-val">user@email.com</span></div>
-          <div class="pm-sync-row"><span class="pm-sync-label">Server</span><span class="pm-sync-val">https://sync.example.com</span></div>
-          <div class="pm-sync-row"><span class="pm-sync-label">Último sync</span><span class="pm-sync-val" style="color:#22c55e">há 2 min</span></div>
-          <div class="pm-sync-row"><span class="pm-sync-label">Próx. sync</span><span class="pm-sync-val">em 8 min</span></div>
-          <div class="pm-sync-row"><span class="pm-sync-label">Ops pendentes</span><span class="pm-sync-val">0</span></div>
-          <div class="pm-footer-row">
-            <span style="color:#3b82f6">☁ conectado</span>
-            <span>2 devices</span>
-            <span>v1.0.0</span>
+          <div class="pm-sync-panel">
+            <div class="pm-sync-row"><span class="pm-sync-label">Account</span><span class="pm-sync-val">user@email.com</span></div>
+            <div class="pm-sync-row"><span class="pm-sync-label">Server</span><span class="pm-sync-val">https://sync.example.com</span></div>
+            <div class="pm-sync-row"><span class="pm-sync-label">Último sync</span><span class="pm-sync-val" style="color:#22c55e">há 2 min</span></div>
+            <div class="pm-sync-row"><span class="pm-sync-label">Próx. sync</span><span class="pm-sync-val">em 8 min</span></div>
           </div>
+          <div class="pm-footer-row"><span style="color:#3b82f6">☁ conectado</span><span>2 devices</span><span>v9.1.1</span></div>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 2 — GAUGES SEMICIRCULARES
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 2: GAUGES SEMICIRCULARES -->
 <div class="section">
   <div class="section-label">Seção 2</div>
-  <div class="section-title"><span class="num">2</span> Gauges Semicirculares (Medidores de Uso)</div>
+  <div class="section-title"><span class="num">2</span> Gauges Semicirculares</div>
   <div class="divider"></div>
   <div class="card">
     <div class="gauges-block">
-
-      <!-- Gauge Sessão — verde (45%) -->
       <div class="gauge-demo">
-        <svg class="gauge-svg" viewBox="0 0 130 72">
-          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="172.8" stroke-dashoffset="95"/>
-          <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="18" font-weight="800" fill="#f0f0f0">45%</text>
-        </svg>
+        <svg class="gauge-svg" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="95"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="18" font-weight="800" fill="#f0f0f0">45%</text></svg>
         <div class="gauge-val" style="color:#22c55e">45%</div>
         <div class="gauge-label">Sessão (5h)</div>
         <div class="gauge-reset">resets em 2h 14min</div>
+        <div class="gauge-sub">reset às 17:00</div>
       </div>
-
-      <!-- Gauge Semanal — âmbar (72%) -->
       <div class="gauge-demo">
-        <svg class="gauge-svg" viewBox="0 0 130 72">
-          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="172.8" stroke-dashoffset="48"/>
-          <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="18" font-weight="800" fill="#f0f0f0">72%</text>
-        </svg>
+        <svg class="gauge-svg" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="48"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="18" font-weight="800" fill="#f0f0f0">72%</text></svg>
         <div class="gauge-val" style="color:#f59e0b">72%</div>
-        <div class="gauge-label">Semanal (7d)</div>
+        <div class="gauge-label">Workflow (7d)</div>
         <div class="gauge-reset">resets em 1d 4h</div>
+        <div class="gauge-sub">reset seg 09:00</div>
       </div>
-
-      <!-- Gauge crítico — vermelho (91%) -->
       <div class="gauge-demo">
-        <svg class="gauge-svg" viewBox="0 0 130 72">
-          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/>
-          <path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="172.8" stroke-dashoffset="16"/>
-          <text x="65" y="56" text-anchor="middle" font-family="Inter,sans-serif" font-size="18" font-weight="800" fill="#f0f0f0">91%</text>
-        </svg>
+        <svg class="gauge-svg" viewBox="0 0 130 72"><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="10" stroke-linecap="round"/><path d="M10,66 A55,55 0 0,1 120,66" fill="none" stroke="#ef4444" stroke-width="10" stroke-linecap="round" stroke-dasharray="172.8" stroke-dashoffset="16"/><text x="65" y="56" text-anchor="middle" font-family="Inter" font-size="18" font-weight="800" fill="#f0f0f0">91%</text></svg>
         <div class="gauge-val" style="color:#ef4444">91%</div>
         <div class="gauge-label">Sessão (5h)</div>
         <div class="gauge-reset">resets em 0h 22min</div>
+        <div class="gauge-sub">reset às 15:30</div>
       </div>
-
-      <!-- Legenda de cores -->
       <div class="color-legend">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;">Sistema de cores</div>
-        <div class="color-row">
-          <div class="color-dot" style="background:#22c55e"></div>
-          <span style="color:#22c55e;font-weight:600;">Verde</span>
-          <span class="color-range">0 – 59%</span>
-        </div>
-        <div class="color-row">
-          <div class="color-dot" style="background:#f59e0b"></div>
-          <span style="color:#f59e0b;font-weight:600;">Âmbar</span>
-          <span class="color-range">60 – 79%</span>
-        </div>
-        <div class="color-row">
-          <div class="color-dot" style="background:#ef4444"></div>
-          <span style="color:#ef4444;font-weight:600;">Vermelho</span>
-          <span class="color-range">≥ 80%</span>
-        </div>
+        <div class="color-row"><div class="color-dot" style="background:#22c55e"></div><span style="color:#22c55e;font-weight:600;">Verde</span><span class="color-range">0 – 59%</span></div>
+        <div class="color-row"><div class="color-dot" style="background:#f59e0b"></div><span style="color:#f59e0b;font-weight:600;">Âmbar</span><span class="color-range">60 – 79%</span></div>
+        <div class="color-row"><div class="color-dot" style="background:#ef4444"></div><span style="color:#ef4444;font-weight:600;">Vermelho</span><span class="color-range">≥ 80%</span></div>
         <div style="margin-top:12px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;">
           <strong style="color:var(--text)">Acima de 100%</strong><br>
           Gauge trava em 100% visualmente.<br>
           Texto exibe <code style="color:#f59e0b">&gt;XXX%</code> (ex: <code style="color:#ef4444">&gt;1600%</code>).
         </div>
       </div>
-
     </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 3 — ÍCONE DA BANDEJA
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 3: GRÁFICO DE BARRAS DIÁRIO -->
 <div class="section">
   <div class="section-label">Seção 3</div>
-  <div class="section-title"><span class="num">3</span> Ícone na Bandeja do Sistema</div>
-  <div class="divider"></div>
-  <div class="card">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-      Gerado em <code>&lt;canvas&gt;</code> oculto (32×32px). Usa o <strong>maior valor</strong> entre sessão e semanal para cor e arco. PNG enviado via <code>ipcRenderer.send('tray-icon-data', ...)</code>.
-    </p>
-    <div class="tray-demos">
-
-      <!-- 45% verde -->
-      <div class="tray-item">
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#22c55e" stroke-width="5"
-                  stroke-dasharray="125.6" stroke-dashoffset="69" stroke-linecap="round"
-                  transform="rotate(-90 26 26)"/>
-          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#f0f0f0">45</text>
-        </svg>
-        <div class="tray-pct" style="color:#22c55e">45%</div>
-        <div class="tray-caption">Normal</div>
-      </div>
-
-      <!-- 72% âmbar -->
-      <div class="tray-item">
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#f59e0b" stroke-width="5"
-                  stroke-dasharray="125.6" stroke-dashoffset="35" stroke-linecap="round"
-                  transform="rotate(-90 26 26)"/>
-          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#f0f0f0">72</text>
-        </svg>
-        <div class="tray-pct" style="color:#f59e0b">72%</div>
-        <div class="tray-caption">Atenção</div>
-      </div>
-
-      <!-- 91% vermelho -->
-      <div class="tray-item">
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#ef4444" stroke-width="5"
-                  stroke-dasharray="125.6" stroke-dashoffset="11" stroke-linecap="round"
-                  transform="rotate(-90 26 26)"/>
-          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#f0f0f0">91</text>
-        </svg>
-        <div class="tray-pct" style="color:#ef4444">91%</div>
-        <div class="tray-caption">Crítico</div>
-      </div>
-
-      <!-- ≥100% vermelho — !!! -->
-      <div class="tray-item">
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="24" fill="rgba(60,60,60,0.85)"/>
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#ef4444" stroke-width="5"
-                  stroke-dasharray="125.6" stroke-dashoffset="0" stroke-linecap="round"
-                  transform="rotate(-90 26 26)"/>
-          <text x="26" y="30" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" font-weight="800" fill="#ef4444">!!!</text>
-        </svg>
-        <div class="tray-pct" style="color:#ef4444">≥100%</div>
-        <div class="tray-caption">Ultrapassado</div>
-      </div>
-
-      <div style="flex:1;min-width:160px;font-size:11px;color:var(--muted);line-height:1.8;padding-left:8px;border-left:1px solid var(--border);">
-        <strong style="color:var(--text);display:block;margin-bottom:8px;">Composição do ícone</strong>
-        🔵 <strong style="color:var(--text)">Fundo</strong> — círculo cinza (adapta ao tema)<br>
-        🟢 <strong style="color:var(--text)">Arco</strong> — proporcional ao maior % (sessão ou semanal)<br>
-        🔤 <strong style="color:var(--text)">Texto</strong> — valor numérico central (<code>!!!</code> se ≥ 100%)<br>
-        🎨 <strong style="color:var(--text)">Cor</strong> — mesma paleta dos gauges<br>
-        📐 <strong style="color:var(--text)">Tamanho</strong> — 32×32px, enviado como PNG via IPC
-      </div>
-
-    </div>
-  </div>
-</div>
-
-
-<!-- ══════════════════════════════════════════
-     SEÇÃO 4 — GRÁFICO DE BARRAS DIÁRIO
-══════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-label">Seção 4</div>
-  <div class="section-title"><span class="num">4</span> Gráfico de Barras Diário (7 dias)</div>
+  <div class="section-title"><span class="num">3</span> Gráfico de Barras Diário (7 dias)</div>
   <div class="divider"></div>
   <div class="card">
     <div class="daily-wrap">
-
-      <!-- Gráfico demo -->
       <div>
         <div class="legend-row" style="margin-bottom:12px;">
           <div class="leg"><div class="leg-dot" style="background:rgba(34,197,94,0.55)"></div>Sessão 5h</div>
-          <div class="leg"><div class="leg-dot" style="background:#22c55e"></div>Semanal 7d</div>
+          <div class="leg"><div class="leg-dot" style="background:#22c55e"></div>Workflow 7d</div>
           <div class="leg"><div class="leg-dot" style="background:rgba(59,130,246,0.85)"></div>Créditos (opcional)</div>
         </div>
         <div class="daily-chart">
-          <!-- Seg -->
-          <div class="day-col">
-            <div class="bars-group">
-              <div class="bar session" style="height:14px"></div>
-              <div class="bar weekly" style="height:20px"></div>
-            </div>
-            <div class="day-label">Seg</div>
-          </div>
-          <!-- Ter -->
-          <div class="day-col">
-            <div class="bars-group">
-              <div class="bar session warn" style="height:28px"></div>
-              <div class="bar weekly warn" style="height:32px"></div>
-            </div>
-            <div class="day-label">Ter</div>
-          </div>
-          <!-- Qua -->
-          <div class="day-col">
-            <div class="bars-group">
-              <div class="bar session" style="height:18px"></div>
-              <div class="bar weekly warn" style="height:38px"></div>
-            </div>
-            <div class="day-label">Qua</div>
-          </div>
-          <!-- Qui -->
-          <div class="day-col">
-            <div class="bars-group">
-              <div class="bar session crit" style="height:38px"></div>
-              <div class="bar weekly crit" style="height:44px"></div>
-              <div class="bar credits" style="height:20px"></div>
-            </div>
-            <div class="day-label">Qui</div>
-          </div>
-          <!-- Sex -->
-          <div class="day-col">
-            <div class="bars-group">
-              <div class="bar session" style="height:12px"></div>
-              <div class="bar weekly crit" style="height:46px"></div>
-            </div>
-            <div class="day-label">Sex</div>
-          </div>
-          <!-- Sab — hoje -->
-          <div class="day-col today">
-            <div class="bars-group">
-              <div class="bar session warn" style="height:22px"></div>
-              <div class="bar weekly crit" style="height:40px"></div>
-            </div>
-            <div class="day-label">Sáb</div>
-          </div>
-          <!-- Dom — futuro -->
-          <div class="day-col future">
-            <div class="bars-group">
-              <div class="bar session" style="height:6px;opacity:0.15"></div>
-              <div class="bar weekly" style="height:6px;opacity:0.15"></div>
-            </div>
-            <div class="day-label">Dom</div>
-          </div>
+          <div class="day-col"><div class="bars-group"><div class="bar session" style="height:14px"></div><div class="bar weekly" style="height:20px"></div></div><div class="day-label">Seg</div></div>
+          <div class="day-col"><div class="bars-group"><div class="bar session warn" style="height:28px"></div><div class="bar weekly warn" style="height:32px"></div></div><div class="day-label">Ter</div></div>
+          <div class="day-col"><div class="bars-group"><div class="bar session" style="height:18px"></div><div class="bar weekly warn" style="height:38px"></div></div><div class="day-label">Qua</div></div>
+          <div class="day-col"><div class="bars-group"><div class="bar session crit" style="height:38px"></div><div class="bar weekly crit" style="height:44px"></div><div class="bar credits" style="height:20px"></div></div><div class="day-label">Qui</div></div>
+          <div class="day-col"><div class="bars-group"><div class="bar session" style="height:12px"></div><div class="bar weekly crit" style="height:46px"></div></div><div class="day-label">Sex</div></div>
+          <div class="day-col today"><div class="bars-group"><div class="bar session warn" style="height:22px"></div><div class="bar weekly crit" style="height:40px"></div></div><div class="day-label">Sáb</div></div>
+          <div class="day-col future"><div class="bars-group"><div class="bar session" style="height:6px;opacity:0.15"></div><div class="bar weekly" style="height:6px;opacity:0.15"></div></div><div class="day-label">Dom</div></div>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:right;">
-          ↑ pico máximo do dia &nbsp;|&nbsp; altura máx = 48px (100%)
+        <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:right;">↑ pico máximo do dia &nbsp;|&nbsp; altura máx = 48px (100%)</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">
+          <strong style="color:var(--text)">Ciclo de 7 dias</strong><br>Calculado a partir de <code>resets_at</code> da janela semanal. <code>cycleStart = resets_at − 7 dias</code>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">
+          <strong style="color:var(--text)">Dias futuros</strong><br>Exibidos sem barras. Dia atual destacado com rótulo em azul.
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">
+          <strong style="color:var(--text)">Janelas de sessão</strong><br>A janela de 5h pode resetar várias vezes/dia. <code>sessionWindowCount</code>: nº de janelas. <code>sessionAccum</code>: uso acumulado.
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;color:var(--muted);line-height:1.6;">
+          <strong style="color:var(--text)">Barra de créditos</strong><br>Exibida apenas se <code>extra_usage.is_enabled</code> e <code>monthly_limit &gt; 0</code> presente.
         </div>
       </div>
-
-      <!-- Notas explicativas -->
-      <div class="daily-notes">
-        <div class="note-box">
-          <strong>Ciclo de 7 dias</strong><br>
-          Calculado a partir de <code>resets_at</code> da janela semanal.<br>
-          <code>cycleStart = resets_at − 7 dias</code>
-        </div>
-        <div class="note-box">
-          <strong>Dias futuros</strong><br>
-          Exibidos sem barras. Dia atual destacado com rótulo em azul.
-        </div>
-        <div class="note-box">
-          <strong>Janelas de sessão</strong><br>
-          A janela de 5h pode resetar várias vezes/dia.<br>
-          <code>sessionWindowCount</code>: nº de janelas abertas<br>
-          <code>sessionAccum</code>: uso acumulado das anteriores
-        </div>
-        <div class="note-box">
-          <strong>Barra de créditos</strong><br>
-          Exibida apenas se <code>extra_usage.is_enabled</code> e <code>monthly_limit &gt; 0</code> presente no histórico.
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 5 — BARRAS SONNET + CRÉDITOS
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 4: BARRAS EXTRAS (SONNET + CRÉDITOS) -->
+<div class="section">
+  <div class="section-label">Seção 4</div>
+  <div class="section-title"><span class="num">4</span> Barras Extras: Sonnet e Créditos</div>
+  <div class="divider"></div>
+  <div class="card">
+    <div class="extra-section">
+      <div class="extra-row">
+        <div class="extra-label">Sonnet</div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" style="width:52%;background:linear-gradient(90deg,rgba(245,158,11,0.6),#f59e0b)"></div></div>
+        <div class="extra-pct" style="color:#f59e0b">52%</div>
+      </div>
+      <div class="extra-row">
+        <div class="extra-label">Credits</div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" style="width:78%;background:linear-gradient(90deg,rgba(59,130,246,0.6),#3b82f6)"></div></div>
+        <div class="extra-pct" style="color:#3b82f6">78%</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:16px;line-height:1.6;">
+      <strong>Condição de exibição:</strong> apenas se <code>extra_usage.is_enabled</code> e <code>monthly_limit &gt; 0</code> presentes no payload da API. São opcionais e controlados por setting.
+    </p>
+  </div>
+</div>
+
+
+<!-- SEÇÃO 5: JANELAS DE SESSÃO (SESSION WINDOWS) -->
 <div class="section">
   <div class="section-label">Seção 5</div>
-  <div class="section-title"><span class="num">5</span> Barras de Progresso: Sonnet e Créditos Extras</div>
+  <div class="section-title"><span class="num">5</span> Janelas de Sessão (Session Windows)</div>
   <div class="divider"></div>
   <div class="card">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">
-      Além dos dois gauges principais, o popup exibe barras horizontais para Sonnet 3.5 (janela semanal) e créditos extras. Cada barra é calculada a partir do payload da API.
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+      O resumo de janelas mostra as sessões de 5h. Cada linha exibe: data/hora de início, estado (Aberta/Fechada), e valor em %.
     </p>
-    <div class="progress-row">
-
-      <!-- Barra Sonnet -->
-      <div class="progress-item">
-        <div class="progress-header">
-          <div class="progress-name">Sonnet</div>
-          <div class="progress-pct" style="color:#f59e0b">52%</div>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" style="width:52%;background:linear-gradient(90deg,rgba(245,158,11,0.6),#f59e0b)"></div>
-        </div>
-        <div class="progress-note">Calculado via <code>seven_day_sonnet.utilization × 100</code> &nbsp;·&nbsp; janela independente de 7 dias</div>
+    <div style="margin-bottom:16px;">
+      <div class="window-row">
+        <span class="window-label">Janela 1 <span class="window-badge open">Aberta</span></span>
+        <span class="window-date">13 abr 10:00 → em andamento</span>
+        <span class="window-peak" style="color:#22c55e">73%</span>
+        <span class="window-peak-time">pico 14:30</span>
       </div>
-
-      <!-- Barra Créditos -->
-      <div class="progress-item">
-        <div class="progress-header">
-          <div class="progress-name">Créditos Extras</div>
-          <div class="progress-pct" style="color:#3b82f6">28%</div>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" style="width:28%;background:linear-gradient(90deg,rgba(59,130,246,0.6),#3b82f6)"></div>
-        </div>
-        <div class="progress-note">Calculado via <code>(extra_usage.used_credits / extra_usage.monthly_limit) × 100</code></div>
+      <div class="window-row">
+        <span class="window-label">Janela 2 <span class="window-badge closed">Fechada</span></span>
+        <span class="window-date">12 abr 14:00 → 19:00</span>
+        <span class="window-peak" style="color:#f59e0b">68%</span>
       </div>
-
-    </div>
-
-    <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="note-box">
-        <strong>Quando a barra Sonnet aparece</strong><br>
-        Sempre que o payload contém <code>seven_day_sonnet</code> com <code>utilization</code> definido. Mostra uso do modelo Sonnet especificamente, separado do limite global.
-      </div>
-      <div class="note-box">
-        <strong>Quando a barra Créditos aparece</strong><br>
-        Apenas se <code>extra_usage.is_enabled === true</code> e <code>monthly_limit &gt; 0</code>. Usuários sem plano de créditos não veem essa barra.
+      <div class="window-row">
+        <span class="window-label">Janela 3 <span class="window-badge closed">Fechada</span></span>
+        <span class="window-date">12 abr 08:00 → 14:00</span>
+        <span class="window-peak" style="color:#ef4444">100%</span>
       </div>
     </div>
-
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:11px;color:var(--muted);line-height:1.7;">
+      <strong style="color:var(--text);display:block;margin-bottom:8px;">Regras de exibição (v9.x):</strong>
+      • <strong style="color:#22c55e;">Janela Aberta:</strong> exibe <code>peak</code> (pico atual) — apenas se <code>peak &gt; 0</code> ou <code>final &gt; 0</code><br>
+      • <strong style="color:#94a3b8;">Janela Fechada:</strong> exibe <code>final</code> (valor no momento do fechamento)<br>
+      • <strong style="color:#f59e0b;">Correção de bug:</strong> antes mostrava pico (100%) ao fechar, agora mostra valor final (73%)<br>
+      • <code>sessionWindowCount</code>: número de janelas abertas no dia (default 1)<br>
+      • <code>sessionAccum</code>: soma dos picos das janelas completadas
+    </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 6 — FLUXO DE DADOS COMPLETO
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 6: MODAIS (11 TOTAL) -->
 <div class="section">
   <div class="section-label">Seção 6</div>
-  <div class="section-title"><span class="num">6</span> Fluxo de Dados Completo</div>
+  <div class="section-title"><span class="num">6</span> Modais (11 modais)</div>
   <div class="divider"></div>
   <div class="card">
-
-    <!-- Fluxo principal -->
-    <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;">
-
-      <div class="flow-step">
-        <div class="flow-icon" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);">🔑</div>
-        <div class="flow-name">credentialService</div>
-        <div class="flow-sub">~/.claude/<br>.credentials.json</div>
+    <div class="modal-grid">
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#1</span> force-refresh-modal</div>
+        <div class="modal-desc">Rate limit ativo. Pergunta se quer forçar atualização mesmo assim. Botões: Cancelar / Forçar.</div>
       </div>
-      <div class="flow-arrow">→</div>
-
-      <div class="flow-step">
-        <div class="flow-icon" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.25);">🌐</div>
-        <div class="flow-name">API Anthropic</div>
-        <div class="flow-sub">/api/oauth/usage<br>timeout 15s</div>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#2</span> day-detail-modal</div>
+        <div class="modal-desc">Detalhe do dia. Gráfico de linha completo da série temporal (Sessão + Semanal ao longo das horas).</div>
       </div>
-      <div class="flow-arrow">→</div>
-
-      <div class="flow-step">
-        <div class="flow-icon" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);">🔌</div>
-        <div class="flow-name">usageApiService</div>
-        <div class="flow-sub">retry 3× (5xx)<br>429 → rate limit</div>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#3</span> credential-modal</div>
+        <div class="modal-desc">Credenciais não encontradas ou 401 (token expirado). Exibe instructions de login e caminho do arquivo.</div>
       </div>
-      <div class="flow-arrow">→</div>
-
-      <div class="flow-step">
-        <div class="flow-icon" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);">⏱</div>
-        <div class="flow-name">pollingService</div>
-        <div class="flow-sub">adaptive intervals<br>pause/resume</div>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#4</span> report-modal</div>
+        <div class="modal-desc">Relatório de uso. Gráfico de linha (7 dias), lista de janelas (com pico/final), métricas analíticas (janelas/dia, pico comum, dias >80%).</div>
       </div>
-      <div class="flow-arrow">→</div>
-
-      <div class="flow-step">
-        <div class="flow-icon" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.25);">📡</div>
-        <div class="flow-name">IPC Main→Renderer</div>
-        <div class="flow-sub">usage-updated<br>rate-limited</div>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#5</span> edit-snapshot-modal</div>
+        <div class="modal-desc">Editar dados do dia. Campos: Dia, Sessão pico (%), Acumulado (%), Nº resets, Semanal máx. (%).</div>
       </div>
-      <div class="flow-arrow">→</div>
-
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
-          <div style="width:30px;height:30px;border-radius:8px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">📊</div>
-          updateGauge (sessão + semanal)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
-          <div style="width:30px;height:30px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">🖼</div>
-          updateTrayIcon (canvas PNG)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
-          <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">📅</div>
-          renderDailyChart (7 dias)
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
-          <div style="width:30px;height:30px;border-radius:8px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;">🔔</div>
-          notificationService
-        </div>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#6</span> settings-modal</div>
+        <div class="modal-desc">Configurações com 5 abas: Geral, Exibição, Notificações, Backup/Sync, Smart Plan.</div>
       </div>
-
-    </div>
-
-    <!-- Ramo Cloud Sync -->
-    <div class="flow-cloud">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Ramo Cloud Sync (feat/cloud-sync)</div>
-      <div class="flow-cloud-row">
-        <div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;">☁</div>
-        <span style="color:var(--muted)">pollingService</span>
-        <span style="color:var(--muted)">→</span>
-        <div style="width:28px;height:28px;border-radius:8px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;">🔄</div>
-        <span style="color:var(--text);font-weight:600;">syncService</span>
-        <span style="color:var(--muted)">→ POST /sync/push (Hono server)</span>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#7</span> smart-scheduler-modal</div>
+        <div class="modal-desc">Timeline do Smart Schedule. Donut de %, texto de status, timeline do expediente (work/break/now/reset).</div>
       </div>
-      <div class="flow-cloud-row" style="margin-left:36px;">
-        <span style="color:var(--muted);font-family:monospace;font-size:11px;">← GET /sync/pull?since=&lt;ts&gt; (delta incremental)</span>
+      <div class="modal-card">
+        <div class="modal-title"><span class="modal-id">#8</span> day-curve-popup</div>
+        <div class="modal-desc">Popup inline de curva do dia (similar ao day-detail mas menor). Clique na coluna do gráfico diário.</div>
       </div>
-      <div class="flow-cloud-row" style="margin-left:36px;">
-        <span style="color:var(--muted);font-family:monospace;font-size:11px;">← GET /sync/snapshot (dump completo)</span>
-      </div>
-      <div style="margin-top:4px;font-size:10px;color:var(--muted);padding:8px 12px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;">
-        O sync roda de forma independente do polling principal. Intervalo padrão: 10 min. Em caso de falha, usa backoff [1, 2, 5, 10, 30] min.
+      <div class="modal-card" style="opacity:0.5;">
+        <div class="modal-title"><span class="modal-id">#9-11</span> (reservados)</div>
+        <div class="modal-desc">Estrutura preparada para futuras expansões.</div>
       </div>
     </div>
-
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 7 — INTERVALOS DE POLLING
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 7: SETTINGS MODAL — ABAS -->
 <div class="section">
   <div class="section-label">Seção 7</div>
-  <div class="section-title"><span class="num">7</span> Intervalos de Polling (pollingService)</div>
+  <div class="section-title"><span class="num">7</span> Settings Modal: 5 Abas</div>
   <div class="divider"></div>
   <div class="card">
-    <div class="poll-grid">
-      <div class="poll-item" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);">
-        <div class="poll-icon">🟢</div>
-        <div class="poll-name">Normal</div>
-        <div class="poll-interval" style="color:#22c55e">10 min</div>
-        <div class="poll-desc">Padrão.<br>Uso estável.</div>
-      </div>
-      <div class="poll-item" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);">
-        <div class="poll-icon">⚡</div>
-        <div class="poll-name">Fast</div>
-        <div class="poll-interval" style="color:#f59e0b">7 min</div>
-        <div class="poll-desc">Spike &gt;1%<br>1 ciclo (FAST_<br>CYCLES=1)</div>
-      </div>
-      <div class="poll-item" style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);">
-        <div class="poll-icon">💤</div>
-        <div class="poll-name">Idle</div>
-        <div class="poll-interval" style="color:#94a3b8">30 min</div>
-        <div class="poll-desc">Sistema inativo<br>&gt; 10 min</div>
-      </div>
-      <div class="poll-item" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);">
-        <div class="poll-icon">💥</div>
-        <div class="poll-name">Error</div>
-        <div class="poll-interval" style="color:#ef4444;font-size:9px;">1→2→4→8→16<br>(cap 20 min)</div>
-        <div class="poll-desc">Falha API (5xx)<br>backoff expo-<br>nencial</div>
-      </div>
-      <div class="poll-item" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);">
-        <div class="poll-icon">🚫</div>
-        <div class="poll-name">Rate Limit</div>
-        <div class="poll-interval" style="color:#f59e0b;font-size:10px;">5→10 min<br>(cap 10 min)</div>
-        <div class="poll-desc">429. Respeita<br>Retry-After<br>se disponível</div>
-      </div>
-      <div class="poll-item" style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);">
-        <div class="poll-icon">⚙️</div>
-        <div class="poll-name">Custom</div>
-        <div class="poll-interval" style="color:#a855f7">1–60 min</div>
-        <div class="poll-desc">Usuário define<br>via settings<br>setCustomInterval</div>
-      </div>
+    <div class="tabs-demo">
+      <button class="tab-btn-demo active">Geral</button>
+      <button class="tab-btn-demo">Exibição</button>
+      <button class="tab-btn-demo">Notificações</button>
+      <button class="tab-btn-demo">Backup/Sync</button>
+      <button class="tab-btn-demo">Agenda</button>
     </div>
-
-    <div style="margin-top:14px;font-size:11px;color:var(--muted);padding:10px 14px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.18);border-radius:8px;line-height:1.7;">
-      <strong style="color:var(--text)">Persistência do Rate Limit:</strong>
-      O estado de rate limit (<code>rateLimitedUntil</code>, <code>rateLimitCount</code>) é persistido em disco (<code>accounts.json</code>). No startup, <code>main.ts</code> chama <code>pollingService.restoreRateLimit(until, count)</code> antes de <code>start()</code>, garantindo que um rate limit ativo sobreviva a reinicializações do app.
+    <div class="settings-content">
+      <div class="settings-group">
+        <div class="settings-row"><span class="settings-label">Launch at startup</span><div class="toggle-demo"></div></div>
+        <div class="settings-row"><span class="settings-label">Always visible</span><div class="toggle-demo"></div></div>
+        <div class="settings-row"><span class="settings-label">Theme</span><span style="font-size:11px;color:var(--muted)">System/Dark/Light</span></div>
+        <div class="settings-row"><span class="settings-label">Language</span><span style="font-size:11px;color:var(--muted)">English / Português (BR)</span></div>
+        <div class="settings-row"><span class="settings-label">Size</span><span style="font-size:11px;color:var(--muted)">Normal/Medium/Large/Very Large</span></div>
+        <div class="settings-row"><span class="settings-label">Auto refresh</span><div class="toggle-demo"></div></div>
+        <div class="settings-row"><span class="settings-label">Modo compacto</span><div class="toggle-demo"></div></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+        <strong style="color:var(--text);">Exibição:</strong> Account bar, Gráfico semanal, Barras Créditos/Sonnet, Rodapé<br>
+        <strong style="color:var(--text);">Notificações:</strong> Enable, Sound, Notify on reset, Reset threshold (1-99%), Session/Weekly limit<br>
+        <strong style="color:var(--text);">Backup/Sync:</strong> Auto backup (modo/pasta), Cloud Sync (server/device auth)<br>
+        <strong style="color:var(--text);">Agenda (Smart Plan):</strong> Enable, Dias ativos (0-6), Horário trabalho (início/fim), Intervalo (início/fim)
+      </div>
     </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 8 — SISTEMA DE NOTIFICAÇÕES
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 8: FLUXO DE DADOS -->
 <div class="section">
   <div class="section-label">Seção 8</div>
-  <div class="section-title"><span class="num">8</span> Sistema de Notificações</div>
+  <div class="section-title"><span class="num">8</span> Fluxo de Dados (Polling)</div>
   <div class="divider"></div>
   <div class="card">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-      O <code>notificationService</code> usa debounce para evitar re-notificações excessivas. Cada alerta tem condição de disparo, condição de reset e configuração independente.
-    </p>
-
-    <div class="notif-grid">
-
-      <div class="notif-card">
-        <div class="notif-event" style="color:#ef4444">Alerta de Sessão</div>
-        <div class="notif-detail">
-          <strong style="color:var(--text)">Dispara quando:</strong> <code>sessionPct ≥ sessionThreshold</code> (padrão 80%)<br>
-          <strong style="color:var(--text)">Debounce:</strong> não re-notifica até <code>sessionPct &lt; resetThreshold</code> (padrão 50%)<br>
-          <strong style="color:var(--text)">Configurável:</strong> toggle on/off + som ativável via settings
-        </div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(34,197,94,0.15)">🔑</div>
+        <div class="flow-name">credentialService</div>
+        <div class="flow-sub">Lê ~/.claude/.credentials.json</div>
       </div>
-
-      <div class="notif-card">
-        <div class="notif-event" style="color:#f59e0b">Alerta Semanal</div>
-        <div class="notif-detail">
-          <strong style="color:var(--text)">Dispara quando:</strong> <code>weeklyPct ≥ weeklyThreshold</code> (padrão 80%)<br>
-          <strong style="color:var(--text)">Debounce:</strong> não re-notifica até <code>weeklyPct &lt; resetThreshold</code> (padrão 50%)<br>
-          <strong style="color:var(--text)">Configurável:</strong> independente do alerta de sessão
-        </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(59,130,246,0.15)">📡</div>
+        <div class="flow-name">usageApiService</div>
+        <div class="flow-sub">GET /v1/daily_usage</div>
       </div>
-
-      <div class="notif-card">
-        <div class="notif-event" style="color:#3b82f6">Reset de Janela (5h)</div>
-        <div class="notif-detail">
-          <strong style="color:var(--text)">Dispara quando:</strong> <code>resets_at</code> muda ≥ 1 hora (nova janela detectada)<br>
-          <strong style="color:var(--text)">Sem debounce</strong> — evento pontual, não acumula<br>
-          <strong style="color:var(--text)">Configurável:</strong> <code>notifyOnWindowReset</code> (padrão: true)
-        </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(168,85,247,0.15)">🔄</div>
+        <div class="flow-name">pollingService</div>
+        <div class="flow-sub">Intervalos dinâmicos</div>
       </div>
-
-      <div class="notif-card">
-        <div class="notif-event" style="color:#22c55e">Queda de Uso</div>
-        <div class="notif-detail">
-          <strong style="color:var(--text)">Dispara quando:</strong> uso cai abaixo de <code>resetThreshold</code> após alerta ter sido enviado<br>
-          <strong style="color:var(--text)">Reset do debounce:</strong> zera a flag de "já notificou"<br>
-          <strong style="color:var(--text)">Configurável:</strong> <code>notifyOnReset</code> (padrão: false)
-        </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(245,158,11,0.15)">💾</div>
+        <div class="flow-name">dailySnapshotService</div>
+        <div class="flow-sub">Atualiza histórico</div>
       </div>
-
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background:rgba(239,68,68,0.15)">🎨</div>
+        <div class="flow-name">renderer (UI)</div>
+        <div class="flow-sub">updateUI() → gauges</div>
+      </div>
     </div>
-
-    <div style="margin-top:16px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;">Thresholds configuráveis</div>
-      <table class="thresh-table">
-        <thead>
-          <tr>
-            <th>Threshold</th>
-            <th>Padrão</th>
-            <th>Range</th>
-            <th>Persistência</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>sessionThreshold</code></td>
-            <td>80%</td>
-            <td>1 – 100</td>
-            <td><code>config.json</code></td>
-          </tr>
-          <tr>
-            <td><code>weeklyThreshold</code></td>
-            <td>80%</td>
-            <td>1 – 100</td>
-            <td><code>config.json</code></td>
-          </tr>
-          <tr>
-            <td><code>resetThreshold</code></td>
-            <td>50%</td>
-            <td>1 – 99</td>
-            <td><code>config.json</code></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
+    <table class="data-table">
+      <tr><th>Componente</th><th>Arquivo</th><th>Frequência</th></tr>
+      <tr><td>Polling normal</td><td>pollingService.ts</td><td>10 min</td></tr>
+      <tr><td>Polling rápido (spike)</td><td>pollingService.ts</td><td>7 min (1 ciclo)</td></tr>
+      <tr><td>Polling ocioso</td><td>pollingService.ts</td><td>30 min</td></tr>
+      <tr><td>Polling erro</td><td>pollingService.ts</td><td>1-20 min (backoff)</td></tr>
+      <tr><td>Polling rate limit</td><td>pollingService.ts</td><td>5-10 min (backoff)</td></tr>
+    </table>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 9 — JANELAS DE SESSÃO
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 9: ESTADOS ESPECIAIS -->
 <div class="section">
   <div class="section-label">Seção 9</div>
-  <div class="section-title"><span class="num">9</span> Janelas de Sessão (5h) e Detecção de Reset</div>
+  <div class="section-title"><span class="num">9</span> Estados Especiais</div>
   <div class="divider"></div>
   <div class="card">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-      A janela de sessão da Anthropic dura 5 horas. Várias janelas podem ocorrer no mesmo dia. O sistema detecta cada transição e acumula os dados.
-    </p>
-
-    <!-- Timeline visual -->
-    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;">
-      <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Exemplo: 3 janelas no mesmo dia</div>
-      <!-- Janela 1 -->
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;">08:00</div>
-        <div style="flex:1;position:relative;height:28px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:6px;display:flex;align-items:center;padding:0 10px;">
-          <span style="font-size:10px;color:#22c55e;font-weight:700;">Janela 1 &nbsp;·&nbsp; peak 65%</span>
-        </div>
-        <div style="font-size:10px;color:var(--muted);width:40px;flex-shrink:0;">13:00</div>
-        <div style="font-size:10px;color:var(--amber);font-weight:700;flex-shrink:0;">reset</div>
+    <div class="states-grid">
+      <div class="state-card rate-limit">
+        <div class="state-icon">⏱</div>
+        <div class="state-title" style="color:#f59e0b">Rate Limit (429)</div>
+        <div class="state-desc">API retornou 429. Backoff exponencial: 5min × 2^(n-1), cap 10min. Persiste entre restarts.</div>
       </div>
-      <!-- Janela 2 -->
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;">13:00</div>
-        <div style="flex:1;position:relative;height:28px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:6px;display:flex;align-items:center;padding:0 10px;">
-          <span style="font-size:10px;color:#ef4444;font-weight:700;">Janela 2 &nbsp;·&nbsp; peak 88%</span>
-        </div>
-        <div style="font-size:10px;color:var(--muted);width:40px;flex-shrink:0;">18:00</div>
-        <div style="font-size:10px;color:var(--amber);font-weight:700;flex-shrink:0;">reset</div>
+      <div class="state-card error">
+        <div class="state-icon">❌</div>
+        <div class="state-title" style="color:#ef4444">Erro de API (5xx/timeout)</div>
+        <div class="state-desc">Servidor indisponível ou timeout. Retry 3× com backoff interno. Depois, erro genérico com backoff próprio.</div>
       </div>
-      <!-- Janela 3 -->
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;">18:00</div>
-        <div style="flex:0.45;position:relative;height:28px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);border-radius:6px;display:flex;align-items:center;padding:0 10px;">
-          <span style="font-size:10px;color:#3b82f6;font-weight:700;">Janela 3 &nbsp;·&nbsp; atual 40%</span>
-        </div>
-        <div style="font-size:10px;color:var(--muted);flex:0.55;padding-left:10px;">em progresso → reset em 23:00</div>
+      <div class="state-card cred">
+        <div class="state-icon">🔐</div>
+        <div class="state-title" style="color:#f59e0b">Credenciais (401)</div>
+        <div class="state-desc">Token expirado (401) ou arquivo não encontrado. Abre modal de credenciais para login.</div>
+      </div>
+      <div class="state-card resetting">
+        <div class="state-icon">🔄</div>
+        <div class="state-title" style="color:#3b82f6">Reset Detectado</div>
+        <div class="state-desc">Janela de 5h resettou (resets_at avançou ≥30min). Notificação opcional + atualiza sessionWindows.</div>
       </div>
     </div>
-
-    <!-- Regras -->
-    <div class="daily-notes">
-      <div class="note-box">
-        <strong>Detecção de nova janela</strong><br>
-        <code>|newResetsAt − storedResetsAt| ≥ 30 minutos</code><br>
-        Evita falsos positivos por flutuação da API.
-      </div>
-      <div class="note-box">
-        <strong>Ao detectar nova janela</strong><br>
-        <code>sessionAccum += completedWindow.peak</code><br>
-        <code>sessionWindowCount++</code><br>
-        <code>maxSession</code> reseta para a nova janela
-      </div>
-      <div class="note-box">
-        <strong>Histórico</strong><br>
-        8 dias de dados mantidos (<code>splice</code> automático).<br>
-        Cada entrada: <code>{ date, peak, resetsAtMinute }</code>
-      </div>
-      <div class="note-box">
-        <strong>Deduplicação</strong><br>
-        Por minuto: <code>resets_at_minute = floor(resetsAt / 60000)</code><br>
-        Evita duplicar a mesma janela em polls consecutivos.
-      </div>
-    </div>
-
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 10 — CREDENCIAIS OAUTH
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 10: CREDENCIAIS E AUTH -->
 <div class="section">
   <div class="section-label">Seção 10</div>
-  <div class="section-title"><span class="num">10</span> Credenciais OAuth (credentialService)</div>
+  <div class="section-title"><span class="num">10</span> Credenciais e Autenticação</div>
   <div class="divider"></div>
   <div class="card">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:18px;">
-      O app lê o token de acesso diretamente do arquivo de credenciais da CLI do Claude. Nenhuma senha é armazenada; o CLI gerencia a autenticação inicial.
-    </p>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-
-      <!-- Fluxo em 4 passos -->
+    <div class="grid-2">
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Fluxo de leitura e refresh</div>
-        <div class="oauth-steps">
-          <div class="oauth-step">
-            <div class="oauth-num">1</div>
-            <div class="oauth-content">
-              <div class="oauth-title">Lê o arquivo de credenciais</div>
-              <div class="oauth-desc"><code>~/.claude/.credentials.json</code><br>No Windows com WSL: tenta também caminhos <code>/mnt/c/Users/…</code> e <code>\\wsl$\…</code></div>
-            </div>
-          </div>
-          <div class="oauth-step">
-            <div class="oauth-num">2</div>
-            <div class="oauth-content">
-              <div class="oauth-title">Extrai e verifica o token</div>
-              <div class="oauth-desc">Lê <code>claudeAiOauth.accessToken</code> e compara <code>expiresAt</code> com <code>Date.now()</code></div>
-            </div>
-          </div>
-          <div class="oauth-step">
-            <div class="oauth-num">3</div>
-            <div class="oauth-content">
-              <div class="oauth-title">Refresh automático se necessário</div>
-              <div class="oauth-desc">Se expira em &lt; 5 min: POST <code>console.anthropic.com/v1/oauth/token</code> com grant <code>refresh_token</code></div>
-            </div>
-          </div>
-          <div class="oauth-step">
-            <div class="oauth-num">4</div>
-            <div class="oauth-content">
-              <div class="oauth-title">Atualiza expiração</div>
-              <div class="oauth-desc"><code>expiresAt = Date.now() + expires_in × 1000</code><br>Grava de volta no arquivo</div>
-            </div>
-          </div>
-        </div>
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:12px;">Source of Truth</h4>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+          O sistema nunca solicita API key. Credenciais são lidas diretamente do arquivo gerado pela CLI:
+        </p>
+        <ul style="font-size:11px;color:var(--muted);margin:8px 0;padding-left:16px;line-height:1.9;">
+          <li><code style="color:var(--amber)">~/.claude/.credentials.json</code> — caminho primário</li>
+          <li><code style="color:var(--amber)">\\wsl.localhost\&lt;distro&gt;\home\&lt;user&gt;\.claude\.credentials.json</code> — fallback WSL</li>
+        </ul>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+          <strong>Seleção:</strong> usa arquivo com <code>mtime</code> mais recente (token mais provável de estar válido).
+        </p>
       </div>
-
-      <!-- Estrutura do arquivo JSON -->
       <div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Estrutura do arquivo</div>
-        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:monospace;font-size:11px;line-height:1.8;color:var(--muted);">
-          <span style="color:rgba(200,200,200,0.3);">{</span><br>
-          &nbsp;&nbsp;<span style="color:#3b82f6">"claudeAiOauth"</span><span style="color:rgba(200,200,200,0.3);">: {</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"accessToken"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#22c55e">"sk-ant-oat01-…"</span><span style="color:rgba(200,200,200,0.3);">,</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"refreshToken"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#22c55e">"…"</span><span style="color:rgba(200,200,200,0.3);">,</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"expiresAt"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#f59e0b">1712345678000</span><span style="color:rgba(200,200,200,0.3);">,</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"scopes"</span><span style="color:rgba(200,200,200,0.3);">: [</span><span style="color:#22c55e">"…"</span><span style="color:rgba(200,200,200,0.3);">],</span><br>
-          &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3b82f6">"subscriptionType"</span><span style="color:rgba(200,200,200,0.3);">:</span> <span style="color:#22c55e">"pro"</span><br>
-          &nbsp;&nbsp;<span style="color:rgba(200,200,200,0.3);">}</span><br>
-          <span style="color:rgba(200,200,200,0.3);">}</span>
-        </div>
-        <div style="margin-top:10px;font-size:10px;color:var(--muted);line-height:1.7;padding:8px 12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);border-radius:8px;">
-          <strong style="color:var(--text)">Fallback WSL:</strong> No Windows, o app tenta detectar instâncias WSL e lê o arquivo <code>.credentials.json</code> do sistema de arquivos Linux montado, permitindo uso sem instalar o CLI nativo do Windows.
-        </div>
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:12px;">Renovação de Token</h4>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+          <strong>Margem:</strong> 5 minutos antes da expiração.<br>
+          <strong>Fluxo:</strong> <code>credentials.json</code> → <code>refreshToken</code> → <code>POST /v1/oauth/token</code> → novo <code>accessToken</code> + <code>expiresAt</code>
+        </p>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px;">
+          Se renovação falhar (ex: sem internet), usa o token existente mesmo que próximo do vencimento. A autenticação falha silenciosamente no pollingService.
+        </p>
       </div>
-
     </div>
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 11 — PERSISTÊNCIA (electron-store)
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 11: SMART SCHEDULE -->
 <div class="section">
   <div class="section-label">Seção 11</div>
-  <div class="section-title"><span class="num">11</span> Persistência com electron-store</div>
+  <div class="section-title"><span class="num">11</span> Smart Schedule (Agenda Inteligente)</div>
   <div class="divider"></div>
   <div class="card">
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
-      Todos os dados do app são persistidos via <code>electron-store</code> (JSON no sistema de arquivos). Quatro stores separados, cada um com schema validado.
-    </p>
-
-    <table class="store-table">
-      <thead>
-        <tr>
-          <th>Arquivo</th>
-          <th>Localização</th>
-          <th>Conteúdo principal</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="store-name">config.json</span></td>
-          <td style="font-size:10px;color:var(--muted);">%APPDATA%\Claude Usage Monitor\</td>
-          <td style="font-size:11px;color:var(--muted);">theme, language, windowSize, sessionThreshold (80%), weeklyThreshold (80%), resetThreshold (50%), notifications (enabled/sound), autoRefresh, pollIntervalMinutes, cloudSync settings</td>
-        </tr>
-        <tr>
-          <td><span class="store-name">accounts.json</span></td>
-          <td style="font-size:10px;color:var(--muted);">mesmo diretório</td>
-          <td style="font-size:11px;color:var(--muted);">usageHistory, dailyHistory (8 dias), timeSeries (por data), sessionWindows[], currentSessionWindow, <strong style="color:var(--amber)">rateLimitedUntil</strong>, <strong style="color:var(--amber)">rateLimitCount</strong></td>
-        </tr>
-        <tr>
-          <td><span class="store-name">cloud-sync.json</span></td>
-          <td style="font-size:10px;color:var(--muted);">mesmo diretório</td>
-          <td style="font-size:11px;color:var(--muted);">jwt (criptografado), jwtExpiresAt</td>
-        </tr>
-        <tr>
-          <td><span class="store-name">sync-outbox.json</span></td>
-          <td style="font-size:10px;color:var(--muted);">mesmo diretório</td>
-          <td style="font-size:11px;color:var(--muted);">operações de sync pendentes (enviadas quando o servidor ficar disponível)</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="note-box">
-        <strong>Dev vs Prod</strong><br>
-        Dev: <code>%APPDATA%\Electron\config.json</code><br>
-        Prod: <code>%APPDATA%\Claude Usage Monitor\config.json</code>
+    <div class="grid-2">
+      <div>
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:12px;">Status do Sistema</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <span style="background:rgba(34,197,94,0.15);color:#22c55e;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;">🟢 VERDE — Modo Livre</span>
+          <span style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;">🟡 ÂMBAR — Próximo do límite</span>
+          <span style="background:rgba(168,85,247,0.15);color:#a855f7;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;">🟣 ROXO — Otimizador Pré-Sessão</span>
+          <span style="background:rgba(239,68,68,0.15);color:#ef4444;font-size:10px;font-weight:700;padding:4px 8px;border-radius:4px;">🔴 VERMELHO — Crítico</span>
+        </div>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+          O sistema avalia em cascata: 1º VERDE (fora do expediente), 2º ROXO (otimização pré-sessão), 3º ÂMBAR (próximo do limite), 4º VERMELHO (crítico).
+        </p>
       </div>
-      <div class="note-box" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04);">
-        <strong style="color:#ef4444">Regra de schema</strong><br>
-        <strong>Nunca</strong> apertar <code>minimum</code>/<code>maximum</code> em campos existentes sem uma migration — o electron-store crasha no startup se o valor salvo violar o schema.
+      <div>
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:12px;">Parâmetros</h4>
+        <table class="data-table">
+          <tr><td>activeDays</td><td>0-6 (0=Dom)</td></tr>
+          <tr><td>workStart/workEnd</td><td>Horário trabalho (min)</td></tr>
+          <tr><td>breakStart/breakEnd</td><td>Intervalo (min)</td></tr>
+          <tr><td>sessionThreshold</td><td>0-100% (default 80%)</td></tr>
+          <tr><td>weeklyThreshold</td><td>0-100% (default 80%)</td></tr>
+        </table>
       </div>
     </div>
-
   </div>
 </div>
 
 
-<!-- ══════════════════════════════════════════
-     SEÇÃO 12 — CLOUD SYNC: SERVIDOR
-══════════════════════════════════════════ -->
+<!-- SEÇÃO 12: CLOUD SYNC -->
 <div class="section">
   <div class="section-label">Seção 12</div>
-  <div class="section-title"><span class="num">12</span> Cloud Sync: Servidor (Hono + SQLite)</div>
+  <div class="section-title"><span class="num">12</span> Cloud Sync</div>
   <div class="divider"></div>
   <div class="card">
-
-    <!-- Autenticação -->
-    <div style="margin-bottom:20px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Fluxo de Autenticação (/auth/exchange)</div>
-      <div class="auth-flow">
-        <span class="highlight">[Electron App]</span> → POST /auth/exchange<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="highlight">accessToken</span> (Anthropic), <span class="highlight">deviceId</span>, <span class="highlight">deviceLabel</span> }<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="warn">validateAnthropicToken()</span> → GET /api/oauth/usage (valida token)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upsert users + devices (SQLite)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="success">signJwt(email, deviceId)</span> → 24h, HS256<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
-        <span class="highlight">[Electron App]</span> ← { <span class="success">jwt</span>, <span class="success">expiresAt</span>, <span class="success">email</span> }
+    <div class="grid-2">
+      <div>
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:12px;">Arquitetura</h4>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;">
+          Servidor self-hosted (Node.js/Express). Autenticação via JWT. Push/pull automático a cada 10 min ou manual.
+        </p>
+        <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px;">
+          <strong>Merge:</strong> union por chave — nenhum dado local é deletado por pull remoto. Maior <code>mtime</code> prevalece.
+        </p>
+      </div>
+      <div>
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:12px;">Dados Sincronizados</h4>
+        <table class="data-table">
+          <tr><td>dailyHistory</td><td>Últimos 8 dias</td></tr>
+          <tr><td>sessionWindows</td><td>Últimas 40 janelas</td></tr>
+          <tr><td>timeSeries</td><td>Série temporal por dia</td></tr>
+          <tr><td>usageHistory</td><td>Snapshots horários</td></tr>
+          <tr><td>currentSessionWindow</td><td>Estado atual</td></tr>
+        </table>
       </div>
     </div>
-
-    <div class="server-arch">
-
-      <!-- Endpoints -->
-      <div class="server-block">
-        <div class="server-block-title">Endpoints</div>
-        <div class="endpoint-row">
-          <span class="ep-method ep-post">POST</span>
-          <div><div class="ep-path">/auth/exchange</div><div class="ep-desc">público · troca token Anthropic por JWT</div></div>
-        </div>
-        <div class="endpoint-row">
-          <span class="ep-method ep-post">POST</span>
-          <div><div class="ep-path">/sync/push</div><div class="ep-desc">JWT · envia dados do cliente</div></div>
-        </div>
-        <div class="endpoint-row">
-          <span class="ep-method ep-get">GET</span>
-          <div><div class="ep-path">/sync/pull?since=ts</div><div class="ep-desc">JWT · puxa deltas incrementais</div></div>
-        </div>
-        <div class="endpoint-row">
-          <span class="ep-method ep-get">GET</span>
-          <div><div class="ep-path">/sync/snapshot</div><div class="ep-desc">JWT · dump completo dos dados</div></div>
-        </div>
-        <div class="endpoint-row">
-          <span class="ep-method ep-delete">DELETE</span>
-          <div><div class="ep-path">/sync/account</div><div class="ep-desc">JWT · apaga todos os dados do usuário</div></div>
-        </div>
-        <div class="endpoint-row">
-          <span class="ep-method ep-get">GET</span>
-          <div><div class="ep-path">/health</div><div class="ep-desc">público · health check</div></div>
-        </div>
-      </div>
-
-      <!-- Estratégia de Merge -->
-      <div class="server-block">
-        <div class="server-block-title">Estratégia de Merge (push)</div>
-        <div class="merge-rule">
-          <span class="merge-icon">📅</span>
-          <div>
-            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">daily_snapshots</code> <span class="badge badge-max">MAX</span></div>
-            <div style="font-size:10px;color:var(--muted);">MAX(max_weekly, max_session, session_accum, session_window_count) — conserva máximos</div>
-          </div>
-        </div>
-        <div class="merge-rule">
-          <span class="merge-icon">🪟</span>
-          <div>
-            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">session_windows</code> <span class="badge badge-max">MAX(peak)</span></div>
-            <div style="font-size:10px;color:var(--muted);">ON CONFLICT(email, date, resets_at_minute) → dedup por minuto</div>
-          </div>
-        </div>
-        <div class="merge-rule">
-          <span class="merge-icon">📈</span>
-          <div>
-            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">time_series_points</code> <span class="badge badge-ignore">IGNORE</span></div>
-            <div style="font-size:10px;color:var(--muted);">INSERT OR IGNORE — imutável por timestamp</div>
-          </div>
-        </div>
-        <div class="merge-rule">
-          <span class="merge-icon">📸</span>
-          <div>
-            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">usage_snapshots</code> <span class="badge badge-ignore">IGNORE</span></div>
-            <div style="font-size:10px;color:var(--muted);">INSERT OR IGNORE — imutável por timestamp</div>
-          </div>
-        </div>
-        <div class="merge-rule">
-          <span class="merge-icon">🔄</span>
-          <div>
-            <div style="font-weight:700;font-size:11px;margin-bottom:2px;"><code style="font-size:10px;">currentWindow</code> <span class="badge badge-newest">NEWEST</span></div>
-            <div style="font-size:10px;color:var(--muted);">resetsAt mais recente vence; mesma janela → MAX(peak)</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Middleware Stack -->
-    <div style="margin-top:16px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Middleware Stack</div>
-      <div class="middleware-stack">
-        <div class="mw-layer" style="background:rgba(59,130,246,0.06);">
-          <div class="mw-label" style="color:#3b82f6;">CORS</div>
-          <div class="mw-desc"><code>process.env.CORS_ORIGIN ?? '*'</code></div>
-          <div class="mw-arrow">↓</div>
-        </div>
-        <div class="mw-layer" style="background:rgba(148,163,184,0.05);">
-          <div class="mw-label" style="color:#94a3b8;">Logger</div>
-          <div class="mw-desc">method + path + status + response time</div>
-          <div class="mw-arrow">↓</div>
-        </div>
-        <div class="mw-layer" style="background:rgba(245,158,11,0.06);">
-          <div class="mw-label" style="color:#f59e0b;">Rate Limit</div>
-          <div class="mw-desc">60 req / 60s por email ou IP → 429 se exceder</div>
-          <div class="mw-arrow">↓</div>
-        </div>
-        <div class="mw-layer" style="background:rgba(239,68,68,0.06);">
-          <div class="mw-label" style="color:#ef4444;">Auth Guard</div>
-          <div class="mw-desc">/sync/* only · verifica Bearer JWT → 401 se inválido</div>
-          <div class="mw-arrow">↓</div>
-        </div>
-        <div class="mw-layer" style="background:rgba(34,197,94,0.06);">
-          <div class="mw-label" style="color:#22c55e;">Route Handler</div>
-          <div class="mw-desc">lógica de negócio + acesso ao SQLite</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Valores Numéricos -->
-    <div style="margin-top:16px;">
-      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Valores Numéricos de Referência</div>
-      <table class="num-table">
-        <thead>
-          <tr>
-            <th>Parâmetro</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Port padrão</td><td>3030</td></tr>
-          <tr><td>JWT expiry</td><td>24h (86400s)</td></tr>
-          <tr><td>JWT algorithm</td><td>HS256</td></tr>
-          <tr><td>JWT refresh buffer (cliente)</td><td>5 min antes de expirar</td></tr>
-          <tr><td>Rate limit window</td><td>60 segundos</td></tr>
-          <tr><td>Rate limit max requests</td><td>60 req / janela</td></tr>
-          <tr><td>Retry backoff (cliente)</td><td>[1, 2, 5, 10, 30] min</td></tr>
-          <tr><td>Timeout API Anthropic</td><td>15s</td></tr>
-        </tbody>
-      </table>
-    </div>
-
   </div>
 </div>
 
 
-<!-- ── Footer ── -->
 <div class="footer">
-  Claude Usage Monitor · Electron v34 + TypeScript · Hono + SQLite (servidor) · Chart.js · electron-store
+  Claude Usage Monitor — Documentação Visual — v9.x<br>
+  <span style="font-size:10px;color:rgba(200,200,200,0.35)">Última atualização: Abril 2026</span>
 </div>
 
 </body>
