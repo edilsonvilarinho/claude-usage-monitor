@@ -229,4 +229,43 @@ describe('updateDailySnapshot', () => {
     const { currentWindow } = updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), window70);
     expect(currentWindow.peakTs).toBeUndefined();
   });
+
+  // ── Credits ─────────────────────────────────────────────────────────────────
+
+  it('maxCredits cresce com creditsPctInt definido', () => {
+    const usageWithCredits = {
+      five_hour: { utilization: 30, resets_at: RESET_A },
+      seven_day: { utilization: 50, resets_at: '2026-04-14T00:00:00Z' },
+      extra_usage: { is_enabled: true, used_credits: 75, monthly_limit: 100 },
+    } as unknown as UsageData;
+    const { dailyHistory } = updateDailySnapshot([], TODAY, usageWithCredits, null);
+    expect(dailyHistory[0].maxCredits).toBe(75);
+  });
+
+  it('maxCredits não decresce', () => {
+    const history: DailySnapshot[] = [
+      { date: TODAY, maxWeekly: 50, maxSession: 30, sessionWindowCount: 1, sessionAccum: 0, maxCredits: 80 },
+    ];
+    const usageWithCredits = {
+      five_hour: { utilization: 30, resets_at: RESET_A },
+      seven_day: { utilization: 50, resets_at: '2026-04-14T00:00:00Z' },
+      extra_usage: { is_enabled: true, used_credits: 40, monthly_limit: 100 },
+    } as unknown as UsageData;
+    const { dailyHistory } = updateDailySnapshot(history, TODAY, usageWithCredits, makeWindow(RESET_A, 30));
+    expect(dailyHistory[0].maxCredits).toBe(80);
+  });
+
+  // ── Edge cases ───────────────────────────────────────────────────────────────
+
+  it('reset na fronteira do dia: acumula pico no dia anterior', () => {
+    const YESTERDAY = '2026-04-06';
+    const history: DailySnapshot[] = [
+      { date: YESTERDAY, maxWeekly: 50, maxSession: 90, sessionWindowCount: 1, sessionAccum: 0 },
+    ];
+    const storedWindow = makeWindow(RESET_A, 90); // janela de ontem
+    // API retorna novo reset HOJE (crosses midnight)
+    const { dailyHistory, completedWindow } = updateDailySnapshot(history, TODAY, makeUsageData(5, 52, RESET_B), storedWindow);
+    expect(dailyHistory[0].sessionAccum).toBe(90);
+    expect(completedWindow?.date).toBe(YESTERDAY);
+  });
 });

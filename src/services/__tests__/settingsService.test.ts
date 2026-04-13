@@ -28,6 +28,12 @@ import {
   getActiveAccount,
   getAccountData,
   saveAccountData,
+  getCloudSyncSecrets,
+  setCloudSyncSecrets,
+  getOutbox,
+  setOutbox,
+  appendOutbox,
+  clearOutbox,
 } from '../settingsService'
 
 const defaultNotifications = {
@@ -366,5 +372,105 @@ describe('saveAccountData()', () => {
 
     const data = getAccountData()
     expect(data.usageHistory).toEqual([{ ts: 7 }])
+  })
+})
+
+describe('getCloudSyncSecrets()', () => {
+  it('retorna valores padrão quando não há dados', () => {
+    const secrets = getCloudSyncSecrets()
+    expect(secrets.jwt).toBe('')
+    expect(secrets.jwtExpiresAt).toBe(0)
+  })
+
+  it('retorna valores armazenados', () => {
+    const cloudSyncData = storesMap.get('cloud-sync') ?? {}
+    cloudSyncData['jwt'] = 'test-jwt-token'
+    cloudSyncData['jwtExpiresAt'] = 1234567890
+    storesMap.set('cloud-sync', cloudSyncData)
+
+    const secrets = getCloudSyncSecrets()
+    expect(secrets.jwt).toBe('test-jwt-token')
+    expect(secrets.jwtExpiresAt).toBe(1234567890)
+  })
+})
+
+describe('setCloudSyncSecrets()', () => {
+  it('define apenas jwt', () => {
+    setCloudSyncSecrets({ jwt: 'new-jwt' })
+    const secrets = getCloudSyncSecrets()
+    expect(secrets.jwt).toBe('new-jwt')
+    expect(secrets.jwtExpiresAt).toBe(0)
+  })
+
+  it('define apenas jwtExpiresAt', () => {
+    setCloudSyncSecrets({ jwtExpiresAt: 9999999999 })
+    const secrets = getCloudSyncSecrets()
+    expect(secrets.jwt).toBe('')
+    expect(secrets.jwtExpiresAt).toBe(9999999999)
+  })
+
+  it('define ambos os valores', () => {
+    setCloudSyncSecrets({ jwt: 'jwt-123', jwtExpiresAt: 8888888888 })
+    const secrets = getCloudSyncSecrets()
+    expect(secrets.jwt).toBe('jwt-123')
+    expect(secrets.jwtExpiresAt).toBe(8888888888)
+  })
+})
+
+describe('getOutbox()', () => {
+  it('retorna array vazio por padrão', () => {
+    const outbox = getOutbox()
+    expect(outbox).toEqual([])
+  })
+
+  it('retorna itens armazenados', () => {
+    const outboxData = storesMap.get('sync-outbox') ?? {}
+    outboxData['items'] = [
+      { op: 'push', payload: { test: true }, attemptCount: 0, lastError: '', queuedAt: 123 },
+    ]
+    storesMap.set('sync-outbox', outboxData)
+
+    const outbox = getOutbox()
+    expect(outbox.length).toBe(1)
+    expect(outbox[0]?.op).toBe('push')
+  })
+})
+
+describe('setOutbox()', () => {
+  it('define itens no outbox', () => {
+    setOutbox([
+      { op: 'push', payload: {}, attemptCount: 1, lastError: 'error', queuedAt: 456 },
+    ])
+    const outbox = getOutbox()
+    expect(outbox.length).toBe(1)
+    expect(outbox[0]?.attemptCount).toBe(1)
+  })
+
+  it('limpa outbox com array vazio', () => {
+    setOutbox([{ op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: 123 }])
+    setOutbox([])
+    const outbox = getOutbox()
+    expect(outbox.length).toBe(0)
+  })
+})
+
+describe('appendOutbox()', () => {
+  it('adiciona item ao outbox existente', () => {
+    setOutbox([{ op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: 123 }])
+    appendOutbox({ op: 'push', payload: { new: true }, attemptCount: 0, lastError: '', queuedAt: 456 })
+    const outbox = getOutbox()
+    expect(outbox.length).toBe(2)
+  })
+})
+
+describe('clearOutbox()', () => {
+  it('limpa todos os itens', () => {
+    setOutbox([
+      { op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: 123 },
+      { op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: 456 },
+    ])
+    clearOutbox()
+    const outbox = getOutbox()
+    expect(outbox.length).toBe(0)
   })
 })

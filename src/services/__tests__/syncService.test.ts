@@ -853,4 +853,84 @@ describe('syncService', () => {
     const pushItems = outbox.filter(i => i.op === 'push')
     expect(pushItems.length).toBe(1)
   })
+
+  // 35. init com deviceId existente não gera novo UUID
+  it('init não substitui deviceId existente', async () => {
+    seedCloudSync({ enabled: true, deviceId: 'existing-device-id', syncIntervalMinutes: 15 })
+    seedJwt()
+
+    mockFetch.mockResolvedValueOnce(makeJsonResponse({ ok: true, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], serverTime: Date.now() }))
+
+    vi.useFakeTimers()
+    await service.init()
+
+    const configData = storesMap.get('config') as Record<string, unknown>
+    const cloudSync = configData['cloudSync'] as Record<string, unknown>
+    expect(cloudSync['deviceId']).toBe('existing-device-id')
+
+    vi.useRealTimers()
+  })
+
+  // 36. enable sem deviceId gera novo UUID
+  it('enable gera novo deviceId quando não existe', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030', deviceId: undefined as unknown as string })
+    mockGetAccessToken.mockResolvedValue('access-token-123')
+
+    mockFetch
+      .mockResolvedValueOnce(makeJsonResponse(makeExchangeResponse()))
+      .mockResolvedValueOnce(makeJsonResponse(makePullResponse()))
+
+    await service.enable('http://localhost:3030', 'My Device')
+
+    const configData = storesMap.get('config') as Record<string, unknown>
+    const cloudSync = configData['cloudSync'] as Record<string, unknown>
+    expect(cloudSync['deviceId']).toBeDefined()
+    expect(typeof cloudSync['deviceId']).toBe('string')
+    expect((cloudSync['deviceId'] as string).length).toBeGreaterThan(0)
+  })
+
+  // 37. ensureValidJwt com JWT válido (sem re-exchange)
+  it('ensureValidJwt retorna JWT existente quando válido', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt('valid.jwt.token', Date.now() + 3600_000)
+
+    mockGetAccessToken.mockResolvedValue('any-token')
+
+    const jwt = await (service as unknown as Record<string, unknown>)['ensureValidJwt']('http://localhost:3030', 'device-id', 'device-label')
+
+    expect(jwt).toBe('valid.jwt.token')
+    expect(mockGetAccessToken).not.toHaveBeenCalled()
+  })
+
+  // 38. buildPushPayload com dados completos
+  it('buildPushPayload gera payload correto', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [{ ts: 1000, session: 50, weekly: 60 }],
+        dailyHistory: [{ date: '2026-04-13', maxSession: 50, maxWeekly: 60, sessionWindowCount: 1, sessionAccum: 0 }],
+        timeSeries: { '2026-04-13': [{ ts: 1000, session: 50, weekly: 60 }] },
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const payload = (service as unknown as Record<string, unknown>)['buildPushPayload'](getAccountData(), 'test-device')
+
+    expect(payload).toBeDefined()
+    expect(payload).toHaveProperty('deviceId', 'test-device')
+    expect(payload).toHaveProperty('daily')
+    expect(payload).toHaveProperty('sessionWindows')
+    expect(payload).toHaveProperty('timeSeries')
+    expect(payload).toHaveProperty('usageSnapshots')
+  })
 })
