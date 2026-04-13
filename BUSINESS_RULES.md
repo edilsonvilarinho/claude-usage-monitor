@@ -13,8 +13,9 @@
 5. [Módulo Smart Scheduler (Gestão Preditiva)](#5-módulo-smart-scheduler-gestão-preditiva)
 6. [Módulo de Persistência e Backup](#6-módulo-de-persistência-e-backup)
 7. [Módulo de Sincronização em Nuvem (Cloud Sync)](#7-módulo-de-sincronização-em-nuvem-cloud-sync)
-8. [Módulo de Interface e UX](#8-módulo-de-interface-e-ux)
-9. [Arquitetura Reativa (IPC & Eventos)](#9-arquitetura-reativa-ipc--eventos)
+8. [Módulo de Custo Estimado](#8-módulo-de-custo-estimado)
+9. [Módulo de Interface e UX](#9-módulo-de-interface-e-ux)
+10. [Arquitetura Reativa (IPC & Eventos)](#10-arquitetura-reativa-ipc--eventos)
 
 ---
 
@@ -560,7 +561,69 @@ Se o JWT expirar ou for inválido e o re-exchange com a Anthropic também falhar
 
 ---
 
-## 8. Módulo de Interface e UX
+## 8. Módulo de Custo Estimado
+
+**Arquivo:** `src/services/costService.ts`
+
+### Conceito
+
+O módulo calcula uma **estimativa de custo** baseada na utilização de tokens, convertendo a porcentagem de uso em valores monetários. O objetivo é fornecer ao usuário visibilidade sobre o gasto aproximado com a API da Anthropic.
+
+### Limitações
+
+> **A API `/api/oauth/usage` retorna apenas `utilization` (porcentagem 0-100%), não tokens brutos.** O custo é calculado por **estimativa** usando a seguinte lógica:
+
+```
+1. utilization % → tokens aproximados (baseado no limite do modelo)
+2. tokens → custo usando rates da API pública
+```
+
+**Aviso exibido ao usuário:** `"⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes."`
+
+### Rates da API (USD por milhão de tokens)
+
+| Modelo | Input (/M tokens) | Output (/M tokens) |
+|--------|-------------------|-------------------|
+| Haiku | $0.25 | $1.25 |
+| Sonnet | $3.00 | $15.00 |
+| Opus | $15.00 | $75.00 |
+
+### Cálculo por Período
+
+| Período | Base de Cálculo |
+|---------|-----------------|
+| Session (5h) | `five_hour.utilization` × tokens por 1% × rates |
+| Weekly (7d) | `seven_day.utilization` × tokens por 1% × 7 dias × rates |
+| Monthly | Weekly × 4.3 (estimativa mensal) |
+
+### Settings do Módulo
+
+O módulo utiliza duas configurações em `AppSettings`:
+
+```typescript
+monthlyBudget: number;    // Orçamento mensal (default: $50)
+costModel: 'sonnet' | 'haiku' | 'opus';  // Modelo para cálculo (default: sonnet)
+```
+
+### UI do Modal
+
+O modal de custo exibe 3 abas:
+- **Session**: custo atual da sessão de 5h
+- **Weekly**: custo dos últimos 7 dias
+- **Monthly**: gauge de progresso + orçamento configurável
+
+**Gauge de Orçamento:**
+- Verde: < 50% do orçamento
+- Amarelo: 50-80% do orçamento
+- Vermelho: > 80% do orçamento
+
+### Persistência
+
+Os settings (`monthlyBudget`, `costModel`) são armazenados no `electron-store` via `settingsService.ts`.
+
+---
+
+## 9. Módulo de Interface e UX
 
 **Arquivos:** `src/renderer/app.ts`, `src/renderer/styles.css`
 
@@ -602,7 +665,7 @@ Controlado via `body[data-size]` com CSS vars `--gauge-w`, `--gauge-h`, `--pct-s
 
 ---
 
-## 9. Arquitetura Reativa (IPC & Eventos)
+## 10. Arquitetura Reativa (IPC & Eventos)
 
 ### Fluxo completo de dados
 
@@ -650,4 +713,4 @@ Ao abrir o modal do Smart Plan, o renderer solicita via IPC `get-smart-status` s
 
 ---
 
-*Última atualização: 2026-04-12 — gerado a partir de leitura direta do código-fonte em `src/`.*
+*Última atualização: 2026-04-13 — feat: Cost Estimate (v10.1.0)*

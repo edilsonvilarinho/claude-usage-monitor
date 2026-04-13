@@ -152,6 +152,8 @@ export interface AppSettings {
   cloudSync: CloudSyncSettings;
   showCloudSyncSettings: boolean;
   workSchedule: WorkSchedule;
+  monthlyBudget: number;
+  costModel: 'sonnet' | 'haiku' | 'opus';
 }
 
 const defaults: AppSettings = {
@@ -200,6 +202,8 @@ const defaults: AppSettings = {
     breakStart: '12:00',
     breakEnd: '13:00',
   },
+  monthlyBudget: 50,
+  costModel: 'sonnet',
   cloudSync: {
     enabled: false,
     serverUrl: '',
@@ -258,6 +262,8 @@ const store = new Store<AppSettings>({
     showCloudSyncSettings: { type: 'boolean' },
     cloudSync: { type: 'object' },
     workSchedule: { type: 'object' },
+    monthlyBudget: { type: 'number', minimum: 1, maximum: 1000 },
+    costModel: { type: 'string', enum: ['sonnet', 'haiku', 'opus'] },
   },
 });
 
@@ -294,6 +300,8 @@ export function getSettings(): AppSettings {
     showCloudSyncSettings: store.get('showCloudSyncSettings', defaults.showCloudSyncSettings),
     cloudSync: store.get('cloudSync', defaults.cloudSync) as CloudSyncSettings,
     workSchedule: store.get('workSchedule', defaults.workSchedule) as WorkSchedule,
+    monthlyBudget: store.get('monthlyBudget', defaults.monthlyBudget),
+    costModel: store.get('costModel', defaults.costModel),
   };
 }
 

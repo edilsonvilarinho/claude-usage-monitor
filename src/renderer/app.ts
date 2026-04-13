@@ -270,6 +270,16 @@ const translations = {
     spLegendNow: 'Now',
     spLegendBreak: 'Break',
     spLegendReset: 'Reset',
+    costModalTitle: 'Estimated Cost',
+    costTabSession: 'Session',
+    costTabWeekly: 'Weekly',
+    costTabMonthly: 'Monthly',
+    costPeriodSession: 'Current session (5h)',
+    costPeriodWeekly: 'Last 7 days',
+    costPeriodMonthly: 'This month',
+    costBudgetOf: 'of',
+    costBudgetLabel: 'Monthly budget:',
+    costWarning: '⚠️ Estimated value based on standard API rates. Team/Enterprise plans may have different rates.',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -419,6 +429,16 @@ const translations = {
     spLegendNow: 'Agora',
     spLegendBreak: 'Intervalo',
     spLegendReset: 'Reset',
+    costModalTitle: 'Custo Estimado',
+    costTabSession: 'Sessão',
+    costTabWeekly: 'Semanal',
+    costTabMonthly: 'Mensal',
+    costPeriodSession: 'Sessão atual (5h)',
+    costPeriodWeekly: 'Últimos 7 dias',
+    costPeriodMonthly: 'Este mês',
+    costBudgetOf: 'de',
+    costBudgetLabel: 'Orçamento mensal:',
+    costWarning: '⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes.',
   },
 } as const;
 
@@ -739,6 +759,7 @@ function barClass(pct: number): string {
 
 let sessionChart: Chart | null = null;
 let weeklyChart:  Chart | null = null;
+let costGaugeChart: Chart | null = null;
 let lastRenderedData: { session: number; weekly: number } | null = null;
 let sessionResetTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -2444,6 +2465,68 @@ function init(): void {
       const status = await window.claudeUsage.sync.getStatus();
       applyCloudSyncStatus(status);
     }
+  });
+
+  // Cost modal
+  function openCostModal(): void {
+    document.getElementById('cost-modal')!.classList.remove('hidden');
+    initCostGauge();
+    loadCostData();
+  }
+
+  function closeCostModal(): void {
+    document.getElementById('cost-modal')!.classList.add('hidden');
+  }
+
+  async function loadCostData(): Promise<void> {
+    const cost = await window.claudeUsage.getCostEstimate();
+    if (!cost) return;
+
+    document.getElementById('cost-session-value')!.textContent = `$${cost.session.total.toFixed(2)}`;
+    document.getElementById('cost-session-input')!.textContent = `$${cost.session.input.toFixed(2)}`;
+    document.getElementById('cost-session-output')!.textContent = `$${cost.session.output.toFixed(2)}`;
+
+    document.getElementById('cost-weekly-value')!.textContent = `$${cost.weekly.total.toFixed(2)}`;
+    document.getElementById('cost-weekly-input')!.textContent = `$${cost.weekly.input.toFixed(2)}`;
+    document.getElementById('cost-weekly-output')!.textContent = `$${cost.weekly.output.toFixed(2)}`;
+
+    document.getElementById('cost-monthly-value')!.textContent = `$${cost.monthly.total.toFixed(2)}`;
+    document.getElementById('cost-monthly-input')!.textContent = `$${cost.monthly.input.toFixed(2)}`;
+    document.getElementById('cost-monthly-output')!.textContent = `$${cost.monthly.output.toFixed(2)}`;
+    document.getElementById('cost-budget-value')!.textContent = `$${cost.budget.toFixed(2)}`;
+    document.getElementById('cost-monthly-pct')!.textContent = String(cost.budgetPercentage);
+    document.getElementById('cost-budget-input')!.value = String(cost.budget);
+
+    if (costGaugeChart) {
+      updateGauge(costGaugeChart, cost.budgetPercentage);
+    }
+  }
+
+  function initCostGauge(): void {
+    if (costGaugeChart) return;
+    costGaugeChart = createGauge('cost-gauge');
+  }
+
+  document.getElementById('btn-cost')!.addEventListener('click', openCostModal);
+  document.getElementById('cost-modal-close')!.addEventListener('click', closeCostModal);
+  document.getElementById('cost-modal')!.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('cost-modal')) closeCostModal();
+  });
+
+  document.querySelectorAll<HTMLElement>('.cost-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = (btn as HTMLElement).dataset.costTab!;
+      document.querySelectorAll('.cost-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.cost-pane').forEach(p => p.classList.add('hidden'));
+      btn.classList.add('active');
+      document.getElementById(`cost-${tabId}`)!.classList.remove('hidden');
+    });
+  });
+
+  document.getElementById('cost-budget-input')!.addEventListener('change', async (e) => {
+    const budget = Math.max(1, Math.min(1000, Number((e.target as HTMLInputElement).value)));
+    await window.claudeUsage.saveSettings({ monthlyBudget: budget });
+    loadCostData();
   });
 }
 
