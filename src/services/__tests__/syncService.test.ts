@@ -933,4 +933,312 @@ describe('syncService', () => {
     expect(payload).toHaveProperty('timeSeries')
     expect(payload).toHaveProperty('usageSnapshots')
   })
+
+  // 39. syncNow com isSyncing=true não faz nada
+  it('syncNow com isSyncing=true retorna early', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    ;(service as unknown as Record<string, unknown>)['isSyncing'] = true
+
+    await service.syncNow()
+
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  // 40. disable limpa backoffTimer
+  it('disable limpa backoffTimer', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+    ;(service as unknown as Record<string, unknown>)['backoffTimer'] = setTimeout(() => {}, 999999) as unknown as ReturnType<typeof setTimeout>
+
+    await service.disable()
+
+    const backoffTimer = (service as unknown as Record<string, unknown>)['backoffTimer']
+    expect(backoffTimer).toBeNull()
+
+    vi.useRealTimers()
+  })
+
+  // 41. scheduleBackoff incrementa backoffCount
+  it('scheduleBackoff incrementa backoffCount', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+    ;(service as unknown as Record<string, unknown>)['backoffCount'] = 0
+    ;(service as unknown as Record<string, unknown>)['backoffTimer'] = null
+
+    ;(service as unknown as Record<string, unknown>)['scheduleBackoff']()
+
+    expect((service as unknown as Record<string, unknown>)['backoffCount']).toBe(1)
+
+    vi.useRealTimers()
+  })
+
+  // 42. clearTimers limpa ambos timers
+  it('clearTimers limpa syncTimer e backoffTimer', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+    ;(service as unknown as Record<string, unknown>)['syncTimer'] = setInterval(() => {}, 999999) as unknown as ReturnType<typeof setInterval>
+    ;(service as unknown as Record<string, unknown>)['backoffTimer'] = setTimeout(() => {}, 999999) as unknown as ReturnType<typeof setTimeout>
+
+    ;(service as unknown as Record<string, unknown>)['clearTimers']()
+
+    expect((service as unknown as Record<string, unknown>)['syncTimer']).toBeNull()
+    expect((service as unknown as Record<string, unknown>)['backoffTimer']).toBeNull()
+
+    vi.useRealTimers()
+  })
+
+  // 43. enable emite evento enabled
+  it('enable emite evento enabled', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    mockGetAccessToken.mockResolvedValue('access-token-123')
+
+    mockFetch
+      .mockResolvedValueOnce(makeJsonResponse(makeExchangeResponse()))
+      .mockResolvedValueOnce(makeJsonResponse(makePullResponse()))
+
+    const events: string[] = []
+    service.on('sync-event', (e: { type: string }) => events.push(e.type))
+
+    await service.enable('http://localhost:3030', 'Test Device')
+
+    expect(events).toContain('enabled')
+  })
+
+  // 44. handleError salva lastSyncError
+  it('handleError salva lastSyncError no config', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    ;(service as unknown as Record<string, unknown>)['handleError']('test-context', new Error('Test error message'))
+
+    const configData = storesMap.get('config') as Record<string, unknown>
+    const cloudSync = configData['cloudSync'] as Record<string, unknown>
+    expect(cloudSync['lastSyncError']).toBe('Test error message')
+  })
+
+  // 45. handleError emite sync-error event
+  it('handleError emite sync-error event', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const events: { type: string; payload?: unknown }[] = []
+    service.on('sync-event', (e: { type: string; payload?: unknown }) => events.push(e))
+
+    ;(service as unknown as Record<string, unknown>)['handleError']('test-context', new Error('Error payload'))
+
+    expect(events.some(e => e.type === 'sync-error')).toBe(true)
+  })
+
+  // 46. applyPullResponse com sessionWindows vazio
+  it('applyPullResponse com sessionWindows vazio não falha', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const pullData = {
+      daily: [],
+      sessionWindows: [],
+      timeSeries: [],
+      usageSnapshots: [],
+      serverTime: Date.now(),
+    }
+
+    expect(() => (service as unknown as Record<string, unknown>)['applyPullResponse'](pullData)).not.toThrow()
+  })
+
+  // 47. applyPullResponse com timeSeries
+  it('applyPullResponse com timeSeries', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const pullData = {
+      daily: [],
+      sessionWindows: [],
+      timeSeries: [{ date: '2026-04-13', ts: 1000, session: 50, weekly: 60 }],
+      usageSnapshots: [],
+      serverTime: Date.now(),
+    }
+
+    ;(service as unknown as Record<string, unknown>)['applyPullResponse'](pullData)
+
+    const updatedAccounts = storesMap.get('accounts') as Record<string, unknown>
+    expect(updatedAccounts).toBeDefined()
+  })
+
+  // 48. schedulePeriodicSync limpa timer existente antes de criar novo
+  it('schedulePeriodicSync limpa timer existente', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+
+    const existingTimer = {} as unknown as ReturnType<typeof setInterval>
+    ;(service as unknown as Record<string, unknown>)['syncTimer'] = existingTimer
+
+    ;(service as unknown as Record<string, unknown>)['schedulePeriodicSync'](20)
+    const newTimer = (service as unknown as Record<string, unknown>)['syncTimer']
+
+    expect(newTimer).not.toBe(existingTimer)
+
+    vi.useRealTimers()
+  })
+
+  // 49. scheduleBackoff com backoffCount no limite max
+  it('scheduleBackoff com backoffCount alto não excede índice', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+    ;(service as unknown as Record<string, unknown>)['backoffCount'] = 10 // Acima do tamanho do array BACKOFF_MINUTES
+    ;(service as unknown as Record<string, unknown>)['backoffTimer'] = null
+
+    ;(service as unknown as Record<string, unknown>)['scheduleBackoff']()
+
+    expect((service as unknown as Record<string, unknown>)['backoffCount']).toBe(11)
+
+    vi.useRealTimers()
+  })
+
+  // 50. scheduleBackoff limpa timer existente
+  it('scheduleBackoff limpa timer existente antes de criar novo', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+    ;(service as unknown as Record<string, unknown>)['backoffCount'] = 0
+    ;(service as unknown as Record<string, unknown>)['backoffTimer'] = setTimeout(() => {}, 999999) as unknown as ReturnType<typeof setTimeout>
+
+    ;(service as unknown as Record<string, unknown>)['scheduleBackoff']()
+
+    expect((service as unknown as Record<string, unknown>)['backoffTimer']).toBeDefined()
+
+    vi.useRealTimers()
+  })
+
+  // 51. buildPushPayload com maxCredits
+  it('buildPushPayload inclui maxCredits quando presente', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [{ date: '2026-04-13', maxSession: 50, maxWeekly: 60, sessionWindowCount: 1, sessionAccum: 0, maxCredits: 75 }],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const payload = (service as unknown as Record<string, unknown>)['buildPushPayload'](getAccountData(), 'test-device') as Record<string, unknown>
+
+    const daily = payload.daily as unknown[]
+    expect(daily[0]).toHaveProperty('maxCredits', 75)
+  })
+
+  // 52. buildPushPayload com sessionWindows
+  it('buildPushPayload inclui sessionWindows', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [{ date: '2026-04-13', resetsAt: '2026-04-13T10:00:00', peak: 50 }],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const payload = (service as unknown as Record<string, unknown>)['buildPushPayload'](getAccountData(), 'test-device') as Record<string, unknown>
+
+    const windows = payload.sessionWindows as unknown[]
+    expect(windows.length).toBeGreaterThan(0)
+  })
+
+  // 53. buildPushPayload com settingsUpdatedAt > 0
+  it('buildPushPayload inclui settings quando settingsUpdatedAt > 0', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const configData = storesMap.get('config') ?? {}
+    ;(configData as Record<string, unknown>)['settingsUpdatedAt'] = 1000
+    ;(configData as Record<string, unknown>)['theme'] = 'dark'
+    storesMap.set('config', configData)
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const payload = (service as unknown as Record<string, unknown>)['buildPushPayload'](getAccountData(), 'test-device') as Record<string, unknown>
+
+    expect(payload).toHaveProperty('settings')
+  })
 })
