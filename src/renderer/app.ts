@@ -401,7 +401,7 @@ const translations = {
     'smartPlan.status.green': 'Caminho livre. Inicie suas tarefas mais complexas e de alto consumo de contexto agora.',
     'smartPlan.status.yellow': 'Cuidado com o overhead. Seu reset cairá no meio da sua janela de trabalho. Intercale tarefas pesadas com codificação manual ou priorize arquivos de menor contexto.',
     'smartPlan.status.red': 'Bloqueio iminente. Evite enviar prompts grandes. Concentre-se em refatorações puramente manuais, revisão de PRs ou documentação até o reset.',
-    'smartPlan.status.purple': "Sincronização de Bio-Ritmo: Para evitar 'resets mortos', sugerimos disparar sua primeira mensagem às {time} para que seu reset alinhe perfeitamente com seu intervalo. Proteja seu foco.",
+    'smartPlan.status.purple': "Sincronização de Fluxo de trabalho: Para evitar 'resets mortos', sugerimos disparar sua primeira mensagem às {time} para que seu reset alinhe perfeitamente com seu intervalo. Proteja seu foco.",
     'smartPlan.openDetails': 'Abrir detalhes da agenda',
     'smartPlan.resetNextDay': '+1 dia às {time}',
     dayShort0: 'Dom',
