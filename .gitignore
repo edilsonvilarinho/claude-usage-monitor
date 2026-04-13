@@ -8,3 +8,4 @@ dist-build/
 server/data/
 server/dist/
 shared/dist/
+coverage/
