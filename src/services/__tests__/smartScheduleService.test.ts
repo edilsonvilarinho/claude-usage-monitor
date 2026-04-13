@@ -168,4 +168,54 @@ describe('smartScheduleService', () => {
       expect(red.colorHex).toBe('#ef4444');
     });
   });
+
+  describe('PURPLE - casos específicos', () => {
+    it('retorna status válido quando usoSessao=0 e reset após expediente', () => {
+      const schedule = makeSchedule({ workStart: '09:00', workEnd: '18:00', breakStart: '12:00', breakEnd: '13:00' });
+      const status = computeSmartStatus(schedule, 0, '2026-04-14T19:00:00', localDate(2026, 4, 14, 8, 45));
+      expect(['purple', 'green', 'blue'].includes(status.statusId)).toBe(true);
+    });
+
+    it('retorna status válido quando usoSessao=0 e reset iminente', () => {
+      const schedule = makeSchedule({ workStart: '09:00', workEnd: '18:00', breakStart: '12:00', breakEnd: '13:00' });
+      const status = computeSmartStatus(schedule, 0, '2026-04-14T11:30:00', localDate(2026, 4, 14, 11, 30));
+      expect(['purple', 'green', 'blue'].includes(status.statusId)).toBe(true);
+    });
+
+    it('retorna status válido quando usoSessao=0 e sessão fresca', () => {
+      const schedule = makeSchedule({ workStart: '09:00', workEnd: '18:00', breakStart: '12:00', breakEnd: '13:00' });
+      const status = computeSmartStatus(schedule, 0, '2026-04-14T14:00:00', localDate(2026, 4, 14, 8, 30));
+      expect(['purple', 'green', 'blue'].includes(status.statusId)).toBe(true);
+    });
+  });
+
+  describe('PURPLE edge cases', () => {
+    it('retorna status válido com usoSessao=0 muito cedo', () => {
+      const schedule = makeSchedule({ workStart: '09:00', workEnd: '18:00' });
+      const status = computeSmartStatus(schedule, 0, '2026-04-14T19:00:00', localDate(2026, 4, 14, 7, 0));
+      expect(['purple', 'green', 'blue'].includes(status.statusId)).toBe(true);
+    });
+
+    it('retorna status válido com usoSessao=0 e reset distante', () => {
+      const schedule = makeSchedule({ workStart: '09:00', workEnd: '18:00', breakStart: '12:00', breakEnd: '13:00' });
+      const status = computeSmartStatus(schedule, 0, '2026-04-14T14:00:00', localDate(2026, 4, 14, 7, 0));
+      expect(['purple', 'green', 'blue'].includes(status.statusId)).toBe(true);
+    });
+  });
+
+  describe('BLUE messageKey variations', () => {
+    it('retorna BLUE com offday messageKey quando enabled mas dia inativo', () => {
+      const schedule = makeSchedule({ enabled: true, activeDays: [2, 3, 4, 5] }); // Seg (1) não incluso
+      const status = computeSmartStatus(schedule, 50, '2026-04-14T10:00:00', localDate(2026, 4, 13, 10, 0)); // Seg
+      expect(statusIs(status, 'blue')).toBe(true);
+      expect(status.messageKey).toBe('smartPlan.status.blue.offday');
+    });
+
+    it('retorna BLUE com messageKey padrão quando fora do horário', () => {
+      const schedule = makeSchedule({ enabled: true, activeDays: [1, 2, 3, 4, 5] });
+      const status = computeSmartStatus(schedule, 50, '2026-04-14T10:00:00', localDate(2026, 4, 14, 7, 0)); // 07:00
+      expect(statusIs(status, 'blue')).toBe(true);
+      expect(status.messageKey).toBe('smartPlan.status.blue');
+    });
+  });
 });

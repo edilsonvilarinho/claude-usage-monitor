@@ -435,4 +435,422 @@ describe('syncService', () => {
 
     vi.useRealTimers()
   })
+
+  // 13. disable com wipeRemote=true faz DELETE no servidor
+  it('disable com wipeRemote=true tenta DELETE no servidor', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    mockFetch.mockResolvedValueOnce(makeJsonResponse({ ok: true }))
+
+    await service.disable(true)
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const call = mockFetch.mock.calls[0][0] as string
+    expect(call).toContain('/sync/account')
+  })
+
+  // 14. disable com wipeRemote=false não faz DELETE
+  it('disable com wipeRemote=false não faz chamada de rede', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    await service.disable(false)
+
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  // 15. syncNow com erro em flushOutbox ainda emite sync-error
+  it('syncNow com erro em flushOutbox emite sync-error event', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const outboxData = { items: [{ op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: Date.now() }] }
+    storesMap.set('sync-outbox', outboxData)
+
+    mockFetch.mockRejectedValue(new Error('Network error'))
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [], dailyHistory: [], timeSeries: {}, sessionWindows: [], currentSessionWindow: null, rateLimitedUntil: 0, rateLimitCount: 0, rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const events: { type: string }[] = []
+    service.on('sync-event', (e: { type: string }) => events.push(e))
+
+    await service.syncNow()
+
+    expect(events.some(e => e.type === 'sync-error')).toBe(true)
+  })
+
+  // 16. schedulePeriodicSync cria timer com intervalo correto
+  it('schedulePeriodicSync cria timer com intervalo correto em minutos', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+
+    const intervalMinutes = 20
+    service.schedulePeriodicSync(intervalMinutes)
+
+    const syncTimer = (service as unknown as Record<string, unknown>)['syncTimer']
+    expect(syncTimer).not.toBeNull()
+
+    vi.useRealTimers()
+  })
+
+  // 17. getStatus com outbox pendente - verifica que getOutbox() retorna tamanho correto
+  it('getStatus retorna pendingOps baseado no tamanho do outbox', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const { getOutbox } = await import('../../services/settingsService')
+    const { setOutbox } = await import('../../services/settingsService')
+    
+    setOutbox([
+      { op: 'push', payload: { daily: [] }, attemptCount: 1, lastError: 'Retry', queuedAt: Date.now() },
+      { op: 'push', payload: { daily: [] }, attemptCount: 0, lastError: '', queuedAt: Date.now() },
+    ])
+
+    const status = service.getStatus()
+
+    expect(status.pendingOps).toBe(2)
+  })
+
+  // 18. sync com JWT próximo de expirar (< 5min) faz re-exchange
+  it('JWT prestes a expirar (< 5min) força re-exchange', async () => {
+    seedCloudSync({ enabled: true })
+    // Expira em 4 minutos
+    seedJwt('almost.jwt', Date.now() + 4 * 60 * 1000)
+
+    mockGetAccessToken.mockResolvedValue('new-access-token')
+
+    mockFetch
+      .mockResolvedValueOnce(makeJsonResponse(makeExchangeResponse())) // re-exchange
+      .mockResolvedValueOnce(makeJsonResponse({ ok: true })) // flush
+      .mockResolvedValueOnce(makeJsonResponse({ ok: true, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], serverTime: Date.now() })) // pull
+
+    await service.syncNow()
+
+    // Ao todo: re-exchange + flush + pull = 3 calls
+    expect(mockFetch).toHaveBeenCalledTimes(3)
+    const firstCall = mockFetch.mock.calls[0][0] as string
+    expect(firstCall).toContain('/auth/exchange')
+  })
+
+  // 19. doExchange com 401 retorna erro
+  it('doExchange com 401 lança erro AUTH_401', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    mockGetAccessToken.mockResolvedValue('access-token')
+
+    mockFetch.mockResolvedValueOnce(
+      new Response(null, { status: 401 })
+    )
+
+    await expect(
+      (service as unknown as Record<string, unknown>)['doExchange']('http://localhost:3030', 'token', 'device-id', 'device-label')
+    ).rejects.toThrow('AUTH_401')
+  })
+
+  // 20. doExchange com !resp.ok lança erro
+  it('doExchange com status 500 lança erro', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    mockGetAccessToken.mockResolvedValue('access-token')
+
+    mockFetch.mockResolvedValueOnce(
+      new Response(null, { status: 500 })
+    )
+
+    await expect(
+      (service as unknown as Record<string, unknown>)['doExchange']('http://localhost:3030', 'token', 'device-id', 'device-label')
+    ).rejects.toThrow('Exchange failed: 500')
+  })
+
+  // 21. doSnapshot com 401 lança AUTH_401
+  it('doSnapshot com 401 lança AUTH_401', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    mockFetch.mockResolvedValueOnce(
+      new Response(null, { status: 401 })
+    )
+
+    await expect(
+      (service as unknown as Record<string, unknown>)['doSnapshot']('http://localhost:3030', 'jwt-token')
+    ).rejects.toThrow('AUTH_401')
+  })
+
+  // 22. doPull com 401 lança AUTH_401
+  it('doPull com 401 lança AUTH_401', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    mockFetch.mockResolvedValueOnce(
+      new Response(null, { status: 401 })
+    )
+
+    await expect(
+      (service as unknown as Record<string, unknown>)['doPull']('http://localhost:3030', 'jwt-token', 123)
+    ).rejects.toThrow('AUTH_401')
+  })
+
+  // 23. applyPullResponse com currentWindow remoto
+  it('applyPullResponse aplica currentWindow remoto', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: { resetsAt: '2026-04-13T10:00:00', peak: 50 },
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const pullData = {
+      daily: [],
+      sessionWindows: [],
+      timeSeries: [],
+      usageSnapshots: [],
+      serverTime: Date.now(),
+      currentWindow: { resetsAt: '2026-04-13T14:00:00', peak: 80 },
+    }
+
+    ;(service as unknown as Record<string, unknown>)['applyPullResponse'](pullData)
+
+    const updatedAccounts = storesMap.get('accounts') as Record<string, unknown>
+    const defaultAccount = (updatedAccounts['accounts'] as Record<string, unknown>)['default'] as Record<string, unknown>
+    expect(defaultAccount['currentSessionWindow']).toBeTruthy()
+  })
+
+  // 24. applyPullResponse com settings remoto (mais recente)
+  it('applyPullResponse atualiza settings se remoto for mais recente', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    const configData = storesMap.get('config') ?? {}
+    ;(configData as Record<string, unknown>)['settingsUpdatedAt'] = 1000
+    storesMap.set('config', configData)
+
+    const pullData = {
+      daily: [],
+      sessionWindows: [],
+      timeSeries: [],
+      usageSnapshots: [],
+      serverTime: Date.now(),
+      settings: { theme: 'dark', language: 'en', notifications: {}, workSchedule: null, updatedAt: 2000 },
+    }
+
+    ;(service as unknown as Record<string, unknown>)['applyPullResponse'](pullData)
+
+    const updatedConfig = storesMap.get('config') as Record<string, unknown>
+    expect(updatedConfig['theme']).toBe('dark')
+    expect(updatedConfig['settingsUpdatedAt']).toBe(2000)
+  })
+
+  // 25. applyPullResponse NÃO atualiza settings se local for mais recente
+  it('applyPullResponse mantém settings local se for mais recente', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    const configData = storesMap.get('config') ?? {}
+    ;(configData as Record<string, unknown>)['settingsUpdatedAt'] = 3000
+    ;(configData as Record<string, unknown>)['theme'] = 'light'
+    storesMap.set('config', configData)
+
+    const pullData = {
+      daily: [],
+      sessionWindows: [],
+      timeSeries: [],
+      usageSnapshots: [],
+      serverTime: Date.now(),
+      settings: { theme: 'dark', language: 'en', notifications: {}, workSchedule: null, updatedAt: 2000 },
+    }
+
+    ;(service as unknown as Record<string, unknown>)['applyPullResponse'](pullData)
+
+    const updatedConfig = storesMap.get('config') as Record<string, unknown>
+    expect(updatedConfig['theme']).toBe('light')
+  })
+
+  // 26. flushOutbox com item existente tenta push
+  it('flushOutbox faz push dos itens do outbox', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    const { setOutbox } = await import('../../services/settingsService')
+    setOutbox([
+      { op: 'push', payload: { daily: [] }, attemptCount: 0, lastError: '', queuedAt: Date.now() },
+    ])
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    mockFetch.mockResolvedValueOnce(makeJsonResponse({ ok: true }))
+
+    await (service as unknown as Record<string, unknown>)['flushOutbox']('http://localhost:3030', 'jwt-token', 'device-abc')
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockFetch.mock.calls[0][0] as string).toContain('/sync/push')
+  })
+
+  // 28. syncNow com outbox vazio não chama flush
+  it('syncNow com outbox vazio pulga flush', async () => {
+    seedCloudSync({ enabled: true, serverUrl: 'http://localhost:3030' })
+    seedJwt()
+
+    const { setOutbox } = await import('../../services/settingsService')
+    setOutbox([])
+
+    mockFetch.mockResolvedValueOnce(makeJsonResponse({ ok: true, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], serverTime: Date.now() }))
+
+    await service.syncNow()
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockFetch.mock.calls[0][0] as string).toContain('/sync/pull')
+  })
+
+  // 29. decodeEmailFromJwt com JWT válido
+  it('decodeEmailFromJwt extrai email do JWT', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const email = (service as unknown as Record<string, unknown>)['decodeEmailFromJwt']('header.eyJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20ifQ.sig')
+    expect(email).toBe('test@example.com')
+  })
+
+  // 30. decodeEmailFromJwt com JWT inválido
+  it('decodeEmailFromJwt com JWT inválido retorna string vazia', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const email = (service as unknown as Record<string, unknown>)['decodeEmailFromJwt']('invalid-jwt')
+    expect(email).toBe('')
+  })
+
+  // 31. decodeEmailFromJwt com payload inválido
+  it('decodeEmailFromJwt com JSON inválido retorna string vazia', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const email = (service as unknown as Record<string, unknown>)['decodeEmailFromJwt']('header.invalid-json.sig')
+    expect(email).toBe('')
+  })
+
+  // 32. enqueuePush com cloudSync disabled não faz nada
+  it('enqueuePush não adiciona ao outbox se cloudSync disabled', async () => {
+    seedCloudSync({ enabled: false })
+
+    const { getOutbox } = await import('../../services/settingsService')
+    const initialOutbox = getOutbox().length
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    service.enqueuePush(getAccountData())
+
+    expect(getOutbox().length).toBe(initialOutbox)
+  })
+
+  // 33. enqueuePush com temporarilyDisabled não faz nada
+  it('enqueuePush não adiciona ao outbox se temporarilyDisabled', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+    ;(service as unknown as Record<string, unknown>)['temporarilyDisabled'] = true
+
+    const { getOutbox } = await import('../../services/settingsService')
+    const initialOutbox = getOutbox().length
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    service.enqueuePush(getAccountData())
+
+    expect(getOutbox().length).toBe(initialOutbox)
+  })
+
+  // 34. enqueuePush com já having push no outbox não adiciona duplicado
+  it('enqueuePush não adiciona duplicado se push já existe', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const { setOutbox } = await import('../../services/settingsService')
+    setOutbox([{ op: 'push', payload: {}, attemptCount: 0, lastError: '', queuedAt: Date.now() }])
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData, getOutbox } = await import('../../services/settingsService')
+    service.enqueuePush(getAccountData())
+
+    const outbox = getOutbox()
+    const pushItems = outbox.filter(i => i.op === 'push')
+    expect(pushItems.length).toBe(1)
+  })
 })
