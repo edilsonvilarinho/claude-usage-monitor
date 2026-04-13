@@ -124,7 +124,8 @@ type Lang = 'en' | 'pt-BR';
 const translations = {
   en: {
     sessionLabel:     'Session (5h)',
-    weeklyLabel:      'Weekly (7d)',
+    weeklyLabel:      'Workflow (7d)',
+    notStarted:       'Not started',
     sonnetLabel:      'Sonnet',
     creditsLabel:     'Credits',
     loadingText:      'Loading...',
@@ -273,7 +274,8 @@ const translations = {
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
-    weeklyLabel:      'Semanal (7d)',
+    weeklyLabel:      'Workflow (7d)',
+    notStarted:       'Não iniciado',
     sonnetLabel:      'Sonnet',
     creditsLabel:     'Créditos',
     loadingText:      'Carregando...',
@@ -1354,10 +1356,17 @@ function updateUI(data: UsageData): void {
   const weeklyPct  = Math.round(data.seven_day.utilization);
 
   if (sessionChart) updateGauge(sessionChart, sessionPct);
-  if (weeklyChart)  updateGauge(weeklyChart, weeklyPct);
+  if (weeklyPct) updateGauge(weeklyChart, weeklyPct);
 
-  (document.getElementById('pct-session') as HTMLElement).textContent =
-    sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`;
+  const today = new Date().toLocaleDateString('sv');
+  window.claudeUsage.getDailyHistory().then(history => {
+    const todayData = history.find(d => d.date === today);
+    const noSessionData = !todayData || (todayData.maxSession === 0 && todayData.sessionAccum === 0);
+    const t = tr();
+    const displayPct = noSessionData ? t.notStarted : (sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`);
+    (document.getElementById('pct-session') as HTMLElement).textContent = displayPct;
+  });
+
   (document.getElementById('pct-weekly') as HTMLElement).textContent =
     weeklyPct > 100 ? `>${Math.min(weeklyPct, 999)}%` : `${weeklyPct}%`;
 
