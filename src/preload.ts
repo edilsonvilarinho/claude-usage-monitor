@@ -103,6 +103,9 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   getCurrentSessionWindow: (): Promise<import('./models/usageData').CurrentSessionWindow | null> =>
     ipcRenderer.invoke('get-current-session-window'),
 
+  getCostEstimate: (): Promise<import('./services/costService').CostEstimate | null> =>
+    ipcRenderer.invoke('get-cost-estimate'),
+
   chooseAutoBackupFolder: (): Promise<string | null> =>
     ipcRenderer.invoke('choose-auto-backup-folder'),
 

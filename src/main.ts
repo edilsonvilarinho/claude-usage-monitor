@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { pollingService, LastResponseInfo } from './services/pollingService';
 import { getSettings, saveSettings, setActiveAccount, getAccountData, saveAccountData } from './services/settingsService';
+import { calculateCostEstimate } from './services/costService';
 import { syncService } from './services/syncService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
@@ -693,6 +694,12 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('set-poll-interval', (_event, ms: number | null) => {
     pollingService.setCustomInterval(ms);
+  });
+
+  ipcMain.handle('get-cost-estimate', () => {
+    if (!lastUsageData) return null;
+    const account = getAccountData();
+    return calculateCostEstimate(lastUsageData, account.dailyHistory ?? [], account.currentSessionWindow ?? null);
   });
 
   ipcMain.handle('sync:get-status', () => syncService.getStatus());
