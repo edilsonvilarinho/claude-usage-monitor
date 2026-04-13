@@ -14,6 +14,7 @@
   "scripts": {
     "dev": "tsc -p tsconfig.main.json && electron --no-sandbox dist/main.js",
     "dev:build": "npm run build && npm run dev",
+    "merge:to-master": "git push && git checkout master && git merge @{-1} && git push origin master && git branch -d @{-1} && git push origin --delete @{-1} && git checkout -",
     "build": "node build-renderer.js",
     "predist": "node -e \"require('fs').rmSync('dist-build', {recursive:true, force:true})\"",
     "dist": "npm run build && electron-builder --win",
