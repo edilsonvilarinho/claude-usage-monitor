@@ -27,6 +27,9 @@ jobs:
       - name: Build shared package
         run: npm run build -w shared
 
+      - name: Compile main TypeScript
+        run: npx tsc -p tsconfig.main.json
+
       - name: Build Linux packages
         run: npm run build && npx electron-builder --linux --publish never
 
