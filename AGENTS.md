@@ -55,6 +55,17 @@ All workflows are defined in `.claude/`:
 - **Rate limit persists** — `rateLimitedUntil` survives app restart
 - **utilization can exceed 1.0** — UI caps at 100%, displays ">1600%"
 
+## Mandatory Workflow
+
+**Antes de qualquer alteração de código** (bug fix, feature, refactor):
+1. Ler seções relevantes do `BUSINESS_RULES.md`
+2. Verificar se a mudança não viola regras existentes
+
+**Após qualquer alteração de código**:
+- Se adicionou nova lógica, threshold, intervalo ou comportamento → atualizar `BUSINESS_RULES.md`
+- Se removeu/substituiu regra existente → atualizar `BUSINESS_RULES.md`
+- Atualização vai no **mesmo commit** da mudança de código
+
 ## References
 
 - Architecture: `CLAUDE.md`
