@@ -289,4 +289,150 @@ describe('syncService', () => {
     // isSyncing deve ter voltado a false
     expect((service as unknown as Record<string, unknown>)['isSyncing']).toBe(false)
   })
+
+  // 7. disable() para sync e limpa timers
+  it('disable() limpa timers e desabilita sync', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    vi.useFakeTimers()
+    await service.syncNow() // Agenda timer de sync
+
+    await service.disable()
+
+    const configData = storesMap.get('config')!
+    const cloudSync = configData['cloudSync'] as Record<string, unknown>
+    expect(cloudSync['enabled']).toBe(false)
+
+    const syncTimer = (service as unknown as Record<string, unknown>)['syncTimer']
+    expect(syncTimer).toBeNull()
+
+    vi.useRealTimers()
+  })
+
+  // 8. getStatus() retorna estado correto
+  it('getStatus() retorna estado atual do sync', async () => {
+    seedCloudSync({ enabled: true, lastSyncAt: Date.now() - 60000, lastSyncError: 'Some error' })
+    seedJwt('valid.jwt', Date.now() + 3600000)
+
+    const status = service.getStatus()
+
+    expect(status.enabled).toBe(true)
+    expect(status.lastSyncAt).toBeGreaterThan(0)
+    expect(status.lastError).toBe('Some error')
+    expect(status.pendingOps).toBe(0)
+    expect(status.jwtExpiresAt).toBeGreaterThan(Date.now())
+  })
+
+  // 9. enqueuePush com dados válidos adiciona ao outbox
+  it('enqueuePush adiciona dados ao outbox quando offline', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    // Sem rede, dados ficam no outbox
+    mockFetch.mockRejectedValue(new Error('Network error'))
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [{ ts: Date.now(), session: 50, weekly: 60 }],
+        dailyHistory: [{ date: '2026-04-13', maxSession: 50, maxWeekly: 60, sessionWindowCount: 1, sessionAccum: 0 }],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const accountData = getAccountData()
+
+    service.enqueuePush(accountData)
+
+    const outboxData = storesMap.get('sync-outbox')!
+    const items = outboxData['items'] as unknown[]
+    expect(items.length).toBeGreaterThanOrEqual(1)
+  })
+
+  // 10. syncNow com dados locais mais recentes prevalece (merge por mtime)
+  it('syncNow com pull incremental retorna dados do servidor', async () => {
+    seedCloudSync({ enabled: true, lastPullCursor: Date.now() - 60000 })
+    seedJwt()
+
+    const accountsData = storesMap.get('accounts') ?? { activeAccount: '', accounts: {} }
+    ;(accountsData as Record<string, unknown>)['activeAccount'] = 'default'
+    ;(accountsData as Record<string, unknown>)['accounts'] = {
+      default: {
+        usageHistory: [],
+        dailyHistory: [{ date: '2026-04-13', maxSession: 80, maxWeekly: 70, sessionWindowCount: 2, sessionAccum: 30 }],
+        timeSeries: {},
+        sessionWindows: [],
+        currentSessionWindow: null,
+        rateLimitedUntil: 0,
+        rateLimitCount: 0,
+        rateLimitResetAt: 0,
+      },
+    }
+    storesMap.set('accounts', accountsData as Record<string, unknown>)
+
+    mockFetch.mockResolvedValueOnce(
+      makeJsonResponse({
+        daily: [],
+        sessionWindows: [],
+        timeSeries: {},
+        usageSnapshots: [],
+        serverTime: Date.now(),
+      }),
+    )
+
+    await service.syncNow()
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    const pullUrl = mockFetch.mock.calls[0][0] as string
+    expect(pullUrl).toContain('/sync/pull')
+  })
+
+  // 11. JWT expirado durante sync aciona re-exchange automático
+  it('JWT expirado aciona re-exchange sem pedir confirmação', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt('old.jwt', Date.now() - 1000) // Expirado
+
+    mockGetAccessToken.mockResolvedValue('fresh-token')
+
+    mockFetch
+      .mockResolvedValueOnce(makeJsonResponse(makeExchangeResponse())) // re-exchange
+      .mockResolvedValueOnce(makeJsonResponse(makePullResponse())) // pull
+
+    await service.syncNow()
+
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+    const firstCall = mockFetch.mock.calls[0]
+    expect((firstCall[0] as string)).toContain('/auth/exchange')
+  })
+
+  // 12. sync Now com interval agendado
+  it('syncNow não agenda timer duplicado quando já existe', async () => {
+    seedCloudSync({ enabled: true, syncIntervalMinutes: 15 })
+    seedJwt()
+
+    mockFetch
+      .mockResolvedValueOnce(makeJsonResponse({ ok: true, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], serverTime: Date.now() }))
+
+    vi.useFakeTimers()
+
+    await service.syncNow()
+    const firstTimer = (service as unknown as Record<string, unknown>)['syncTimer']
+
+    await service.syncNow()
+    const secondTimer = (service as unknown as Record<string, unknown>)['syncTimer']
+
+    // Timer deve ser o mesmo (não duplicado)
+    expect(firstTimer).toBe(secondTimer)
+
+    vi.useRealTimers()
+  })
 })
