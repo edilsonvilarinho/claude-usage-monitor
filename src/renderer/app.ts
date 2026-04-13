@@ -252,7 +252,7 @@ const translations = {
     'smartPlan.status.green': 'Clear path. Start your most complex and high-context tasks now.',
     'smartPlan.status.yellow': 'Beware of overhead. Your reset will fall in the middle of your work window. Interleave heavy tasks with manual coding or prioritize lower-context files.',
     'smartPlan.status.red': 'Imminent block. Avoid sending large prompts. Focus on purely manual refactoring, PR reviews, or documentation until the reset.',
-    'smartPlan.status.purple': "Bio-Rhythm Synchronization: To avoid 'dead resets', we suggest sending your first message at {time} so your reset aligns perfectly with your break. Protect your focus.",
+    'smartPlan.status.purple': "Workflow Synchronization: To avoid 'dead resets', we suggest sending your first message at {time} so your reset aligns perfectly with your break. Protect your focus.",
     'smartPlan.openDetails': 'Open smart schedule details',
     'smartPlan.resetNextDay': '+1 day at {time}',
     dayShort0: 'Sun',
