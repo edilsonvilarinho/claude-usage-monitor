@@ -874,7 +874,7 @@ async function openReportModal(): Promise<void> {
   const isPtBR = currentLang === 'pt-BR';
   const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 
-  const buildRow = (resetsAt: string, peak: number, index: number, isOpen: boolean, peakTs?: number) => {
+  const buildRow = (resetsAt: string, peak: number, final: number, index: number, isOpen: boolean, peakTs?: number) => {
     const endDt   = new Date(resetsAt);
     const startDt = new Date(endDt.getTime() - 5 * 60 * 60 * 1000);
     const fmtDate = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
@@ -882,7 +882,7 @@ async function openReportModal(): Promise<void> {
     const rangeStr = isOpen
       ? `${startStr} → ${isPtBR ? 'em andamento' : 'ongoing'}`
       : `${startStr} → ${fmtDate(endDt)} ${fmt(endDt)}`;
-    const pct   = Math.min(peak, 200);
+    const pct   = isOpen ? Math.min(peak, 200) : Math.min(final, 200);
     const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
     const label = isPtBR ? `Janela ${index}` : `Window ${index}`;
     const badge = isOpen
@@ -904,9 +904,9 @@ async function openReportModal(): Promise<void> {
   let windowRows = '';
   let idx = 1;
   if (currentWindow) {
-    windowRows += buildRow(currentWindow.resetsAt, currentWindow.peak, idx++, true, currentWindow.peakTs);
+    windowRows += buildRow(currentWindow.resetsAt, currentWindow.peak, currentWindow.final ?? currentWindow.peak, idx++, true, currentWindow.peakTs);
   }
-  windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, idx++, false, w.peakTs)).join('');
+  windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, w.final ?? w.peak, idx++, false, w.peakTs)).join('');
 
   windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` + windowRows;
 

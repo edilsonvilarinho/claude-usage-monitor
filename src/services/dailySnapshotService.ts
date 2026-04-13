@@ -51,22 +51,20 @@ export function updateDailySnapshot(
 
   if (existingDay) {
     if (sessionResetOccurred && currentWindow) {
-      // Usa o pico rastreado da janela completada (não o último valor polled)
       const peak = currentWindow.peak;
-      // Se a janela começou num dia anterior, atribui ao dia anterior (não incrementa count)
+      const final = currentWindow.final;
       const windowDate = currentWindow.date;
       if (windowDate && windowDate < today && dailyHistory.length > 0) {
         const prevDay = dailyHistory.find(d => d.date === windowDate)
           ?? dailyHistory[dailyHistory.length - 1];
-        completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date, peakTs: currentWindow.peakTs };
+        completedWindow = { resetsAt: currentWindow.resetsAt, peak, final, date: prevDay.date, peakTs: currentWindow.peakTs };
         prevDay.sessionAccum = (prevDay.sessionAccum ?? 0) + peak;
-        // sessionWindowCount não incrementa: a janela já foi contada como o "1" inicial do dia anterior
       } else {
-        completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: today, peakTs: currentWindow.peakTs };
+        completedWindow = { resetsAt: currentWindow.resetsAt, peak, final, date: today, peakTs: currentWindow.peakTs };
         existingDay.sessionAccum  = (existingDay.sessionAccum  ?? 0) + peak;
         existingDay.sessionWindowCount = (existingDay.sessionWindowCount ?? 1) + 1;
       }
-      existingDay.maxSession    = sessionPctInt; // inicia rastreamento da nova janela
+      existingDay.maxSession    = sessionPctInt;
     } else {
       existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
     }
@@ -79,9 +77,9 @@ export function updateDailySnapshot(
     if (sessionResetOccurred && currentWindow && dailyHistory.length > 0) {
       const prevDay = dailyHistory[dailyHistory.length - 1];
       const peak = currentWindow.peak;
-      completedWindow = { resetsAt: currentWindow.resetsAt, peak, date: prevDay.date, peakTs: currentWindow.peakTs };
+      const final = currentWindow.final;
+      completedWindow = { resetsAt: currentWindow.resetsAt, peak, final, date: prevDay.date, peakTs: currentWindow.peakTs };
       prevDay.sessionAccum = (prevDay.sessionAccum ?? 0) + peak;
-      // sessionWindowCount não incrementa: a janela já foi contada como o "1" inicial do dia anterior
     }
     dailyHistory.push({
       date: today,
@@ -97,15 +95,11 @@ export function updateDailySnapshot(
   if (dailyHistory.length > 8) dailyHistory.splice(0, dailyHistory.length - 8);
 
   // ── Atualizar currentWindow ─────────────────────────────────────────────────
-  // Quando há reset: se sessionPctInt >= peak da janela completada, a API ainda está
-  // reportando o valor da sessão anterior — usa 0 para não contaminar o peak da nova janela.
-  // Caso contrário (valor já é menor, portanto genuíno da nova sessão), usa sessionPctInt.
-  // No próximo poll, Math.max atualiza para o valor real.
   const newCurrentWindow: CurrentSessionWindow = sessionResetOccurred
-    ? { resetsAt: newResetsAt, peak: sessionPctInt >= (completedWindow?.peak ?? 0) ? 0 : sessionPctInt, date: today, peakTs: undefined }
+    ? { resetsAt: newResetsAt, peak: sessionPctInt >= (completedWindow?.peak ?? 0) ? 0 : sessionPctInt, final: 0, date: today, peakTs: undefined }
     : !currentWindow
-      ? { resetsAt: newResetsAt, peak: sessionPctInt, date: today, peakTs: now }           // primeira janela
-      : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt), date: currentWindow.date ?? today, peakTs: sessionPctInt > currentWindow.peak ? now : currentWindow.peakTs }; // mesma janela, atualiza pico
+      ? { resetsAt: newResetsAt, peak: sessionPctInt, final: sessionPctInt, date: today, peakTs: now }
+      : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt), final: sessionPctInt, date: currentWindow.date ?? today, peakTs: sessionPctInt > currentWindow.peak ? now : currentWindow.peakTs };
 
   return { dailyHistory, currentWindow: newCurrentWindow, completedWindow };
 }

@@ -94,6 +94,8 @@ se (sessionDelta > 0.01 || weeklyDelta > 0.01) → fastCyclesLeft = 1
 
 **401 (Autenticação):** Na primeira ocorrência dentro de uma sessão de tentativas, invalida o cache de versão do Claude e recolhe o token. Na segunda, lança o erro para o `pollingService` tratar como erro genérico.
 
+**Modal de credenciais no 401:** Quando a API retorna 401 (token expirado ou inválido), o `main.ts` detecta a mensagem `"Authentication failed (401)"` e abre o modal de credenciais (`#credential-modal`). Isso garante que o usuário seja notificado tanto quando o arquivo de credenciais não existe quanto quando o token está expirado.
+
 **Persistência do rate limit entre restarts:** O `rateLimitedUntil` e `rateLimitCount` são salvos no electron-store. No startup do app, `main.ts` chama `pollingService.restoreRateLimit(until, count)` antes de `start()` — garantindo que o backoff não seja perdido se o usuário reiniciar o app enquanto ainda está em cooldown.
 
 ### `triggerNow()` vs `forceNow()`
@@ -153,6 +155,31 @@ interface DailySnapshot {
 ```
 
 **Por que usar pico (`peak`) e não o último valor da janela?** O último valor polled pode ser baixo se o reset aconteceu pouco antes do poll. O pico rastreado ao longo da janela é a métrica honesta de "quanto foi consumido nesta sessão".
+
+### Campo `final` — valor ao fechar a janela
+
+`SessionWindowRecord` e `CurrentSessionWindow` possuem o campo `final: number` que armazena a utilization observada no **último poll antes do reset** (ou valor atual para janela em andamento).
+
+**Por que ter `final` além do `peak`?**
+- `peak` = maior valor alcançado na janela (para metrics de acumulação)
+- `final` = valor no momento do fechamento (para exibição no resumo de janelas)
+
+**Regra de exibição no modal de relatório:**
+- **Janela aberta:** exibe `peak` (está em andamento)
+- **Janela fechada:** exibe `final` (valor quando encerrou)
+
+Isso corrige o bug onde o resumo mostrava "Janela fechou com 100%" quando na verdade fechou com 73% — o sistema estava exibindo o pico em vez do valor final.
+
+**Armazenamento:**
+- A cada poll, `final` é atualizado para o valor atual: `final: sessionPctInt`
+- Ao detectar reset, `completedWindow` herda `final` da `currentWindow` antes de criar a nova janela
+- Após reset, `final` da nova janela começa em 0 (até o próximo poll)
+
+**Exemplo de fluxo:**
+1. Poll 1: session=50 → peak=50, final=50
+2. Poll 2: session=73 → peak=73, final=73
+3. Poll 3: session=100 → peak=100, final=100
+4. Poll 4: session=10 (reset!) → completedWindow.final=100, nova janela peak=0, final=0
 
 **`sessionAccum`:** Soma apenas janelas *completadas*. A janela em curso é excluída para evitar dupla contagem — ela já está refletida no `maxSession`. Ao computar métricas de "uso total do dia", o cálculo correto é `sessionAccum + maxSession`.
 

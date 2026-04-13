@@ -9,8 +9,8 @@ function makeUsageData(sessionPct: number, weeklyPct: number, sessionResetsAt: s
   };
 }
 
-function makeWindow(resetsAt: string, peak: number): CurrentSessionWindow {
-  return { resetsAt, peak };
+function makeWindow(resetsAt: string, peak: number, final?: number): CurrentSessionWindow {
+  return { resetsAt, peak, final: final ?? peak };
 }
 
 const TODAY  = '2026-04-07';
@@ -99,8 +99,8 @@ describe('updateDailySnapshot', () => {
     expect(dailyHistory[0].sessionAccum).toBe(70);  // usa peak, não último valor polled
     expect(dailyHistory[0].sessionWindowCount).toBe(2);
     expect(dailyHistory[0].maxSession).toBe(14);    // reinicia com valor da nova janela
-    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 14, date: TODAY }); // nova janela iniciada
-    expect(completedWindow).toMatchObject({ resetsAt: RESET_A, peak: 70, date: TODAY });
+    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 14, final: 0, date: TODAY });
+    expect(completedWindow).toMatchObject({ resetsAt: RESET_A, peak: 70, final: 70, date: TODAY });
   });
 
   it('FIX: acumulado usa pico rastreado, não o último valor polled antes do reset', () => {
