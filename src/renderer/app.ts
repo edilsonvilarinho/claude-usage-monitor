@@ -125,7 +125,6 @@ const translations = {
   en: {
     sessionLabel:     'Session (5h)',
     weeklyLabel:      'Workflow (7d)',
-    notStarted:       'Not started',
     sonnetLabel:      'Sonnet',
     creditsLabel:     'Credits',
     loadingText:      'Loading...',
@@ -275,7 +274,6 @@ const translations = {
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
     weeklyLabel:      'Workflow (7d)',
-    notStarted:       'Não iniciado',
     sonnetLabel:      'Sonnet',
     creditsLabel:     'Créditos',
     loadingText:      'Carregando...',
@@ -1363,8 +1361,7 @@ function updateUI(data: UsageData): void {
     const todayData = history.find(d => d.date === today);
     const noSessionData = !todayData || (todayData.maxSession === 0 && todayData.sessionAccum === 0);
     const t = tr();
-    const displayPct = noSessionData ? t.notStarted : (sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`);
-    (document.getElementById('pct-session') as HTMLElement).textContent = displayPct;
+    (document.getElementById('pct-session') as HTMLElement).textContent = noSessionData ? '—' : (sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`);
   });
 
   (document.getElementById('pct-weekly') as HTMLElement).textContent =

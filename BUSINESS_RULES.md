@@ -138,18 +138,6 @@ sessionResetOccurred = (newResetsAtMs - storedResetsAtMs) >= 30min
 
 **Por que 30 minutos como limiar, não apenas "diferente"?** O timestamp `resets_at` pode variar por alguns segundos entre polls (arredondamentos da API). Um limiar de 30min elimina falsos positivos de micro-variações enquanto captura com segurança qualquer reset genuíno — o menor ciclo possível é 5 horas.
 
-### Exibição "Não iniciado" quando sem dados do dia
-
-Quando o usuário **não iniciou nenhuma sessão** no dia atual (ou seja, `dailyHistory` do dia não existe ou `maxSession = 0` e `sessionAccum = 0`), o gauge de Sessão exibe o texto "Não iniciado" (pt-BR) / "Not started" (en) em vez do percentual.
-
-**Condição:**
-- `dailyHistory` do dia atual não existe **OU**
-- `maxSession === 0` **E** `sessionAccum === 0`
-
-**Por que não mostrar 0%?** O valor 0% indica que a sessão foi usada e reached 0%. "Não iniciado" deixa claro que nenhuma sessão foi aberta ainda, o que é semanticamente diferente.
-
-**Multilíngue:** A tradução usa o sistema existente de `translations` com a chave `notStarted`.
-
 **Vantagem sobre comparação de `utilization`:** A abordagem por timestamp funciona mesmo após restart do app. A detecção anterior dependia de `prevData` em memória — se o app reiniciasse após um reset mas antes do próximo poll, o reset nunca seria detectado.
 
 ### Acumulação de janelas diárias
