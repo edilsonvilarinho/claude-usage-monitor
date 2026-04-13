@@ -154,7 +154,8 @@ function positionPopup(height?: number): void {
 
   const h = height ?? popup.getSize()[1];
   const trayBounds = tray.getBounds();
-  const workArea = screen.getPrimaryDisplay().workArea;
+  const display = screen.getDisplayNearestPoint({ x: trayBounds.x, y: trayBounds.y });
+  const workArea = display.workArea;
 
   let x = Math.round(trayBounds.x + trayBounds.width / 2 - POPUP_WIDTH / 2);
   let y = Math.round(trayBounds.y - h - 8);
@@ -183,7 +184,8 @@ function togglePopup(): void {
   } else {
     if (!getSettings().alwaysVisible) {
       if (savedPopupPosition) {
-        const workArea = screen.getPrimaryDisplay().workArea;
+        const display = screen.getDisplayNearestPoint({ x: savedPopupPosition.x, y: savedPopupPosition.y });
+        const workArea = display.workArea;
         const clampedX = Math.max(workArea.x, Math.min(savedPopupPosition.x, workArea.x + workArea.width - POPUP_WIDTH));
         const [, currentH] = popup.getSize();
         const clampedY = Math.max(workArea.y, Math.min(savedPopupPosition.y, workArea.y + workArea.height - currentH));
@@ -709,11 +711,12 @@ function registerIpcHandlers(): void {
 
   ipcMain.on('set-window-height', (_event, height: number) => {
     if (!popup) return;
-    const workArea = screen.getPrimaryDisplay().workArea;
+    const [popupX, popupY] = popup.getPosition();
+    const display = screen.getDisplayNearestPoint({ x: popupX, y: popupY });
+    const workArea = display.workArea;
     const h = Math.min(Math.round(height), workArea.height - 16);
     if (positionedByUser) {
       const [x, y] = popup.getPosition();
-      // Clamp y so the window doesn't go below the screen bottom
       const clampedY = Math.min(y, workArea.y + workArea.height - h);
       markAsProgrammaticMove();
       popup.setBounds({ x, y: Math.max(workArea.y, clampedY), width: POPUP_WIDTH, height: h }, false);
@@ -915,7 +918,8 @@ app.whenReady().then(() => {
         if (!popup.isVisible()) {
           if (!getSettings().alwaysVisible) {
             if (savedPopupPosition) {
-              const workArea = screen.getPrimaryDisplay().workArea;
+              const display = screen.getDisplayNearestPoint({ x: savedPopupPosition.x, y: savedPopupPosition.y });
+              const workArea = display.workArea;
               const clampedX = Math.max(workArea.x, Math.min(savedPopupPosition.x, workArea.x + workArea.width - POPUP_WIDTH));
               const [, currentH] = popup.getSize();
               const clampedY = Math.max(workArea.y, Math.min(savedPopupPosition.y, workArea.y + workArea.height - currentH));
