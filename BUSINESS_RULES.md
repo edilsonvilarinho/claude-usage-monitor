@@ -168,6 +168,12 @@ interface DailySnapshot {
 - **Janela aberta:** exibe `peak` (está em andamento)
 - **Janela fechada:** exibe `final` (valor quando encerrou)
 
+**Regra de estado "aberta" vs "fechada":**
+Uma janela só é considerada "aberta" (com badge "Aberta") se houve atividade real:
+- `isOpen = true` **E** (`peak > 0` **ou** `final > 0`)
+
+Se `peak = 0` e `final = 0` (janela foi criada mas não houve uso), exibe como "Fechada". Isso cobre o caso onde o usuário atingiu o limite semanal e não iniciou uma nova sessão de 5h — não faz sentido mostrar "Janela 1 Aberta" com 0% de uso.
+
 Isso corrige o bug onde o resumo mostrava "Janela fechou com 100%" quando na verdade fechou com 73% — o sistema estava exibindo o pico em vez do valor final.
 
 **Armazenamento:**

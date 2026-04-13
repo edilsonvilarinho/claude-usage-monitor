@@ -879,13 +879,15 @@ async function openReportModal(): Promise<void> {
     const startDt = new Date(endDt.getTime() - 5 * 60 * 60 * 1000);
     const fmtDate = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
     const startStr = `${fmtDate(startDt)} ${fmt(startDt)}`;
-    const rangeStr = isOpen
+    const hasActivity = peak > 0 || final > 0;
+    const effectiveIsOpen = isOpen && hasActivity;
+    const rangeStr = effectiveIsOpen
       ? `${startStr} → ${isPtBR ? 'em andamento' : 'ongoing'}`
       : `${startStr} → ${fmtDate(endDt)} ${fmt(endDt)}`;
-    const pct   = isOpen ? Math.min(peak, 200) : Math.min(final, 200);
+    const pct   = effectiveIsOpen ? Math.min(peak, 200) : Math.min(final, 200);
     const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
     const label = isPtBR ? `Janela ${index}` : `Window ${index}`;
-    const badge = isOpen
+    const badge = effectiveIsOpen
       ? `<span class="window-badge open">${isPtBR ? 'Aberta' : 'Open'}</span>`
       : `<span class="window-badge closed">${isPtBR ? 'Fechada' : 'Closed'}</span>`;
     const peakTimeStr = peakTs
