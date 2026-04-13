@@ -2112,19 +2112,19 @@ function init(): void {
     }
   });
 
-  document.getElementById('btn-edit-history')!.addEventListener('click', () => {
+  document.getElementById('btn-edit-history')!.addEventListener('click', async () => {
     const modal = document.getElementById('edit-snapshot-modal') as HTMLElement;
     const dateSelect = document.getElementById('edit-date-select') as HTMLSelectElement;
 
     const todayStr = new Date().toLocaleDateString('sv');
-    const dates = [...new Set([...currentDailyHistory.map(d => d.date), todayStr])].sort().reverse();
+    const history = await window.claudeUsage.getDailyHistory();
+    const dates = [...new Set([...history.map(d => d.date), todayStr])].sort().reverse();
     dateSelect.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
 
     function populateFields(dateStr: string): void {
-      const found = currentDailyHistory.find(d => d.date === dateStr);
+      const found = history.find(d => d.date === dateStr);
       (document.getElementById('edit-maxSession') as HTMLInputElement).value = String(found?.maxSession ?? 0);
       (document.getElementById('edit-sessionAccum') as HTMLInputElement).value = String(found?.sessionAccum ?? 0);
-      // sessionWindowCount starts at 1 (first window); display as resets count (0-based)
       (document.getElementById('edit-sessionWindowCount') as HTMLInputElement).value = String(Math.max(0, (found?.sessionWindowCount ?? 1) - 1));
       (document.getElementById('edit-maxWeekly') as HTMLInputElement).value = String(found?.maxWeekly ?? 0);
     }
