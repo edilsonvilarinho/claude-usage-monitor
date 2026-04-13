@@ -906,14 +906,11 @@ app.whenReady().then(() => {
 
   pollingService.on('error', (err: Error) => {
     const isCredError = err.message.includes('credentials not found') ||
-                        err.message.includes('Invalid credentials file');
+                        err.message.includes('Invalid credentials file') ||
+                        err.message.includes('Authentication failed (401)');
     if (isCredError) {
       credentialMissing = true;
-      // Extract path from error message or fall back to default
-      const match = err.message.match(/Expected location: (.+)/);
-      credentialPath = match
-        ? match[1].trim()
-        : path.join(process.env['USERPROFILE'] || process.env['HOME'] || '~', '.claude', '.credentials.json');
+      credentialPath = path.join(process.env['USERPROFILE'] || process.env['HOME'] || '~', '.claude', '.credentials.json');
       if (popup) {
         if (!popup.isVisible()) {
           if (!getSettings().alwaysVisible) {
