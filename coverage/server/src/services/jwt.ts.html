@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for services/dailySnapshotService.ts</title>
+    <title>Code coverage report for server/src/services/jwt.ts</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../prettify.css" />
-    <link rel="stylesheet" href="../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../sort-arrow-sprite.png);
+            background-image: url(../../../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,20 +19,20 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">services</a> dailySnapshotService.ts</h1>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">server/src/services</a> jwt.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.55% </span>
+                <span class="strong">80.95% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>28/29</span>
+                <span class='fraction'>17/21</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">66.66% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>16/24</span>
+                <span class='fraction'>6/8</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.15% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>25/26</span>
+                <span class='fraction'>16/20</span>
             </div>
         
             
@@ -114,7 +114,25 @@
 <a name='L49'></a><a href='#L49'>49</a>
 <a name='L50'></a><a href='#L50'>50</a>
 <a name='L51'></a><a href='#L51'>51</a>
-<a name='L52'></a><a href='#L52'>52</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">23x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -122,99 +140,84 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">16x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { DailySnapshot, UsageData } from '../models/usageData';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { SignJWT, jwtVerify } from 'jose';
+import { logger } from '../logger';
 &nbsp;
-export function updateDailySnapshot(
-  dailyHistory: DailySnapshot[],
-  today: string,
-  data: UsageData,
-  prevData: UsageData | null
-): DailySnapshot[] {
-  const weeklyPctInt  = Math.round(data.seven_day.utilization);
-  const sessionPctInt = Math.round(data.five_hour.utilization);
-  const extra = data.extra_usage;
-  const creditsPctInt = (extra?.is_enabled &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >extra.monthly_limit &gt; 0)</span>
-    ? <span class="branch-0 cbranch-no" title="branch not covered" >Math.round((extra.used_credits / extra.monthly_limit) * 100)</span>
-    : undefined;
+const JWT_EXPIRY_SECONDS = 24 * 60 * 60; // 24h
 &nbsp;
-  // Detectar reset de sessão: resets_at avançou pelo menos 30min (evita falsos positivos
-  // por variações mínimas no timestamp retornado pela API)
-  let sessionResetOccurred = false;
-  if (prevData) {
-    const prevResetsAt = new Date(prevData.five_hour.resets_at).getTime();
-    const currResetsAt = new Date(data.five_hour.resets_at).getTime();
-    const THIRTY_MINUTES_MS = 30 * 60 * 1000;
-    if (currResetsAt - prevResetsAt &gt;= THIRTY_MINUTES_MS) {
-      sessionResetOccurred = true;
-    }
-  }
+let _secret: Uint8Array | null = null;
 &nbsp;
-  const existingDay = dailyHistory.find(d =&gt; d.date === today);
-&nbsp;
-  if (existingDay) {
-    if (sessionResetOccurred) {
-      const peakOfCompletedWindow = Math.round(prevData!.five_hour.utilization);
-      existingDay.sessionAccum  = (existingDay.sessionAccum  ?? <span class="branch-1 cbranch-no" title="branch not covered" >0) + p</span>eakOfCompletedWindow;
-      existingDay.sessionResets = (existingDay.sessionResets ?? <span class="branch-1 cbranch-no" title="branch not covered" >1) + 1</span>;
-      existingDay.maxSession = sessionPctInt;
-    } else {
-      existingDay.maxSession = Math.max(existingDay.maxSession ?? <span class="branch-1 cbranch-no" title="branch not covered" >0, s</span>essionPctInt);
-    }
-    existingDay.maxWeekly = Math.max(existingDay.maxWeekly, weeklyPctInt);
-    <span class="missing-if-branch" title="if path not taken" >I</span>if (creditsPctInt !== undefined) {
-<span class="cstat-no" title="statement not covered" >      existingDay.maxCredits = Math.max(existingDay.maxCredits ?? 0, creditsPctInt);</span>
-    }
+function secret(): Uint8Array {
+  if (_secret) return _secret;
+  const raw = process.env.JWT_SECRET;
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!raw) {
+<span class="cstat-no" title="statement not covered" >    logger.warn('JWT_SECRET not set — using random ephemeral secret (dev only)');</span>
+    const random = <span class="cstat-no" title="statement not covered" >Math.random().toString(36).repeat(4);</span>
+<span class="cstat-no" title="statement not covered" >    _secret = new TextEncoder().encode(random);</span>
   } else {
-    dailyHistory.push({ date: today, maxWeekly: weeklyPctInt, maxSession: sessionPctInt, maxCredits: creditsPctInt, sessionResets: 1, sessionAccum: 0 });
+    _secret = new TextEncoder().encode(raw);
+  }
+  return _secret;
+}
+&nbsp;
+export interface JwtPayload {
+  email: string;
+  deviceId: string;
+}
+&nbsp;
+export async function signJwt(
+  email: string,
+  deviceId: string,
+): Promise&lt;{ jwt: string; expiresAt: number }&gt; {
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAtSec = now + JWT_EXPIRY_SECONDS;
+&nbsp;
+  const jwt = await new SignJWT({ email, deviceId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(now)
+    .setExpirationTime(expiresAtSec)
+    .sign(secret());
+&nbsp;
+  return { jwt, expiresAt: expiresAtSec * 1000 };
+}
+&nbsp;
+export async function verifyJwt(token: string): Promise&lt;JwtPayload&gt; {
+  const { payload } = await jwtVerify(token, secret());
+  const email = payload['email'] as string | undefined;
+  const deviceId = payload['deviceId'] as string | undefined;
+&nbsp;
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!email || !deviceId) {
+<span class="cstat-no" title="statement not covered" >    throw new Error('JWT payload missing email or deviceId');</span>
   }
 &nbsp;
-  dailyHistory.sort((a, b) =&gt; a.date.localeCompare(b.date));
-  if (dailyHistory.length &gt; 8) dailyHistory.splice(0, dailyHistory.length - 8);
-&nbsp;
-  return dailyHistory;
+  return { email, deviceId };
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -223,16 +226,16 @@ export function updateDailySnapshot(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-07T23:05:53.147Z
+                at 2026-04-13T19:41:11.830Z
             </div>
-        <script src="../prettify.js"></script>
+        <script src="../../../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../sorter.js"></script>
-        <script src="../block-navigation.js"></script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
     </body>
 </html>
     
