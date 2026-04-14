@@ -1777,6 +1777,7 @@ body {
 /* Cost Modal */
 .cost-modal-box {
   width: 280px;
+  min-height: 320px;
   padding: 16px 20px;
 }
 
@@ -1830,6 +1831,7 @@ body {
 .cost-pane.active {
   display: block;
   animation: fadeInUp 0.2s var(--ease-out) forwards;
+  min-height: 200px;
 }
 
 .cost-value {
