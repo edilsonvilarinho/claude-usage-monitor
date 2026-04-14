@@ -124,7 +124,7 @@ type Lang = 'en' | 'pt-BR';
 const translations = {
   en: {
     sessionLabel:     'Session (5h)',
-    weeklyLabel:      'Workflow (7d)',
+    weeklyLabel:      'Weekly (7d)',
     sonnetLabel:      'Sonnet',
     creditsLabel:     'Credits',
     loadingText:      'Loading...',
@@ -285,7 +285,7 @@ const translations = {
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
-    weeklyLabel:      'Workflow (7d)',
+    weeklyLabel:      'Semanal (7d)',
     sonnetLabel:      'Sonnet',
     creditsLabel:     'Créditos',
     loadingText:      'Carregando...',
