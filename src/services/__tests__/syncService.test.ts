@@ -1263,4 +1263,46 @@ describe('syncService', () => {
 
     expect(payload.daily).toEqual([])
   })
+
+  // 54. _testEnqueuePush com cloudSync disabled
+  it('_testEnqueuePush retorna quando cloudSync disabled', async () => {
+    seedCloudSync({ enabled: false })
+    seedJwt()
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const { syncService } = await import('../../services/syncService')
+
+    syncService._testEnqueuePush(getAccountData())
+
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  // 56. _testEnqueuePush com temporarilyDisabled
+  it('_testEnqueuePush retorna quando temporarilyDisabled', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const { syncService } = await import('../../services/syncService')
+    syncService._setTempDisabled(true)
+
+    syncService._testEnqueuePush(getAccountData())
+
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  // 57. _getSyncing getter
+  it('_getSyncing retorna boolean', async () => {
+    const { syncService } = await import('../../services/syncService')
+    const syncing = syncService._getSyncing()
+    expect(typeof syncing).toBe('boolean')
+  })
+
+  // 58. _setTempDisabled setter
+  it('_setTempDisabled altera flag', async () => {
+    const { syncService } = await import('../../services/syncService')
+    syncService._setTempDisabled(true)
+    syncService._setTempDisabled(false)
+    expect(syncService._getSyncing()).toBe(false)
+  })
 })

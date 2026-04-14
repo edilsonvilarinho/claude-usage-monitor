@@ -563,6 +563,23 @@ class SyncService extends EventEmitter {
       return '';
     }
   }
+
+  // Test wrappers - expose private methods for testing
+  public _setTempDisabled(value: boolean): void {
+    this.temporarilyDisabled = value;
+  }
+
+  public _getSyncing(): boolean {
+    return this.isSyncing;
+  }
+
+  public _testEnqueuePush(account: AccountData): void {
+    this.enqueuePush(account);
+  }
+
+  public _testSyncNow(): Promise<void> {
+    return this.syncNow();
+  }
 }
 
 export const syncService = new SyncService();
