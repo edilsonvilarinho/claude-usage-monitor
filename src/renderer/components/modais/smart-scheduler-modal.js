@@ -1,0 +1,41 @@
+export const SMART_SCHEDULER_MODAL_HTML = `
+<div id="smart-scheduler-modal" class="modal-overlay hidden">
+  <div class="modal-box smart-scheduler-box">
+    <div class="day-detail-header">
+      <span class="day-detail-title-text" data-i18n="spModalTitle">Smart Plan</span>
+      <button id="sp-close-btn" class="day-detail-close-btn">✕</button>
+    </div>
+    <div id="sp-verdict-header" class="sp-verdict">
+      <span id="sp-verdict-text"></span>
+    </div>
+    <div class="sp-donut-wrap">
+      <canvas id="sp-donut"></canvas>
+      <div class="sp-donut-label"><span id="sp-donut-pct">0</span>%</div>
+    </div>
+    <div class="sp-donut-subtitle" data-i18n="spSessionLabel">Sessão (5h)</div>
+    <div id="sp-summary-text" class="sp-summary"></div>
+    <div class="sp-timeline">
+      <div class="sp-timeline-title" data-i18n="spTimelineTitle">Expediente hoje</div>
+      <div class="sp-timeline-track">
+        <div id="sp-work-block" class="sp-work-shift"></div>
+        <div id="sp-break-block" class="sp-break"></div>
+        <div id="sp-work-start-tick" class="sp-tick"></div>
+        <div id="sp-work-end-tick" class="sp-tick"></div>
+        <div id="sp-now-marker" class="sp-marker-now"></div>
+        <span id="sp-now-label" class="sp-marker-label"></span>
+        <div id="sp-reset-marker" class="sp-marker-reset"></div>
+        <span id="sp-reset-label" class="sp-reset-label"></span>
+      </div>
+      <div class="sp-timeline-labels">
+        <span id="sp-timeline-start"></span>
+        <span id="sp-timeline-end"></span>
+      </div>
+      <div class="sp-legend">
+        <span class="sp-legend-item"><span class="sp-legend-now-icon"></span><span data-i18n="spLegendNow">Agora</span></span>
+        <span class="sp-legend-item"><span class="sp-legend-break-icon"></span><span data-i18n="spLegendBreak">Intervalo</span></span>
+        <span class="sp-legend-item"><span id="sp-legend-reset-icon" class="sp-legend-reset-icon">◆</span><span data-i18n="spLegendReset">Reset</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+`;
