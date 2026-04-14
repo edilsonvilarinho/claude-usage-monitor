@@ -1390,8 +1390,11 @@ function updateUI(data: UsageData): void {
     }
   });
 
+  // Weekly gauge
   (document.getElementById('pct-weekly') as HTMLElement).textContent =
     weeklyPct > 100 ? `>${Math.min(weeklyPct, 999)}%` : `${weeklyPct}%`;
+  (document.getElementById('reset-weekly') as HTMLElement).textContent = formatResetsIn(data.seven_day.resets_at);
+  (document.getElementById('reset-at-weekly') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.seven_day.resets_at));
 
   // Sonnet bar
   const sonnetRow  = document.getElementById('sonnet-row') as HTMLElement;
