@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design System - Claude Usage Monitor</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Estilos específicos para o doc */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 { color: #1a1a2e; border-bottom: 2px solid #4a4a8a; padding-bottom: 10px; }
+    h2 { color: #2a2a4a; margin-top: 40px; }
+    h3 { color: #3a3a5a; }
+    .section { background: #fff; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .component-row { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+    .color-swatch { width: 60px; height: 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    .example { background: #1e1e2e; padding: 20px; border-radius: 8px; margin: 10px 0; }
+    .example-label { color: #aaa; font-size: 12px; margin-bottom: 10px; display: block; }
+  </style>
+</head>
+<body>
+
+<h1>🎨 Design System - Claude Usage Monitor</h1>
+
+<p>Este documento presenta todos os componentes visuais da aplicação para referência e manutenção.</p>
+
+---
+
+<h2>🎨 Cores (Variables CSS)</h2>
+
+<div class="section">
+  <h3>Dark Theme (padrão)</h3>
+  <div class="component-row">
+    <div class="color-swatch" style="background: var(--bg); color: #fff;">--bg #1e1e2e</div>
+    <div class="color-swatch" style="background: var(--surface); color: #fff;">--surface #2a2a3e</div>
+    <div class="color-swatch" style="background: var(--border); color: #fff;">--border #3a3a5e</div>
+    <div class="color-swatch" style="background: var(--text-primary);">--text-primary #e0e0e0</div>
+    <div class="color-swatch" style="background: var(--text-secondary);">--text-secondary #a0a0a0</div>
+    <div class="color-swatch" style="background: var(--accent);">--accent #6366f1</div>
+  </div>
+
+  <h3>Semantic Colors</h3>
+  <div class="component-row">
+    <div class="color-swatch" style="background: var(--green);">--green #22c55e</div>
+    <div class="color-swatch" style="background: var(--yellow);">--yellow #eab308</div>
+    <div class="color-swatch" style="background: var(--red);">--red #ef4444</div>
+    <div class="color-swatch" style="background: var(--blue);">--blue #3b82f6</div>
+    <div class="color-swatch" style="background: var(--purple);">--purple #a855f7</div>
+  </div>
+</div>
+
+---
+
+<h2>🔤 Tipografia</h2>
+
+<div class="section">
+  <p><strong>Título do App:</strong> <span style="font-size: 14px;">Claude Usage</span></p>
+  <p><strong>Labels:</strong> <span style="font-size: 11px;">Session (5h)</span></p>
+  <p><strong>Texto secundário:</strong> <span style="font-size: 10px;">Reset in 2h 30m</span></p>
+  <p><strong>Gauge percentage:</strong> <span style="font-size: 19px;">42%</span></p>
+</div>
+
+---
+
+<h2>🔘 Botões</h2>
+
+<div class="section">
+  <h3>Icon Button</h3>
+  <span class="example-label">class="icon-btn"</span>
+  <div class="example">
+    <button class="icon-btn" title="Settings">⚙️</button>
+    <button class="icon-btn" title="Close">✕</button>
+    <button class="icon-btn" title="Cost">💰</button>
+    <button class="icon-btn" title="Update">🔄</button>
+  </div>
+
+  <h3>Toggle Button</h3>
+  <span class="example-label">label.toggle &gt; input + span.toggle-slider</span>
+  <div class="example">
+    <label class="toggle">
+      <input type="checkbox" checked>
+      <span class="toggle-slider"></span>
+    </label>
+    <label class="toggle">
+      <input type="checkbox">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <h3>Tab Button</h3>
+  <span class="example-label">button.tab-btn (active / .hidden)</span>
+  <div class="example">
+    <button class="tab-btn active">Geral</button>
+    <button class="tab-btn">Exibição</button>
+    <button class="tab-btn" disabled>Notificações</button>
+  </div>
+
+  <h3>Cost Tab Button</h3>
+  <span class="example-label">button.cost-tab</span>
+  <div class="example">
+    <button class="cost-tab active">Sessão</button>
+    <button class="cost-tab">Semanal</button>
+    <button class="cost-tab">Mensal</button>
+  </div>
+
+  <h3>Action Button</h3>
+  <span class="example-label">button.test-btn</span>
+  <div class="example">
+    <button class="test-btn">Test</button>
+    <button class="test-btn" disabled>Disabled</button>
+  </div>
+
+  <h3>Modal Button</h3>
+  <span class="example-label">button inside modal-actions</span>
+  <div class="example">
+    <button>Cancelar</button>
+    <button style="background: var(--accent); color: #fff;">Salvar</button>
+  </div>
+
+  <h3>Clear History Button</h3>
+  <span class="example-label">button.clear-history-btn</span>
+  <div class="example">
+    <button class="clear-history-btn">Limpar</button>
+    <button class="clear-history-btn">Backup</button>
+    <button class="clear-history-btn">Import</button>
+  </div>
+
+  <h3>Refresh Button</h3>
+  <span class="example-label">button.refresh-btn</span>
+  <div class="example">
+    <button class="refresh-btn">↺ Refresh</button>
+  </div>
+</div>
+
+---
+
+<h2>📊 Gauges (Medidores)</h2>
+
+<div class="section">
+  <h3>Gauge Card</h3>
+  <span class="example-label">class="gauge-card" com canvas semicircular</span>
+  <div class="example" style="max-width: 200px;">
+    <div class="gauge-card">
+      <span class="gauge-label">Session (5h)</span>
+      <div class="gauge-wrapper">
+        <canvas id="gauge-example" width="80" height="45"></canvas>
+        <span class="gauge-pct">42%</span>
+      </div>
+      <span class="gauge-reset">Reset in</span>
+      <span class="gauge-reset-at">2h 30m</span>
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>📈 Gráficos</h2>
+
+<div class="section">
+  <h3>Daily Chart (Barras)</h3>
+  <span class="example-label">class="daily-chart" com barras de dias</span>
+  <div class="example">
+    <div style="display: flex; gap: 3px; align-items: flex-end; height: 60px;">
+      <div style="background: var(--green); width: 12px; height: 80%; border-radius: 2px;"></div>
+      <div style="background: var(--green); width: 12px; height: 60%; border-radius: 2px;"></div>
+      <div style="background: var(--yellow); width: 12px; height: 40%; border-radius: 2px;"></div>
+      <div style="background: var(--red); width: 12px; height: 90%; border-radius: 2px;"></div>
+      <div style="background: var(--green); width: 12px; height: 70%; border-radius: 2px;"></div>
+      <div style="background: var(--green); width: 12px; height: 50%; border-radius: 2px;"></div>
+      <div style="background: var(--text-secondary); width: 12px; height: 20%; border-radius: 2px;"></div>
+    </div>
+  </div>
+
+  <h3>Cost Gauge (Mensal)</h3>
+  <span class="example-label">canvas id="cost-gauge" com gauge completo</span>
+  <div class="example" style="max-width: 150px;">
+    <div style="position: relative; width: 120px; height: 120px;">
+      <svg viewBox="0 0 120 120" style="transform: rotate(-90deg);">
+        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border)" stroke-width="10"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="10" stroke-dasharray="235 314" stroke-linecap="round"/>
+      </svg>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+        <span style="font-size: 20px; font-weight: bold;">75%</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Smart Scheduler Donut</h3>
+  <span class="example-label">canvas id="sp-donut"</span>
+  <div class="example" style="max-width: 120px;">
+    <div style="position: relative; width: 100px; height: 100px;">
+      <svg viewBox="0 0 100 100" style="transform: rotate(-90deg);">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border)" stroke-width="8"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--green)" stroke-width="8" stroke-dasharray="170 251" stroke-linecap="round"/>
+      </svg>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <span style="font-size: 18px; font-weight: bold;">68%</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Smart Timeline</h3>
+  <span class="example-label">class="sp-timeline-track"</span>
+  <div class="example">
+    <div style="position: relative; height: 24px; background: var(--surface); border-radius: 4px; overflow: hidden;">
+      <div style="position: absolute; left: 9%; width: 75%; height: 100%; background: var(--purple); opacity: 0.3;"></div>
+      <div style="position: absolute; left: 33%; width: 17%; height: 100%; background: var(--yellow); opacity: 0.3;"></div>
+      <div style="position: absolute; left: 9%; width: 2px; height: 100%; background: var(--text-secondary);"></div>
+      <div style="position: absolute; left: 84%; width: 2px; height: 100%; background: var(--text-secondary);"></div>
+      <div style="position: absolute; left: 50%; width: 3px; height: 100%; background: var(--green);"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); margin-top: 4px;">
+      <span>09:00</span>
+      <span>12:00</span>
+      <span>18:00</span>
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>🔲 Banners</h2>
+
+<div class="section">
+  <h3>Error Banner</h3>
+  <span class="example-label">class="error-banner"</span>
+  <div class="example">
+    <div class="error-banner" style="display: block;">Erro: Credenciais inválidas</div>
+  </div>
+
+  <h3>Rate Limit Banner</h3>
+  <span class="example-label">class="rate-limit-banner"</span>
+  <div class="example">
+    <div class="rate-limit-banner" style="display: flex;">
+      <div class="rl-text">
+        <span>Rate limit ativo</span>
+        <span style="color: var(--yellow);">Retry in 5m</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Update Banner</h3>
+  <span class="example-label">class="update-banner"</span>
+  <div class="example">
+    <div class="update-banner" style="display: flex;">
+      <span class="update-icon">⬆</span>
+      <div class="update-text">
+        <span>v12.1.0 available</span>
+      </div>
+      <button id="btn-update-download">Download</button>
+    </div>
+  </div>
+
+  <h3>Smart Recommendation Bar</h3>
+  <span class="example-label">id="smart-rec-bar"</span>
+  <div class="example">
+    <div id="smart-rec-bar" style="display: block; background: var(--surface); padding: 8px 12px; border-radius: 4px;">
+      <span style="color: var(--green);">●</span> Caminho livre. Inicie suas tarefas mais complexas agora.
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>📝 Barras de Progresso</h2>
+
+<div class="section">
+  <h3>Progress Bar</h3>
+  <span class="example-label">class="progress-bar-track" &gt; div.progress-bar-fill</span>
+  <div class="example">
+    <div class="progress-bar-track" style="width: 100%; max-width: 200px;">
+      <div class="progress-bar-fill" style="width: 65%;"></div>
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>💬 Modais</h2>
+
+<div class="section">
+  <h3>Modal Overlay + Box</h3>
+  <span class="example-label">class="modal-overlay" &gt; class="modal-box"</span>
+  <div class="example">
+    <div class="modal-overlay" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 150px;">
+      <div class="modal-box" style="max-width: 300px;">
+        <p class="modal-msg">Rate limit ativo. Forçar atualização mesmo assim?</p>
+        <div class="modal-actions">
+          <button>Cancelar</button>
+          <button style="background: var(--accent); color: #fff;">Forçar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Day Detail Modal</h3>
+  <span class="example-label">class="modal-box day-detail-box"</span>
+  <div class="example">
+    <div class="modal-overlay" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 150px;">
+      <div class="modal-box day-detail-box" style="max-width: 320px;">
+        <div class="day-detail-header">
+          <span class="day-detail-title-text">14/04/2026</span>
+          <button class="day-detail-close-btn">✕</button>
+        </div>
+        <div class="day-detail-chart-wrap">
+          <div style="background: var(--surface); height: 100px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">Gráfico aqui</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Credential Modal</h3>
+  <span class="example-label">class="modal-box credential-modal-box"</span>
+  <div class="example">
+    <div class="modal-overlay" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+      <div class="modal-box credential-modal-box" style="max-width: 320px;">
+        <div class="credential-modal-icon">⚠</div>
+        <h3 class="credential-modal-title">Credenciais não encontradas</h3>
+        <p class="credential-modal-desc">Faça login no Claude Code...</p>
+        <div class="modal-actions">
+          <button id="credential-retry-btn">Tentar novamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Settings Modal (abas)</h3>
+  <span class="example-label">class="modal-box settings-modal-box"</span>
+  <div class="example">
+    <div class="modal-overlay" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 250px;">
+      <div class="modal-box settings-modal-box" style="max-width: 360px;">
+        <div class="settings-modal-header">
+          <span class="settings-modal-title">Configurações</span>
+          <button class="icon-btn">✕</button>
+        </div>
+        <div class="settings-tabs">
+          <button class="tab-btn active">Geral</button>
+          <button class="tab-btn">Exibição</button>
+          <button class="tab-btn">Notificações</button>
+        </div>
+        <div class="settings-tab-content">
+          <div class="settings-group">
+            <div class="settings-row">
+              <label>Theme</label>
+              <select class="setting-select">
+                <option>System</option>
+                <option>Dark</option>
+              </select>
+            </div>
+            <div class="settings-row">
+              <label>Language</label>
+              <select class="setting-select">
+                <option>English</option>
+                <option>Português (BR)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Cost Modal (tabs + content)</h3>
+  <div class="example">
+    <div class="modal-overlay" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+      <div class="modal-box cost-modal-box" style="max-width: 300px;">
+        <div class="cost-modal-header">
+          <span class="cost-modal-title">Custo Estimado</span>
+          <button class="icon-btn">✕</button>
+        </div>
+        <div class="cost-tabs">
+          <button class="cost-tab active">Sessão</button>
+          <button class="cost-tab">Semanal</button>
+          <button class="cost-tab">Mensal</button>
+        </div>
+        <div class="cost-content">
+          <div class="cost-value">$12.50</div>
+          <div class="cost-period">Sessão atual (5h)</div>
+          <div class="cost-breakdown">
+            <div class="cost-breakdown-row"><span>Input</span><span>$3.50</span></div>
+            <div class="cost-breakdown-row"><span>Output</span><span>$9.00</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Smart Scheduler Modal</h3>
+  <div class="example">
+    <div class="modal-overlay" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 250px;">
+      <div class="modal-box smart-scheduler-box" style="max-width: 320px;">
+        <div class="day-detail-header">
+          <span class="day-detail-title-text">Smart Plan</span>
+          <button class="day-detail-close-btn">✕</button>
+        </div>
+        <div id="sp-verdict-header" class="sp-verdict" style="background: var(--green); padding: 8px; border-radius: 4px; text-align: center; color: #fff;">
+          Caminho livre
+        </div>
+        <div class="sp-donut-wrap" style="text-align: center; margin: 20px 0;">
+          <svg viewBox="0 0 100 100" style="width: 80px; height: 80px; transform: rotate(-90deg);">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border)" stroke-width="8"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--green)" stroke-width="8" stroke-dasharray="170 251"/>
+          </svg>
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">68%</div>
+        </div>
+        <div class="sp-donut-subtitle">Sessão (5h)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>🏷️ Inputs de Formulário</h2>
+
+<div class="section">
+  <h3>Toggle Switch</h3>
+  <span class="example-label">label.toggle &gt; input[type="checkbox"]</span>
+  <div class="example">
+    <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+  </div>
+
+  <h3>Select</h3>
+  <span class="example-label">select.setting-select</span>
+  <div class="example">
+    <select class="setting-select">
+      <option>Option 1</option>
+      <option>Option 2</option>
+    </select>
+  </div>
+
+  <h3>Number Input</h3>
+  <span class="example-label">input.spinner-input</span>
+  <div class="example">
+    <input type="number" class="spinner-input" value="80" min="0" max="100">
+  </div>
+
+  <h3>Range Slider</h3>
+  <span class="example-label">input[type="range"]</span>
+  <div class="example">
+    <input type="range" min="1" max="100" value="80" style="width: 100%;">
+    <span class="slider-value">80%</span>
+  </div>
+
+  <h3>Text Input</h3>
+  <span class="example-label">input.sync-text-input</span>
+  <div class="example">
+    <input type="text" class="sync-text-input" placeholder="http://localhost:3030">
+  </div>
+
+  <h3>Day Checkbox (Smart Plan)</h3>
+  <span class="example-label">input.sp-day</span>
+  <div class="example">
+    <label><input type="checkbox" class="sp-day" checked> <span>Dom</span></label>
+    <label><input type="checkbox" class="sp-day" checked> <span>Seg</span></label>
+    <label><input type="checkbox" class="sp-day" checked> <span>Ter</span></label>
+    <label><input type="checkbox" class="sp-day"> <span>Qua</span></label>
+    <label><input type="checkbox" class="sp-day"> <span>Qui</span></label>
+    <label><input type="checkbox" class="sp-day"> <span>Sex</span></label>
+    <label><input type="checkbox" class="sp-day"> <span>Sáb</span></label>
+  </div>
+
+  <h3>Time Input</h3>
+  <span class="example-label">input.sp-time-input</span>
+  <div class="example">
+    <input type="time" class="sp-time-input" value="09:00">
+    <span>–</span>
+    <input type="time" class="sp-time-input" value="18:00">
+  </div>
+</div>
+
+---
+
+<h2>📋 Estrutura Principal</h2>
+
+<div class="section">
+  <h3>Header</h3>
+  <span class="example-label">class="header"</span>
+  <div class="example">
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="header-left">
+        <div class="logo-dot" style="width: 10px; height: 10px; background: var(--green); border-radius: 50%;"></div>
+        <span class="app-title">Claude Usage</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn">⚙️</button>
+        <button class="icon-btn">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <h3>Account Bar</h3>
+  <span class="example-label">class="account-bar"</span>
+  <div class="example">
+    <div class="account-bar" style="display: flex; gap: 10px; align-items: center;">
+      <div class="account-avatar" style="width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff;">E</div>
+      <div class="account-info">
+        <div style="font-weight: bold;">Edilson</div>
+        <div style="font-size: 10px; color: var(--text-secondary);">email@example.com</div>
+      </div>
+      <span class="account-plan" style="background: var(--green); padding: 2px 6px; border-radius: 4px; font-size: 10px; color: #fff;">Pro</span>
+    </div>
+  </div>
+
+  <h3>Footer</h3>
+  <span class="example-label">class="footer"</span>
+  <div class="example">
+    <div class="footer" style="display: flex; justify-content: space-between; align-items: center;">
+      <span class="updated-text">Updated 2 min ago</span>
+      <button class="refresh-btn">↺ Refresh</button>
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>📦 Smart Indicator</h2>
+
+<div class="section">
+  <h3>Status Dots</h3>
+  <span class="example-label">class="smart-indicator" / class="smart-indicator-dot"</span>
+  <div class="example">
+    <button class="smart-indicator" style="display: inline-flex;">
+      <span class="smart-indicator-dot" style="background: var(--green);"></span>
+    </button>
+    <button class="smart-indicator" style="display: inline-flex;">
+      <span class="smart-indicator-dot" style="background: var(--yellow);"></span>
+    </button>
+    <button class="smart-indicator" style="display: inline-flex;">
+      <span class="smart-indicator-dot" style="background: var(--red);"></span>
+    </button>
+    <button class="smart-indicator" style="display: inline-flex;">
+      <span class="smart-indicator-dot" style="background: var(--purple);"></span>
+    </button>
+  </div>
+  <p> greenspan style="font-size: 10px; color: var(--text-secondary); margin-left: 10px;">Verde (livre) • Amarelo (atenção) • Vermelho (bloqueio) • Roxo (sincronização)</p>
+</div>
+
+---
+
+<h2>📋 Legendas</h2>
+
+<div class="section">
+  <h3>Daily Legend</h3>
+  <span class="example-label">class="daily-legend"</span>
+  <div class="example">
+    <div class="daily-legend" style="display: flex; gap: 12px;">
+      <span><span style="display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 2px; margin-right: 4px;"></span>&lt; 50%</span>
+      <span><span style="display: inline-block; width: 8px; height: 8px; background: var(--yellow); border-radius: 2px; margin-right: 4px;"></span>50-79%</span>
+      <span><span style="display: inline-block; width: 8px; height: 8px; background: var(--red); border-radius: 2px; margin-right: 4px;"></span>≥ 80%</span>
+    </div>
+  </div>
+</div>
+
+---
+
+<h2>📋 Referência de Códigos</h2>
+
+<div class="section">
+  <h3>Atributos Data</h3>
+  <ul>
+    <li><code>data-i18n="key"</code> - Tradução de texto</li>
+    <li><code>data-i18n-title="key"</code> - Tradução de title/tooltip</li>
+    <li><code>data-i18n-opt="key"</code> - Tradução de option</li>
+    <li><code>data-tab="tab-id"</code> - Aba do settings</li>
+    <li><code>data-cost-tab="session|weekly|monthly"</code> - Aba de custo</li>
+  </ul>
+
+  <h3>Classes Utilitárias</h3>
+  <ul>
+    <li><code>.hidden</code> - Oculto (display: none)</li>
+    <li><code>.active</code> - Estado ativo</li>
+  </ul>
+</div>
+
+---
+
+<footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; color: var(--text-secondary); font-size: 12px;">
+  <p>Design System - Claude Usage Monitor v12.0.4</p>
+  <p>Para atualizar, edite <code>src/renderer/index.html</code> e <code>src/renderer/styles.css</code></p>
+</footer>
+
+</body>
+</html>
