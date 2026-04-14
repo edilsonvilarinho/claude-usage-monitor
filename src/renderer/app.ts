@@ -828,18 +828,6 @@ async function openReportModal(): Promise<void> {
           fill: true,
           tension: 0.3,
         },
-        {
-          label: currentLang === 'pt-BR' ? 'Semanal máx.' : 'Weekly max',
-          data: weeklyData,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59,130,246,0.08)',
-          borderWidth: 2,
-          pointRadius: 3,
-          pointBackgroundColor: '#3b82f6',
-          fill: true,
-          tension: 0.3,
-          borderDash: [5, 3],
-        },
       ],
     },
     options: {
