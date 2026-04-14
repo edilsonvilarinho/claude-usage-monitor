@@ -1696,11 +1696,11 @@ function openSmartModal(): void {
   });
 
   // Timeline — Dynamic Bounds
-  const timelineStartMin = Math.min(s.workStartMin, s.minutosAtuais);
+const timelineStartMin = Math.min(s.workStartMin, s.minutosAtuais, s.workEndMin);
   const timelineEndMin = Math.max(
     s.workEndMin,
     s.minutosAtuais,
-    s.momentoDoReset
+    s.resetCrossesDay ? s.workEndMin : Math.min(s.momentoDoReset, 24 * 60)
   );
   const totalRange = timelineEndMin - timelineStartMin;
   const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
