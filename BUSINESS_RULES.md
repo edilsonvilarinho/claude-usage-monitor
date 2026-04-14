@@ -713,4 +713,50 @@ Ao abrir o modal do Smart Plan, o renderer solicita via IPC `get-smart-status` s
 
 ---
 
-*Última atualização: 2026-04-13 — feat: Cost Estimate (v10.1.0)*
+## 11. Testes e Qualidade
+
+### Estratatégia de Testes
+
+O projeto usa **Vitest** para testes unitários e de integração com mocks de:
+- `fs` (filesystem)
+- `https` (requisições OAuth)
+- `electron` (APIs do sistema)
+
+### Cobertura por Módulo
+
+| Módulo | Arquivo de Teste | Casos Cobertos |
+|--------|-----------------|----------------|
+| 1. Credenciais | `src/services/__tests__/credentialService.test.ts` (452 linhas) | Token válido, renovação, expiração, 401, OAuth |
+| 2. Polling | `src/services/__tests__/pollingService.test.ts` (586 linhas) | Rate limit 429, backoff 5xx, spike detection, idle mode |
+| 3. Usage | `src/services/__tests__/dailySnapshotService.test.ts` | Reset detection, picos, burn rate, retração |
+| 4. Notificações | `src/services/__tests__/notificationService.test.ts` | Threshold 80%, re-arm 50%, reset detection |
+| 5. Smart Scheduler | `src/services/__tests__/smartScheduleService.test.ts` (221 linhas) | BLUE, ROXO, VERDE, VERMELHO, AMARELO |
+| 6. Persistência | `src/services/__tests__/settingsService.test.ts` | Backup, restore, migration de conta |
+| 7. Cloud Sync | `src/services/__tests__/syncService.test.ts` | Push, pull, merge LWW, outbox |
+| 8. Custo Estimado | `src/services/__tests__/costService.test.ts` | Estimativas por período |
+| 9. i18n | `src/i18n/__tests__/mainTranslations.test.ts` | Strings pt-BR/en |
+| 10. IPC/Eventos | `src/services/__tests__/startupService.test.ts` | Startup → polling |
+
+### Testes Manuais (Checklist)
+
+Para fluxos que requerem UI ou integração completa:
+
+| # | Fluxo | Passos | Esperado |
+|---|------|-------|----------|
+| 1 | Abrir app → gauge mostra uso atual | Iniciar app | Percentuais visíveis |
+| 2 | Token expira → modal abre | `token.expiresAt = now` | Modal de credenciais visível |
+| 3 | Trocar idioma → UI atualiza | Selecionar idioma no dropdown | Labels atualizam instantaneamente |
+| 4 | Abrir Smart Plan modal | Clicar no indicador | Timeline com hora atual |
+| 5 | Rate limit 429 | Forçar 429 na API | Banner de countdown visível |
+| 6 | Cloud sync | Push em device A, pull em B | Dados sincronizados |
+
+### Executar Testes
+
+```bash
+npm test           # Todos os testes (301+)
+npm run test:coverage  # Com Coverage
+```
+
+---
+
+*Última atualização: 2026-04-14 — feat: Testes (E2E Planning)*
