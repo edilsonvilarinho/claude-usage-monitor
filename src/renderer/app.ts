@@ -701,14 +701,8 @@ function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  // Center label
+  // Center label - just show colored circle, no text
   ctx.fillStyle = textColor;
-  const label = maxPct > 100 ? '!!!' : `${maxPct}`;
-  const fontSize = maxPct > 99 ? 17 : 22;
-  ctx.font = `bold ${fontSize}px sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, cx, cy + 1);
 
   lastRenderedData = { session: sessionPct, weekly: weeklyPct };
 
