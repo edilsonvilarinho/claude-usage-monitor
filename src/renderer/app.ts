@@ -133,6 +133,9 @@ const translations = {
     resettingText:    'Resetting...',
     refreshingText:   'Refreshing...',
     retryingText:     'Retrying...',
+    credentialExpired: 'Token expired. Please log in again.',
+    credentialModalTitle: 'Credentials not found',
+    credentialModalDesc: 'Log in to Claude Code so the monitor can access your usage data.',
     forcingText:      'Forcing...',
     errorPrefix:      'Error: ',
     generalTitle:     'General',
@@ -328,6 +331,9 @@ const translations = {
     sessionThreshold:    'Limite da sessão',
     weeklyThreshold:     'Limite semanal',
     test:                'Testar',
+    credentialExpired: 'Token expirado. Faça login novamente.',
+    credentialModalTitle: 'Credenciais não encontrada',
+    credentialModalDesc: 'Faça login no Claude Code para que o monitor possa acessar seus dados de uso.',
     rateLimitMsg:    'Limite de requisições',
     rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
     rateLimitAt:     (time: string) => `(às ${time})`,
@@ -2269,9 +2275,9 @@ function init(): void {
     (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
   });
 
-  window.claudeUsage.onCredentialsExpired(() => {
+window.claudeUsage.onCredentialsExpired(() => {
     const t = tr();
-    (document.getElementById('credential-path-value') as HTMLElement).textContent = 'Token expirado. Faça login novamente.';
+    (document.getElementById('credential-path-value') as HTMLElement).textContent = t.credentialExpired ?? 'Token expired. Please log in again.';
     const winStep = document.getElementById('install-step-win') as HTMLElement;
     const linuxStep = document.getElementById('install-step-linux') as HTMLElement;
     if (winStep) winStep.style.display = 'none';
