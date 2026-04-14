@@ -2201,8 +2201,7 @@ function init(): void {
   // Fecha modais abertos quando a janela é reexibida (popup hide → show não recria o DOM)
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      closeDayDetailModal();
-      closeDayCurvePopup();
+      document.querySelectorAll<HTMLElement>('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden'));
     }
   });
 
@@ -2288,6 +2287,7 @@ function init(): void {
   });
 
   document.getElementById('btn-close')!.addEventListener('click', () => {
+    document.querySelectorAll<HTMLElement>('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden'));
     window.claudeUsage.closeWindow();
   });
 
