@@ -67,6 +67,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.on('credential-missing', (_e, credPath: string) => cb(credPath));
   },
 
+  onCredentialsExpired: (cb: () => void): void => {
+    ipcRenderer.on('credentials-expired', () => cb());
+  },
+
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),
 
   getProfile: (): Promise<ProfileData | null> => ipcRenderer.invoke('get-profile'),

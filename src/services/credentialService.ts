@@ -160,6 +160,17 @@ export async function getAccessToken(): Promise<string> {
       return await refreshToken(filePath, creds);
     } catch (err) {
       console.warn('[CredentialService] Token refresh failed, using existing token:', err);
+      // Notify renderer that credentials expired (if in renderer process)
+      try {
+        const { ipcMain } = await import('electron');
+        if (ipcMain.getAllWindows) {
+          ipcMain.getAllWindows().forEach(win => {
+            win.webContents.send('credentials-expired');
+          });
+        }
+      } catch {
+        // Silent fail in tests or main process
+      }
       return creds.claudeAiOauth.accessToken;
     }
   }

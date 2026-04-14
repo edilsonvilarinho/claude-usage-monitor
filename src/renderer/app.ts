@@ -2269,6 +2269,16 @@ function init(): void {
     (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
   });
 
+  window.claudeUsage.onCredentialsExpired(() => {
+    const t = tr();
+    (document.getElementById('credential-path-value') as HTMLElement).textContent = 'Token expirado. Faça login novamente.';
+    const winStep = document.getElementById('install-step-win') as HTMLElement;
+    const linuxStep = document.getElementById('install-step-linux') as HTMLElement;
+    if (winStep) winStep.style.display = 'none';
+    if (linuxStep) linuxStep.style.display = 'none';
+    (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
+  });
+
   document.getElementById('credential-retry-btn')?.addEventListener('click', async () => {
     const btn = document.getElementById('credential-retry-btn') as HTMLButtonElement;
     const originalText = btn.textContent;
