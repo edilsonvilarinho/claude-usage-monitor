@@ -1488,6 +1488,8 @@ body {
 
 .tab-pane {
   display: block;
+  animation: fadeInUp 0.2s var(--ease-out) forwards;
+  min-height: 280px;
 }
 
 .tab-pane.hidden {
@@ -1827,6 +1829,7 @@ body {
 
 .cost-pane.active {
   display: block;
+  animation: fadeInUp 0.2s var(--ease-out) forwards;
 }
 
 .cost-value {
