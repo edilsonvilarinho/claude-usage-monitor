@@ -86,6 +86,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   updateDailySnapshot: (snapshot: { date: string; maxWeekly: number; maxSession: number; sessionAccum: number; sessionWindowCount: number }): Promise<void> =>
     ipcRenderer.invoke('update-daily-snapshot', snapshot),
 
+  checkForUpdate: (): Promise<void> => ipcRenderer.invoke('check-for-update'),
+
   onNextPollAt: (cb: (nextPollAt: number) => void): void => {
     ipcRenderer.on('next-poll-at', (_event, nextPollAt: number) => cb(nextPollAt));
   },

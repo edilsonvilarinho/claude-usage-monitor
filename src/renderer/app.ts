@@ -2520,7 +2520,7 @@ function init(): void {
   }
 
   document.getElementById('btn-update-header')!.addEventListener('click', () => {
-    void window.claudeUsage.refreshNow();
+    void window.claudeUsage.checkForUpdate();
   });
 
   document.getElementById('btn-cost')!.addEventListener('click', openCostModal);

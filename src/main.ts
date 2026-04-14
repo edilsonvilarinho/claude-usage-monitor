@@ -662,6 +662,10 @@ function registerIpcHandlers(): void {
     saveAccountData({ dailyHistory });
   });
 
+  ipcMain.handle('check-for-update', async () => {
+    await runUpdateCheck(true);
+  });
+
   ipcMain.handle('get-day-timeseries', (_event, date: string) => {
     return getAccountData().timeSeries?.[date] ?? [];
   });
