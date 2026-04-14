@@ -131,6 +131,8 @@ const translations = {
     refreshText:      '↺ Refresh',
     resettingText:    'Resetting...',
     refreshingText:   'Refreshing...',
+    retryingText:     'Retrying...',
+    forcingText:      'Forcing...',
     errorPrefix:      'Error: ',
     generalTitle:     'General',
     notifTitle:       'Notifications',
@@ -290,6 +292,8 @@ const translations = {
     refreshText:      '↺ Atualizar',
     resettingText:    'Reiniciando...',
     refreshingText:   'Atualizando...',
+    retryingText:     'Tentando...',
+    forcingText:      'Forçando...',
     errorPrefix:      'Erro: ',
     generalTitle:     'Geral',
     notifTitle:       'Notificações',
@@ -2257,7 +2261,16 @@ function init(): void {
   });
 
   document.getElementById('credential-retry-btn')?.addEventListener('click', async () => {
-    await window.claudeUsage.refreshNow();
+    const btn = document.getElementById('credential-retry-btn') as HTMLButtonElement;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = tr().retryingText;
+    try {
+      await window.claudeUsage.refreshNow();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   });
 
   window.claudeUsage.onUpdateAvailable(({ version, url }) => {
@@ -2294,9 +2307,16 @@ function init(): void {
   });
 
   document.getElementById('modal-confirm')!.addEventListener('click', () => {
+    const btn = document.getElementById('modal-confirm') as HTMLButtonElement;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = tr().forcingText;
     document.getElementById('force-refresh-modal')!.classList.add('hidden');
-    void window.claudeUsage.forceRefreshNow();
     (document.getElementById('updated-text') as HTMLElement).textContent = tr().refreshingText;
+    void window.claudeUsage.forceRefreshNow().finally(() => {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    });
   });
 
   const settingEls = [
