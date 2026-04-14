@@ -162,12 +162,11 @@ export async function getAccessToken(): Promise<string> {
       console.warn('[CredentialService] Token refresh failed, using existing token:', err);
       // Notify renderer that credentials expired (if in renderer process)
       try {
-        const { ipcMain } = await import('electron');
-        if (ipcMain.getAllWindows) {
-          ipcMain.getAllWindows().forEach(win => {
-            win.webContents.send('credentials-expired');
-          });
-        }
+        const { BrowserWindow } = await import('electron');
+        const wins = BrowserWindow.getAllWindows();
+        wins.forEach(win => {
+          win.webContents.send('credentials-expired');
+        });
       } catch {
         // Silent fail in tests or main process
       }
