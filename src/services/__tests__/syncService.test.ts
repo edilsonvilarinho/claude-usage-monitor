@@ -1241,4 +1241,26 @@ describe('syncService', () => {
 
     expect(payload).toHaveProperty('settings')
   })
+
+  // 54. buildPushPayload com JWT expirado
+  it('buildPushPayload retorna dados quando jwt expirado', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt(Date.now() - 1000)
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const payload = (service as unknown as Record<string, unknown>)['buildPushPayload'](getAccountData(), 'test-device') as Record<string, unknown>
+
+    expect(payload).toHaveProperty('deviceId')
+  })
+
+  // 55. buildPushPayload com diaria vazia
+  it('buildPushPayload retorna dados quando sem historico', async () => {
+    seedCloudSync({ enabled: true })
+    seedJwt()
+
+    const { getAccountData } = await import('../../services/settingsService')
+    const payload = (service as unknown as Record<string, unknown>)['buildPushPayload'](getAccountData(), 'test-device') as Record<string, unknown>
+
+    expect(payload.daily).toEqual([])
+  })
 })
