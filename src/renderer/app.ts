@@ -2519,6 +2519,10 @@ function init(): void {
     costGaugeChart = createGauge('cost-gauge');
   }
 
+  document.getElementById('btn-update-header')!.addEventListener('click', () => {
+    void window.claudeUsage.refreshNow();
+  });
+
   document.getElementById('btn-cost')!.addEventListener('click', openCostModal);
   document.getElementById('cost-modal-close')!.addEventListener('click', closeCostModal);
   document.getElementById('cost-modal')!.addEventListener('click', (e) => {
