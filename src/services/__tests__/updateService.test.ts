@@ -130,7 +130,7 @@ describe('checkForUpdate', () => {
     const result = await checkForUpdate('3.0.0')
     expect(result.hasUpdate).toBe(true)
     expect(result.latestVersion).toBe('4.0.0')
-    expect(result.releaseUrl).toBe('https://example.com/release')
+    expect(result.releaseUrl).toBe('https://github.com/edilsonvilarinho/claude-usage-monitor/releases')
   })
 
   it('200 with equal tag_name → hasUpdate: false', async () => {
