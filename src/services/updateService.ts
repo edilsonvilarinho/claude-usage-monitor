@@ -38,7 +38,7 @@ export function checkForUpdate(currentVersion: string): Promise<UpdateCheckResul
         try {
           const json = JSON.parse(body) as { tag_name?: string; html_url?: string };
           const latestVersion = json.tag_name ?? '';
-          const releaseUrl = json.html_url ?? '';
+          const releaseUrl = 'https://github.com/edilsonvilarinho/claude-usage-monitor/releases';
           const hasUpdate = latestVersion !== '' && isNewer(latestVersion, currentVersion);
           resolve({ hasUpdate, latestVersion: latestVersion.replace(/^v/, ''), releaseUrl });
         } catch {
