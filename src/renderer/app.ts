@@ -1495,6 +1495,7 @@ async function loadSettings(): Promise<void> {
 
   const lang = s.language ?? 'en';
   currentLang = lang;
+  applyTranslations();
   (document.getElementById('setting-language') as HTMLSelectElement).value = lang;
 
   (document.getElementById('setting-session-threshold') as HTMLInputElement).value =
