@@ -497,16 +497,10 @@ function applyTranslations(): void {
     themeSelect.options[2].text = t.themeLight;
   }
 
-  const langSelect = document.getElementById('setting-language') as HTMLSelectElement | null;
+const langSelect = document.getElementById('setting-language') as HTMLSelectElement | null;
   if (langSelect) {
     langSelect.options[0].text = t.langEn;
     langSelect.options[1].text = t.langPtBR;
-    // Apply translations immediately when language changes
-    langSelect.addEventListener('change', () => {
-      const newLang = langSelect.value as Lang;
-      currentLang = newLang;
-      applyTranslations();
-    });
   }
 
   const sizeSelect = document.getElementById('setting-window-size') as HTMLSelectElement | null;
@@ -796,6 +790,7 @@ let sessionResetTimer: ReturnType<typeof setTimeout> | null = null;
 let lastWeeklyResetsAt: string | null = null;
 let lastWeeklyPct: number | null = null;
 let lastSessionPct: number | null = null;
+let lastUpdatedTime: string | null = null;
 let currentDailyHistory: DailySnapshot[] = [];
 let dayDetailChart: Chart | null = null;
 let reportChart: Chart | null = null;
@@ -1452,8 +1447,9 @@ function updateUI(data: UsageData): void {
   extraSection.style.display =
     (extraSectionAllowed && (data.seven_day_sonnet || hasCredits)) ? 'block' : 'none';
 
-  (document.getElementById('updated-text') as HTMLElement).textContent =
-    tr().updatedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  lastUpdatedTime = now;
+  (document.getElementById('updated-text') as HTMLElement).textContent = tr().updatedAt(now);
 
   const dot = document.getElementById('status-dot') as HTMLElement;
   dot.className = 'logo-dot';
@@ -2390,6 +2386,42 @@ window.claudeUsage.onCredentialsExpired(() => {
 
   document.getElementById('smart-indicator')?.addEventListener('click', openSmartModal);
   document.getElementById('btn-settings')!.addEventListener('click', openSettingsModal);
+
+  // Language change handler - apply translations immediately
+  document.addEventListener('change', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.id === 'setting-language') {
+      const newLang = (target as HTMLSelectElement).value as Lang;
+      currentLang = newLang;
+      applyTranslations();
+      // Update gauge labels directly after translation
+      setTimeout(() => {
+        const labels = document.getElementsByClassName('gauge-label');
+        const t2 = tr();
+        if (labels[0]) labels[0].textContent = t2.sessionLabel;
+        if (labels[1]) labels[1].textContent = t2.weeklyLabel;
+      }, 0);
+      // Re-render daily chart
+      if (lastWeeklyResetsAt) {
+        renderDailyChart(currentDailyHistory, lastWeeklyResetsAt, lastWeeklyPct ?? undefined, lastSessionPct ?? undefined);
+      }
+      // Update footer countdown
+      if (nextPollAt > 0) {
+        const remaining = nextPollAt - Date.now();
+        if (remaining > 0) {
+          const m = Math.floor(remaining / 60000);
+          const s = Math.floor((remaining % 60000) / 1000);
+          const el = document.getElementById('next-poll-text') as HTMLElement;
+          if (el) el.textContent = tr().nextPollIn(`${m}:${String(s).padStart(2, '0')}`);
+        }
+      }
+      // Update footer updated time
+      if (lastUpdatedTime) {
+        const el = document.getElementById('updated-text') as HTMLElement;
+        if (el) el.textContent = tr().updatedAt(lastUpdatedTime);
+      }
+    }
+  });
   document.getElementById('btn-settings-close')!.addEventListener('click', closeSettingsModal);
   document.getElementById('settings-modal')!.addEventListener('click', (e) => {
     if (e.target === document.getElementById('settings-modal')) closeSettingsModal();
