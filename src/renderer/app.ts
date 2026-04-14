@@ -2292,6 +2292,12 @@ window.claudeUsage.onCredentialsExpired(() => {
     btn.textContent = tr().retryingText;
     try {
       await window.claudeUsage.refreshNow();
+      // Close modal on success
+      (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
+      // Trigger usage refresh
+      await window.claudeUsage.refreshNow();
+    } catch {
+      // Keep modal open on error
     } finally {
       btn.disabled = false;
       btn.textContent = originalText;
