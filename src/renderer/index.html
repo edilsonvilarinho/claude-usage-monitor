@@ -10,7 +10,9 @@
 </head>
 <body>
 
-  <!-- ── Header ── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- CABEÇALHO (Header) - Logo, botões de ação, status -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="header">
     <div class="header-left">
       <div class="logo-dot" id="status-dot"></div>
@@ -31,7 +33,10 @@
       <button class="icon-btn" id="btn-close" title="Close">✕</button>
     </div>
   </div>
-  <!-- ── Account bar ── -->
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- BARRA DE CONTA (Account Bar) - Informações do usuário logado -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="account-bar" id="account-bar" style="display:none">
     <div class="account-avatar" id="account-avatar">?</div>
     <div class="account-info">
@@ -41,16 +46,20 @@
     <span class="account-plan" id="account-plan"></span>
   </div>
 
-  <!-- ── Smart recommendation bar ── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- BARRA DE RECOMENDAÇÃO (Smart Recommendation) - Dicas de planejamento -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div id="smart-rec-bar" class="smart-rec-bar hidden"></div>
 
-  <!-- ── Body ── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ÁREA PRINCIPAL (Content) - Gauges, histórico, barras -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div class="content">
 
-    <!-- Error banner -->
+    <!-- BANNER DE ERRO (Error) - Mensagens críticas -->
     <div class="error-banner" id="error-banner"></div>
 
-    <!-- Rate limit banner -->
+    <!-- BANNER DE RATE LIMIT (Rate Limit) - Limite de requisições -->
     <div class="rate-limit-banner" id="rate-limit-banner">
       <div class="rl-text">
         <span id="rl-label"></span>
@@ -58,7 +67,7 @@
       </div>
     </div>
 
-    <!-- Update available banner -->
+    <!-- BANNER DE ATUALIZAÇÃO (Update) - Nova versão disponível -->
     <div class="update-banner" id="update-banner" style="display:none">
       <span class="update-icon">&#8593;</span>
       <div class="update-text">
@@ -67,7 +76,9 @@
       <button id="btn-update-download">Download</button>
     </div>
 
-    <!-- Gauges -->
+    <!-- MEDIDORES (Gauges) - Sessão e Semanal -->
+    <!-- Exibe o uso atual como medidor semicircular com percentual -->
+    <!-- Sessão: 5h | Semanal: 7d -->
     <div class="gauges-grid">
       <div class="gauge-card">
         <span class="gauge-label" data-i18n="sessionLabel">Session (5h)</span>
@@ -91,7 +102,11 @@
       </div>
     </div>
 
-    <!-- Usage history -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- HISTÓRICO SEMANAL (Daily Chart) - Evolução dos últimos 7 dias -->
+    <!-- Gráfico de barras mostrando uso por dia da semana -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="history-header">
     <div class="history-header">
       <span class="history-label" data-i18n="dailyHistoryLabel">Ciclo semanal</span>
       <button class="clear-history-btn" id="btn-clear-history" data-i18n="clearHistoryBtn">Limpar</button>

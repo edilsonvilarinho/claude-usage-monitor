@@ -44,6 +44,11 @@ export interface UsageWindow {
   resets_at: string;   // ISO datetime string
 }
 
+export type SessionWindow = UsageWindow;
+export type WeeklyWindow = UsageWindow;
+export type FiveHourWindow = UsageWindow;
+export type SevenDayWindow = UsageWindow;
+
 export interface ExtraUsage {
   is_enabled: boolean;
   monthly_limit: number; // cents
