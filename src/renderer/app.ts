@@ -1771,8 +1771,11 @@ const timelineStartMin = Math.min(s.workStartMin, s.minutosAtuais, s.workEndMin)
   const tlEnd = document.getElementById('sp-timeline-end') as HTMLElement;
   tlEnd.textContent = formatMinutes(s.workEndMin);
   tlEnd.style.left = `${pctOf(s.workEndMin)}%`;
-  // Esconde tlEnd quando está muito próximo do nowLabel para evitar sobreposição
-  tlEnd.style.visibility = Math.abs(pctOf(s.workEndMin) - pctOf(s.minutosAtuais)) < 8 ? 'hidden' : '';
+
+  // Hide markers when too close to avoid overlap (gap < 10%)
+  const gap = (a: number, b: number) => Math.abs(pctOf(a) - pctOf(b));
+  tlEnd.style.visibility = gap(s.workEndMin, s.minutosAtuais) < 10 ? 'hidden' : '';
+  tlStart.style.visibility = gap(s.workStartMin, s.minutosAtuais) < 10 ? 'hidden' : '';
 
   // Summary sentence
   const resetHHMM = formatMinutes(s.momentoDoReset % (24 * 60));
