@@ -736,6 +736,19 @@ O projeto usa **Vitest** para testes unitários e de integração com mocks de:
 | 8. Custo Estimado | `src/services/__tests__/costService.test.ts` | Estimativas por período |
 | 9. i18n | `src/i18n/__tests__/mainTranslations.test.ts` | Strings pt-BR/en |
 | 10. IPC/Eventos | `src/services/__tests__/startupService.test.ts` | Startup → polling |
+| **Renderer (Frontend)** | `src/renderer/__tests/*.test.ts` | Funções de formatação, i18n, dados de produção |
+
+### Testes do Renderer (Frontend)
+
+Arquivos em `src/renderer/__tests/`:
+
+| Arquivo | Testes | Cobertura |
+|--------|-------|----------|
+| `i18nRenderer.test.ts` | 10 | Traduções en/pt-BR |
+| `translationsRenderer.test.ts` | 19 | Strings completas |
+| `productionData.test.ts` | 19 | Dados reais de cliente |
+| `rendererFunctions.test.ts` | 24 | colorForPct, barClass, formatMinutes, burn rate |
+| `mockProductionData.ts` | - | Mock de dados reais |
 
 ### Testes Manuais (Checklist)
 
@@ -753,10 +766,10 @@ Para fluxos que requerem UI ou integração completa:
 ### Executar Testes
 
 ```bash
-npm test           # Todos os testes (301+)
+npm test           # Todos os testes (369)
 npm run test:coverage  # Com Coverage
 ```
 
 ---
 
-*Última atualização: 2026-04-14 — feat: Testes (E2E Planning)*
+*Última atualização: 2026-04-14 — feat: Testes renderer (+68 testes)*
