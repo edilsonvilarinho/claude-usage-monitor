@@ -257,6 +257,9 @@ const translations = {
     'smartPlan.status.red': 'Imminent block. Avoid sending large prompts. Focus on purely manual refactoring, PR reviews, or documentation until the reset.',
     'smartPlan.status.purple': "Workflow Synchronization: To avoid 'dead resets', we suggest sending your first message at {time} so your reset aligns perfectly with your break. Protect your focus.",
     'smartPlan.openDetails': 'Open smart schedule details',
+    'headerCheckUpdate': 'Check for updates',
+    'headerCost': 'Estimated cost',
+    'headerSettings': 'Settings',
     'smartPlan.resetNextDay': '+1 day at {time}',
     dayShort0: 'Sun',
     dayShort1: 'Mon',
@@ -420,6 +423,9 @@ const translations = {
     'smartPlan.status.red': 'Bloqueio iminente. Evite enviar prompts grandes. Concentre-se em refatorações puramente manuais, revisão de PRs ou documentação até o reset.',
     'smartPlan.status.purple': "Sincronização de Fluxo de trabalho: Para evitar 'resets mortos', sugerimos disparar sua primeira mensagem às {time} para que seu reset alinhe perfeitamente com seu intervalo. Proteja seu foco.",
     'smartPlan.openDetails': 'Abrir detalhes da agenda',
+    'headerCheckUpdate': 'Verificar atualizações',
+    'headerCost': 'Custo estimado',
+    'headerSettings': 'Configurações',
     'smartPlan.resetNextDay': '+1 dia às {time}',
     dayShort0: 'Dom',
     dayShort1: 'Seg',
@@ -467,6 +473,14 @@ function applyTranslations(): void {
     const val = t[key];
     if (typeof val === 'string') {
       el.textContent = val;
+    }
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach(el => {
+    const key = el.dataset.i18nTitle as keyof Translations;
+    const val = t[key];
+    if (typeof val === 'string') {
+      el.title = val;
     }
   });
 
