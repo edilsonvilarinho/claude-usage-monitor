@@ -549,47 +549,22 @@
         </div>
         <div class="sp-donut-subtitle" data-i18n="spSessionLabel">Sessão (5h)</div>
         <div id="sp-summary-text" class="sp-summary"></div>
-        
-        <!-- Timeline melhorada -->
         <div class="sp-timeline">
-          <div class="sp-timeline-header">
-            <span class="sp-timeline-title" data-i18n="spTimelineTitle">Expediente hoje</span>
-            <span class="sp-timeline-hours" id="sp-timeline-hours"></span>
-          </div>
+          <div class="sp-timeline-title" data-i18n="spTimelineTitle">Expediente hoje</div>
           <div class="sp-timeline-track">
-            <!-- Fundo 24h -->
-            <div class="sp-timeline-bg"></div>
-            <!-- Bloco de trabalho -->
             <div id="sp-work-block" class="sp-work-shift"></div>
-            <!-- Bloco de intervalo -->
             <div id="sp-break-block" class="sp-break"></div>
-            <!-- Marcadores -->
             <div id="sp-work-start-tick" class="sp-tick"></div>
             <div id="sp-work-end-tick" class="sp-tick"></div>
-            <!-- Marker atual -->
-            <div id="sp-now-marker" class="sp-marker-now">
-              <span class="sp-marker-now-label" id="sp-now-label"></span>
-            </div>
-            <!-- Marker reset -->
-            <div id="sp-reset-marker" class="sp-marker-reset">
-              <span class="sp-marker-reset-label" id="sp-reset-label"></span>
-            </div>
+            <div id="sp-now-marker" class="sp-marker-now"></div>
+            <span id="sp-now-label" class="sp-marker-label"></span>
+            <div id="sp-reset-marker" class="sp-marker-reset"></div>
+            <span id="sp-reset-label" class="sp-reset-label"></span>
           </div>
-          <!-- Labels de hora (24h) -->
-          <div class="sp-timeline-hour-labels">
-            <span>00:00</span>
-            <span>06:00</span>
-            <span>09:00</span>
-            <span>12:00</span>
-            <span>15:00</span>
-            <span>18:00</span>
-            <span>21:00</span>
-            <span>24:00</span>
+          <div class="sp-timeline-labels">
+            <span id="sp-timeline-start"></span>
+            <span id="sp-timeline-end"></span>
           </div>
-          <!-- IDs necessários para o app.ts (ocultos) -->
-          <span id="sp-timeline-start" style="display:none"></span>
-          <span id="sp-timeline-end" style="display:none"></span>
-          <!-- Legenda -->
           <div class="sp-legend">
             <span class="sp-legend-item"><span class="sp-legend-now-icon"></span><span data-i18n="spLegendNow">Agora</span></span>
             <span class="sp-legend-item"><span class="sp-legend-break-icon"></span><span data-i18n="spLegendBreak">Intervalo</span></span>
