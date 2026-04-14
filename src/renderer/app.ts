@@ -501,6 +501,12 @@ function applyTranslations(): void {
   if (langSelect) {
     langSelect.options[0].text = t.langEn;
     langSelect.options[1].text = t.langPtBR;
+    // Apply translations immediately when language changes
+    langSelect.addEventListener('change', () => {
+      const newLang = langSelect.value as Lang;
+      currentLang = newLang;
+      applyTranslations();
+    });
   }
 
   const sizeSelect = document.getElementById('setting-window-size') as HTMLSelectElement | null;
