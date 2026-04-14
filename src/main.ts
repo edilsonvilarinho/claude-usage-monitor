@@ -922,6 +922,7 @@ app.whenReady().then(() => {
       credentialMissing = true;
       credentialPath = path.join(process.env['USERPROFILE'] || process.env['HOME'] || '~', '.claude', '.credentials.json');
       if (popup) {
+        popup.webContents.send('credential-missing', credentialPath);
         if (!popup.isVisible()) {
           if (!getSettings().alwaysVisible) {
             if (savedPopupPosition) {
@@ -941,7 +942,6 @@ app.whenReady().then(() => {
           popup.show();
           popup.focus();
         }
-        popup.webContents.send('credential-missing', credentialPath);
       }
       return; // do not send usage-error for credential errors
     }
