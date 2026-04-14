@@ -23,7 +23,7 @@ function getTokensPerPercent(model: ModelType): number {
   }
 }
 
-function calculateCost(
+export function calculateCost(
   inputTokens: number,
   outputTokens: number,
   model: ModelType = 'sonnet'
