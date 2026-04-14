@@ -1667,6 +1667,10 @@ function formatMinutes(totalMin: number): string {
 function openSmartModal(): void {
   const s = currentSmartStatus;
   if (!s) return;
+  
+  // Aplicar traduções primeiro
+  applyTranslations();
+  
   const modal = document.getElementById('smart-scheduler-modal')!;
   const t = translations[currentLang] as Record<string, string>;
 
