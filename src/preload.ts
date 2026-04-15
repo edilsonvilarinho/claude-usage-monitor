@@ -68,7 +68,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   },
 
   onCredentialsExpired: (cb: () => void): void => {
-    ipcRenderer.on('credentials-expired', () => cb());
+    ipcRenderer.on('credentials-expired', () => {
+      ipcRenderer.send('credentials-expired-received');
+      cb();
+    });
   },
 
   getAppVersion: (): Promise<string> => ipcRenderer.invoke('get-app-version'),

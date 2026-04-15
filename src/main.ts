@@ -58,6 +58,7 @@ let programmaticMoveTimer: ReturnType<typeof setTimeout> | null = null;
 let currentRateLimitUntil = 0; // restored from disk on startup
 let lastResponseInfo: LastResponseInfo | null = null;
 let credentialMissing = false;
+let credentialExpiredSent = false;
 let credentialPath = '';
 let cachedProfile: ProfileData | null = null;
 let cachedProfileAt = 0;
@@ -217,6 +218,10 @@ function togglePopup(): void {
     // Re-surface credential error if still unresolved
     if (credentialMissing) {
       popup.webContents.send('credential-missing', credentialPath);
+    }
+    // Re-surface credentials expired if still pending
+    if (credentialExpiredSent) {
+      popup.webContents.send('credentials-expired');
     }
     // Send actual next poll time so countdown shows correct remaining time
     const npa = pollingService.nextPollAt;
@@ -595,6 +600,9 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('refresh-now', async () => {
+    // Reset credential state when user explicitly asks for refresh
+    credentialMissing = false;
+    credentialExpiredSent = false;
     // Only suppress notifications when the popup is visible (user is actively watching).
     // If the popup is hidden, auto-refresh runs in the background and must not block alerts.
     if (popup?.isVisible()) suppressNextNotification = true;
@@ -602,6 +610,9 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('force-refresh-now', async () => {
+    // Reset credential state when user explicitly forces refresh
+    credentialMissing = false;
+    credentialExpiredSent = false;
     if (popup?.isVisible()) suppressNextNotification = true;
     await pollingService.forceNow();
   });
@@ -718,6 +729,11 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('sync:trigger-now', async () => {
     await syncService.syncNow();
+  });
+
+  ipcMain.on('credentials-expired-received', () => {
+    credentialExpiredSent = true;
+    console.log('[Main] credentials-expired received by renderer, will re-send on show');
   });
 
   ipcMain.on('set-window-height', (_event, height: number) => {
@@ -911,6 +927,9 @@ app.whenReady().then(() => {
   });
 
   pollingService.on('rate-limited', (until: number, count: number, resetAt?: number) => {
+    if (credentialMissing || credentialExpiredSent) {
+      return;
+    }
     currentRateLimitUntil = until;
     saveAccountData({ rateLimitedUntil: until, rateLimitCount: count, rateLimitResetAt: resetAt ?? 0 });
     if (popup?.isVisible()) {
@@ -919,9 +938,14 @@ app.whenReady().then(() => {
   });
 
   pollingService.on('error', (err: Error) => {
+    console.log('[Main] pollingService error:', err.message, 'credentialMissing:', credentialMissing);
     const isCredError = err.message.includes('credentials not found') ||
                         err.message.includes('Invalid credentials file') ||
-                        err.message.includes('Authentication failed (401)');
+                        err.message.includes('Authentication failed (401)') ||
+                        err.message.includes('authenticationrequired') ||
+                        err.message.includes('no access_token') ||
+                        (err.message.includes('429') && credentialMissing);
+    console.log('[Main] isCredError:', isCredError);
     if (isCredError) {
       credentialMissing = true;
       credentialPath = path.join(process.env['USERPROFILE'] || process.env['HOME'] || '~', '.claude', '.credentials.json');

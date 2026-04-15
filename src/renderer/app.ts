@@ -598,6 +598,10 @@ let countdownTimer: ReturnType<typeof setInterval> | null = null;
 let isRateLimited = false;
 
 function startRateLimitCountdown(until: number, resetAt?: number): void {
+  const credModal = document.getElementById('credential-modal');
+  if (!credModal?.classList.contains('hidden')) {
+    return;
+  }
   stopNextPollCountdown();
   if (countdownTimer) clearInterval(countdownTimer);
 
@@ -2269,6 +2273,8 @@ function init(): void {
   });
 
   window.claudeUsage.onCredentialMissing((credPath: string) => {
+    console.log('[Renderer] onCredentialMissing:', credPath);
+    clearRateLimitBanner();
     (document.getElementById('credential-path-value') as HTMLElement).textContent = credPath;
     const isLinux = credPath.startsWith('/');
     const winStep = document.getElementById('install-step-win') as HTMLElement;
@@ -2276,9 +2282,12 @@ function init(): void {
     if (winStep) winStep.style.display = isLinux ? 'none' : '';
     if (linuxStep) linuxStep.style.display = isLinux ? '' : 'none';
     (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
+    setTimeout(() => fitWindow(), 50);
   });
 
 window.claudeUsage.onCredentialsExpired(() => {
+    console.log('[Renderer] onCredentialsExpired fired');
+    clearRateLimitBanner();
     const t = tr();
     (document.getElementById('credential-path-value') as HTMLElement).textContent = t.credentialExpired ?? 'Token expired. Please log in again.';
     const winStep = document.getElementById('install-step-win') as HTMLElement;
@@ -2286,6 +2295,7 @@ window.claudeUsage.onCredentialsExpired(() => {
     if (winStep) winStep.style.display = 'none';
     if (linuxStep) linuxStep.style.display = 'none';
     (document.getElementById('credential-modal') as HTMLElement).classList.remove('hidden');
+    setTimeout(() => fitWindow(), 50);
   });
 
   document.getElementById('credential-retry-btn')?.addEventListener('click', async () => {
@@ -2294,7 +2304,7 @@ window.claudeUsage.onCredentialsExpired(() => {
     btn.disabled = true;
     btn.textContent = tr().retryingText;
     try {
-      await window.claudeUsage.refreshNow();
+      await window.claudeUsage.forceRefreshNow();
     } catch {
       // Keep modal open on error (rate limit, etc)
     } finally {
@@ -2343,6 +2353,7 @@ window.claudeUsage.onCredentialsExpired(() => {
     btn.disabled = true;
     btn.textContent = tr().forcingText;
     document.getElementById('force-refresh-modal')!.classList.add('hidden');
+    clearRateLimitBanner();
     (document.getElementById('updated-text') as HTMLElement).textContent = tr().refreshingText;
     void window.claudeUsage.forceRefreshNow().finally(() => {
       btn.disabled = false;
