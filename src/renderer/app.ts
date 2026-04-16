@@ -1568,6 +1568,23 @@ async function loadSettings(): Promise<void> {
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
 
+  // Server status indicator
+  const serverStatusDot = document.getElementById('server-status-dot') as HTMLElement;
+  const serverStatusBtn = document.getElementById('btn-server-status') as HTMLElement;
+  serverStatusBtn.style.display = '';
+
+  function updateServerStatusUI(status: string): void {
+    serverStatusDot.className = 'server-status-dot server-status-' + status;
+  }
+
+  window.claudeUsage.server.onStatusChange((event) => {
+    updateServerStatusUI(event.status);
+  });
+
+  void window.claudeUsage.server.getStatus().then((status) => {
+    updateServerStatusUI(status);
+  });
+
   // Daily chart sempre visível — carrega se já temos o resets_at
   void window.claudeUsage.getDailyHistory().then(d => {
     if (lastWeeklyResetsAt) renderDailyChart(d, lastWeeklyResetsAt, lastWeeklyPct ?? undefined, lastSessionPct ?? undefined);
