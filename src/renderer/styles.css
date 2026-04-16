@@ -223,6 +223,66 @@ body {
   50% { opacity: 0.4; }
 }
 
+/* ── Server status indicator ───────────────────────────────────────── */
+#btn-server-status {
+  color: var(--text-secondary);
+}
+.server-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.server-status-online {
+  --accent-color: var(--accent-green);
+  background: var(--accent-green);
+  animation: server-status-pulse 3s ease-in-out infinite;
+}
+.server-status-offline {
+  --accent-color: #888;
+  background: #888;
+  animation: server-status-pulse 3s ease-in-out infinite;
+}
+.server-status-disconnected {
+  --accent-color: #888;
+  background: #888;
+  animation: server-status-pulse 3s ease-in-out infinite;
+}
+.server-status-connecting {
+  --accent-color: #f59e0b;
+  background: #f59e0b;
+  animation: server-status-pulse 2.5s ease-in-out infinite;
+}
+.server-status-error {
+  --accent-color: var(--accent-red);
+  background: var(--accent-red);
+  animation: server-status-pulse 3s ease-in-out infinite;
+}
+@keyframes server-status-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.92);
+    box-shadow: 0 0 4px var(--accent-color);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 8px var(--accent-color);
+  }
+}
+
+/* ── Online users indicator ────────────────────────────────────────── */
+#btn-online-users {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+#online-users-count {
+  font-weight: 500;
+}
+
 /* ── Account bar ──────────────────────────────────────────────────── */
 .account-bar {
   display: flex;

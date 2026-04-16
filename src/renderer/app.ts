@@ -290,6 +290,10 @@ const translations = {
     costBudgetOf: 'of',
     costBudgetLabel: 'Monthly budget:',
     costWarning: '⚠️ Estimated value based on standard API rates. Team/Enterprise plans may have different rates.',
+    serverStatusOnline: 'Server online',
+    serverStatusOffline: 'Server offline',
+    serverStatusConnecting: 'Connecting...',
+    serverStatusError: 'Server error',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -459,6 +463,10 @@ const translations = {
     costBudgetOf: 'de',
     costBudgetLabel: 'Orçamento mensal:',
     costWarning: '⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes.',
+    serverStatusOnline: 'Servidor online',
+    serverStatusOffline: 'Servidor offline',
+    serverStatusConnecting: 'Conectando...',
+    serverStatusError: 'Erro no servidor',
   },
 } as const;
 
@@ -1567,6 +1575,47 @@ async function loadSettings(): Promise<void> {
   setInterval(refreshSyncTimes, 30_000);
   const notifyOnResetEl = document.getElementById('setting-notify-on-reset') as HTMLInputElement;
   (document.getElementById('row-reset-threshold') as HTMLElement).style.opacity = notifyOnResetEl.checked ? '1' : '0.4';
+
+  // Server status indicator
+  const serverStatusDot = document.getElementById('server-status-dot') as HTMLElement;
+  const serverStatusBtn = document.getElementById('btn-server-status') as HTMLElement;
+  serverStatusBtn.style.display = '';
+  const SERVER_IP = '104.131.23.0:3030';
+
+  function updateServerStatusUI(status: string): void {
+    const cssStatus = status === 'disconnected' ? 'disconnected' : status;
+    serverStatusDot.className = 'server-status-dot server-status-' + cssStatus;
+    const t = tr();
+    const statusLabels: Record<string, string> = {
+      connected: t.serverStatusOnline,
+      disconnected: t.serverStatusOffline,
+      connecting: t.serverStatusConnecting,
+      error: t.serverStatusError,
+    };
+    const label = statusLabels[status] ?? status;
+    serverStatusBtn.title = `${label} (${SERVER_IP})`;
+  }
+
+  window.claudeUsage.server.onStatusChange((event) => {
+    updateServerStatusUI(event.status);
+  });
+
+  void window.claudeUsage.server.getStatus().then((status) => {
+    updateServerStatusUI(status);
+  });
+
+  // Online users indicator
+  const onlineUsersBtn = document.getElementById('btn-online-users') as HTMLElement;
+  const onlineUsersCount = document.getElementById('online-users-count') as HTMLElement;
+  onlineUsersBtn.style.display = '';
+
+  window.claudeUsage.server.onClientCountChange((count) => {
+    onlineUsersCount.textContent = count > 0 ? String(count) : '—';
+  });
+
+  void window.claudeUsage.server.getClientCount().then((count) => {
+    onlineUsersCount.textContent = count > 0 ? String(count) : '—';
+  });
 
   // Daily chart sempre visível — carrega se já temos o resets_at
   void window.claudeUsage.getDailyHistory().then(d => {

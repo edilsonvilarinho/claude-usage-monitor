@@ -139,4 +139,26 @@ contextBridge.exposeInMainWorld('claudeUsage', {
       ipcRenderer.on('sync-event', (_event, data: { type: string; payload: unknown }) => cb(data));
     },
   },
+
+  server: {
+    getStatus: (): Promise<import('./services/serverStatusService').ServerStatus> =>
+      ipcRenderer.invoke('server:get-status'),
+
+    connect: (): Promise<void> =>
+      ipcRenderer.invoke('server:connect'),
+
+    disconnect: (): Promise<void> =>
+      ipcRenderer.invoke('server:disconnect'),
+
+    getClientCount: (): Promise<number> =>
+      ipcRenderer.invoke('server:get-client-count'),
+
+    onStatusChange: (cb: (event: import('./services/serverStatusService').ServerStatusEvent) => void): void => {
+      ipcRenderer.on('server:status-changed', (_event, data) => cb(data));
+    },
+
+    onClientCountChange: (cb: (count: number) => void): void => {
+      ipcRenderer.on('server:client-count-changed', (_event, count) => cb(count));
+    },
+  },
 });

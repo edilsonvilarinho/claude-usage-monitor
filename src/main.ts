@@ -13,6 +13,7 @@ import { fetchProfileData } from './services/usageApiService';
 import { checkForUpdate } from './services/updateService';
 import { updateDailySnapshot } from './services/dailySnapshotService';
 import { computeSmartStatus } from './services/smartScheduleService';
+import { serverStatusService } from './services/serverStatusService';
 
 /** Arredonda timestamp para o minuto mais próximo — usado para deduplicar janelas de sessão
  *  cujo resetsAt difere por milissegundos devido à precisão variável da API */
@@ -731,6 +732,30 @@ function registerIpcHandlers(): void {
     await syncService.syncNow();
   });
 
+  ipcMain.handle('server:get-status', () => serverStatusService.getStatus());
+
+  ipcMain.handle('server:connect', () => {
+    serverStatusService.connect();
+  });
+
+  ipcMain.handle('server:disconnect', () => {
+    serverStatusService.disconnect();
+  });
+
+  ipcMain.handle('server:get-client-count', () => serverStatusService.getClientCount());
+
+  serverStatusService.onStatusChange((event) => {
+    if (popup && !popup.isDestroyed()) {
+      popup.webContents.send('server:status-changed', event);
+    }
+  });
+
+  serverStatusService.onClientCountChange((count) => {
+    if (popup && !popup.isDestroyed()) {
+      popup.webContents.send('server:client-count-changed', count);
+    }
+  });
+
   ipcMain.on('credentials-expired-received', () => {
     credentialExpiredSent = true;
     console.log('[Main] credentials-expired received by renderer, will re-send on show');
@@ -757,6 +782,7 @@ function registerIpcHandlers(): void {
 
 app.whenReady().then(() => {
   registerIpcHandlers();
+  serverStatusService.connect();
 
   // Restore rate-limit state from previous session (per-account)
   const { rateLimitedUntil: saved, rateLimitCount: savedCount, rateLimitResetAt: savedResetAt } = getAccountData();
