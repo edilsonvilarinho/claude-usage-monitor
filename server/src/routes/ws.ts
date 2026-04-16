@@ -1,9 +1,10 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import type { IncomingMessage } from 'http';
 import type { Server } from 'net';
+import { randomUUID } from 'crypto';
 import { logger } from '../logger';
 
-const clients = new Set<WebSocket>();
+const clients = new Map<WebSocket, string>();
 
 let heartbeatInterval: NodeJS.Timeout | null = null;
 let clientCountInterval: NodeJS.Timeout | null = null;
@@ -21,10 +22,11 @@ export const setupWebSocket = (server: Server) => {
   });
 
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-    clients.add(ws);
-    logger.info({ ip: req.socket.remoteAddress, count: clients.size }, 'WebSocket client connected');
+    const clientId = randomUUID();
+    clients.set(ws, clientId);
+    logger.info({ ip: req.socket.remoteAddress, count: clients.size, clientId }, 'WebSocket client connected');
 
-    ws.send(JSON.stringify({ type: 'connected', timestamp: Date.now() }));
+    ws.send(JSON.stringify({ type: 'connected', timestamp: Date.now(), clientId }));
     broadcastClientCount();
 
     ws.on('message', (data: Buffer) => {
@@ -62,16 +64,16 @@ export const setupWebSocket = (server: Server) => {
 };
 
 const broadcastClientCount = () => {
-  broadcastToClients({ type: 'client_count', count: clients.size, timestamp: Date.now() });
+  broadcastToClients({ type: 'client_count', count: Math.max(0, clients.size - 1), timestamp: Date.now() });
 };
 
 export const broadcastToClients = (message: object) => {
   const data = JSON.stringify(message);
-  clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
+  clients.forEach((_, ws) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(data);
     }
   });
 };
 
-export const getConnectedClientsCount = () => clients.size;
+export const getConnectedClientsCount = () => Math.max(0, clients.size - 1);
