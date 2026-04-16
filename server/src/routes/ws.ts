@@ -6,6 +6,7 @@ import { logger } from '../logger';
 const clients = new Set<WebSocket>();
 
 let heartbeatInterval: NodeJS.Timeout | null = null;
+let clientCountInterval: NodeJS.Timeout | null = null;
 
 export const setupWebSocket = (server: Server) => {
   const wss = new WebSocketServer({ noServer: true });
@@ -21,9 +22,10 @@ export const setupWebSocket = (server: Server) => {
 
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     clients.add(ws);
-    logger.info({ ip: req.socket.remoteAddress }, 'WebSocket client connected');
+    logger.info({ ip: req.socket.remoteAddress, count: clients.size }, 'WebSocket client connected');
 
     ws.send(JSON.stringify({ type: 'connected', timestamp: Date.now() }));
+    broadcastClientCount();
 
     ws.on('message', (data: Buffer) => {
       try {
@@ -38,7 +40,8 @@ export const setupWebSocket = (server: Server) => {
 
     ws.on('close', () => {
       clients.delete(ws);
-      logger.info({ ip: req.socket.remoteAddress }, 'WebSocket client disconnected');
+      logger.info({ ip: req.socket.remoteAddress, count: clients.size }, 'WebSocket client disconnected');
+      broadcastClientCount();
     });
 
     ws.on('error', (err) => {
@@ -51,7 +54,15 @@ export const setupWebSocket = (server: Server) => {
     broadcastToClients({ type: 'ping', timestamp: Date.now() });
   }, 30000);
 
+  clientCountInterval = setInterval(() => {
+    broadcastClientCount();
+  }, 10000);
+
   return clients;
+};
+
+const broadcastClientCount = () => {
+  broadcastToClients({ type: 'client_count', count: clients.size, timestamp: Date.now() });
 };
 
 export const broadcastToClients = (message: object) => {

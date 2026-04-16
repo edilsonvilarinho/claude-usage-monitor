@@ -742,9 +742,17 @@ function registerIpcHandlers(): void {
     serverStatusService.disconnect();
   });
 
+  ipcMain.handle('server:get-client-count', () => serverStatusService.getClientCount());
+
   serverStatusService.onStatusChange((event) => {
     if (popup && !popup.isDestroyed()) {
       popup.webContents.send('server:status-changed', event);
+    }
+  });
+
+  serverStatusService.onClientCountChange((count) => {
+    if (popup && !popup.isDestroyed()) {
+      popup.webContents.send('server:client-count-changed', count);
     }
   });
 

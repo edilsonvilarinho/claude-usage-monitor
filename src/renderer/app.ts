@@ -1583,7 +1583,8 @@ async function loadSettings(): Promise<void> {
   const SERVER_IP = '104.131.23.0:3030';
 
   function updateServerStatusUI(status: string): void {
-    serverStatusDot.className = 'server-status-dot server-status-' + status;
+    const cssStatus = status === 'disconnected' ? 'disconnected' : status;
+    serverStatusDot.className = 'server-status-dot server-status-' + cssStatus;
     const t = tr();
     const statusLabels: Record<string, string> = {
       connected: t.serverStatusOnline,
@@ -1601,6 +1602,19 @@ async function loadSettings(): Promise<void> {
 
   void window.claudeUsage.server.getStatus().then((status) => {
     updateServerStatusUI(status);
+  });
+
+  // Online users indicator
+  const onlineUsersBtn = document.getElementById('btn-online-users') as HTMLElement;
+  const onlineUsersCount = document.getElementById('online-users-count') as HTMLElement;
+  onlineUsersBtn.style.display = '';
+
+  window.claudeUsage.server.onClientCountChange((count) => {
+    onlineUsersCount.textContent = count > 0 ? String(count) : '—';
+  });
+
+  void window.claudeUsage.server.getClientCount().then((count) => {
+    onlineUsersCount.textContent = count > 0 ? String(count) : '—';
   });
 
   // Daily chart sempre visível — carrega se já temos o resets_at

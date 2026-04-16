@@ -2,9 +2,9 @@
 
 **Data criação:** 2026-04-16
 **Hora criação:** 09:17:35
-**Última atualização:** 2026-04-16 09:33:07
+**Última atualização:** 2026-04-16 09:43:39
 **Branch:** feature/server-online-indicator
-**Status:** CONCLUÍDO (v1 + v2 melhorias)
+**Status:** EM ANDAMENTO (v3 - Correção + Indicador Usuários)
 
 ---
 
@@ -56,7 +56,132 @@
 | 5 | server-status-offline/error → vermelho + animação | ✅ Concluído | 2026-04-16 09:32:30 |
 | 6 | Garantir que indicador sempre apareça | ✅ Concluído | 2026-04-16 09:33:00 |
 | 7 | Testar (build) | ✅ Concluído | 2026-04-16 09:33:07 |
-| 8 | Commit + Push | 🔄 Pendente | - |
+| 8 | Commit + Push | ✅ Concluído | 2026-04-16 09:34:17 |
+
+---
+
+## Plano v3: Correção Pulse + Indicador Usuários Online
+
+**Data:** 2026-04-16 09:40:00
+**Status:** CONCLUÍDO
+
+### PARTE 1: Correção Pulse Suave (v3a)
+
+**Problema:** Indicador fica invisível quando status é `disconnected` (não existe CSS)
+
+#### Animação CSS Implementada (Suave):
+
+```css
+@keyframes server-status-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.92);
+    box-shadow: 0 0 4px var(--accent-color);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 8px var(--accent-color);
+  }
+}
+```
+
+#### Comportamento Visual:
+
+| Status | Cor | Animação | Tooltip |
+|--------|-----|----------|---------|
+| `connected` | Verde | 3s, 0.92→1, 0.7→1 opacity | Server online (IP) |
+| `disconnected` | Cinza | 3s, 0.92→1, 0.7→1 opacity | Servidor offline (IP) |
+| `connecting` | Laranja | 2.5s (mais rápido) | Conectando... (IP) |
+| `error` | Vermelho | 3s, 0.92→1, 0.7→1 opacity | Erro no servidor (IP) |
+
+#### Etapas v3a:
+
+| # | Descrição | Status | Data/Hora |
+|---|-----------|--------|-----------|
+| 1 | Atualizar `styles.css` - pulse suave + CSS vars | ✅ Concluído | 2026-04-16 09:44:00 |
+| 2 | Garantir mapeamento `disconnected` → `server-status-disconnected` | ✅ Concluído | 2026-04-16 09:44:30 |
+| 3 | Build + Testes | ✅ Concluído | 2026-04-16 09:46:48 |
+| 4 | Commit + Push | 🔄 Pendente | - |
+
+---
+
+### PARTE 2: Indicador de Usuários Online (v3b)
+
+**Objetivo:** Mostrar ícone de usuário + número de dispositivos conectados ao servidor
+
+#### Arquitetura:
+
+```
+Server (Hono)
+  ↓ WS /ws
+  Mantém lista de clients conectados
+  ↓ Broadcast periódico (a cada 10s)
+  Envia { type: 'client_count', count: N }
+  ↓
+Electron Main (serverStatusService)
+  Recebe mensagem WebSocket
+  ↓ IPC 'server:client-count-changed'
+Renderer (Header UI)
+  Atualiza: [👤12]
+```
+
+#### Mensagens WebSocket:
+
+```typescript
+// Server → Client: contagem de clientes (a cada 10s)
+{ type: 'client_count', count: number, timestamp: number }
+
+// Server → Client: conexão estabelecida
+{ type: 'connected', timestamp: number }
+```
+
+#### UI no Header:
+
+```
+[Sync] [●Server] [👤12]
+           └── Indicador de usuários online
+```
+
+**Ícone:** Silhueta de pessoa (SVG inline)
+**Número:** `12` (dispositivos conectados ao WebSocket)
+**Estado offline:** `—` (travessão)
+
+#### HTML proposto:
+
+```html
+<button class="icon-btn" id="btn-online-users" title="Online users" style="display:none">
+  <svg width="12" height="14" viewBox="0 0 12 14" fill="none">
+    <path d="M6 6C7.65685 6 9 4.65685 9 3C9 1.34315 7.65685 0 6 0C4.34315 0 3 1.34315 3 3C3 4.65685 4.34315 6 6 6Z" fill="currentColor"/>
+    <path d="M2 14C2 11.2386 4.23858 9 7 9H5C7.76142 9 10 11.2386 10 14V13C10 12.4477 9.55228 12 9 12H3C2.44772 12 2 12.4477 2 13V14Z" fill="currentColor"/>
+  </svg>
+  <span id="online-users-count">—</span>
+</button>
+```
+
+#### Arquivos a modificar (v3b):
+
+| Arquivo | Mudança |
+|---------|---------|
+| `server/src/routes/ws.ts` | Broadcast `client_count` a cada 10s |
+| `src/services/serverStatusService.ts` | Receber `client_count`, expor via IPC |
+| `src/main.ts` | Handler IPC `server:client-count-changed` |
+| `src/preload.ts` | Expor `server.onClientCountChange()` |
+| `src/renderer/index.html` | Adicionar botão `#btn-online-users` |
+| `src/renderer/styles.css` | Estilos para `#btn-online-users` |
+| `src/renderer/app.ts` | Listener para atualizar número |
+
+#### Etapas v3b:
+
+| # | Descrição | Status | Data/Hora |
+|---|-----------|--------|-----------|
+| 1 | Server: broadcast client_count a cada 10s | ✅ Concluído | 2026-04-16 09:44:00 |
+| 2 | Client: receber client_count no WebSocket | ✅ Concluído | 2026-04-16 09:44:30 |
+| 3 | Client: IPC handler + preload | ✅ Concluído | 2026-04-16 09:45:00 |
+| 4 | Renderer: HTML + CSS do indicador | ✅ Concluído | 2026-04-16 09:45:30 |
+| 5 | Renderer: conectar IPC e atualizar UI | ✅ Concluído | 2026-04-16 09:46:00 |
+| 6 | Build + Testes | ✅ Concluído | 2026-04-16 09:46:48 |
+| 7 | Commit + Push | 🔄 Pendente | - |
 
 ---
 

@@ -10,6 +10,7 @@ export interface ServerStatusEvent {
 }
 
 type StatusCallback = (event: ServerStatusEvent) => void;
+type ClientCountCallback = (count: number) => void;
 
 class ServerStatusService {
   private ws: WebSocket | null = null;
@@ -18,7 +19,9 @@ class ServerStatusService {
   private maxReconnectDelay = 30000;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private listeners: Set<StatusCallback> = new Set();
+  private clientCountListeners: Set<ClientCountCallback> = new Set();
   private pingInterval: NodeJS.Timeout | null = null;
+  private clientCount: number = 0;
 
   connect(): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -42,6 +45,8 @@ class ServerStatusService {
           const msg = JSON.parse(data.toString());
           if (msg.type === 'ping') {
             this.ws?.send(JSON.stringify({ type: 'pong' }));
+          } else if (msg.type === 'client_count') {
+            this.handleClientCount(msg.count);
           }
         } catch {
           // Ignore invalid messages
@@ -51,6 +56,7 @@ class ServerStatusService {
       this.ws.on('close', () => {
         console.log('[ServerStatus] Disconnected');
         this.setStatus('disconnected');
+        this.handleClientCount(0);
         this.cleanup();
         this.scheduleReconnect();
       });
@@ -79,15 +85,30 @@ class ServerStatusService {
       this.ws = null;
     }
     this.setStatus('disconnected');
+    this.handleClientCount(0);
   }
 
   getStatus(): ServerStatus {
     return this.status;
   }
 
+  getClientCount(): number {
+    return this.clientCount;
+  }
+
   onStatusChange(callback: StatusCallback): () => void {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
+  }
+
+  onClientCountChange(callback: ClientCountCallback): () => void {
+    this.clientCountListeners.add(callback);
+    return () => this.clientCountListeners.delete(callback);
+  }
+
+  private handleClientCount(count: number): void {
+    this.clientCount = count;
+    this.clientCountListeners.forEach((cb) => cb(count));
   }
 
   private setStatus(status: ServerStatus, error?: string): void {
