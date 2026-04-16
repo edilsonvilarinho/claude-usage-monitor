@@ -22,11 +22,29 @@ Nenhum cadastro separado é necessário — a identidade é o e-mail da conta An
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
 | `GET` | `/health` | Não | Liveness check — retorna `{ status: "ok", ts: <unix ms> }` |
+| `WS` | `/ws` | Não | WebSocket para indicadores em tempo real (client_count, ping/pong) |
 | `POST` | `/auth/exchange` | Não | Troca `accessToken` Anthropic por JWT próprio de 24h |
 | `POST` | `/sync/push` | JWT | Envia dados locais para merge CRDT no servidor |
 | `GET` | `/sync/pull?since=<ts>` | JWT | Retorna dados com `updated_at > since` (incremental) |
 | `GET` | `/sync/snapshot` | JWT | Dump completo de todos os dados do usuário |
 | `DELETE` | `/sync/account` | JWT | Apaga todos os dados do usuário (LGPD-friendly) |
+
+### WebSocket /ws
+
+Conexão persistente para indicadores em tempo real (ex: usuários online).
+
+```bash
+# Exemplo com wscat
+wscat -c ws://localhost:3030/ws
+
+# Mensagens recebidas:
+# - {"type":"connected","timestamp":1746345600000}
+# - {"type":"client_count","count":3,"timestamp":1746345610000}  # a cada 10s
+# - {"type":"ping","timestamp":1746345620000}  # a cada 30s
+
+# Responda ao ping com:
+# {"type":"pong"}
+```
 
 ### POST /auth/exchange
 
@@ -240,17 +258,29 @@ A URL pública será `http://<IP-DO-DROPLET>:3030`.
 
 ```bash
 cd /opt/claude-usage
-git pull
+git pull origin master
 
 # Rebuildar shared se houver mudanças
 cd shared && npm install && npm run build
 
-# Rebuildar server
+# Rebuildar server (inclui @types/ws para WebSocket)
 cd ../server && npm install && npm run build
 
 # Reiniciar
 pm2 restart sync-claude-usage
 pm2 logs sync-claude-usage --lines 20
+```
+
+### Verificar endpoints
+
+```bash
+# Health check
+curl http://localhost:3030/health
+
+# WebSocket (teste básico com wscat)
+npm install -g wscat
+wscat -c ws://localhost:3030/ws
+# Deve receber: {"type":"connected","timestamp":...}
 ```
 
 ---
@@ -326,5 +356,7 @@ O `Dockerfile` usa build multi-stage: compila o TypeScript em um estágio e copi
 **SQLite locked** — em deploy com múltiplas instâncias, o SQLite com WAL suporta leituras concorrentes, mas apenas uma escrita por vez. Para alto volume, migre para PostgreSQL (substitua `better-sqlite3` por `pg` e ajuste as queries).
 
 **`better-sqlite3` crash após update do Node** — o binding nativo precisa ser recompilado: `npm rebuild better-sqlite3`.
+
+**Build falha com erro "Could not find a declaration file for module 'ws'"** — execute `npm install @types/ws --save-dev`.
 
 **Volume cheio no Fly.io** — verifique com `flyctl ssh console` e `df -h /data`. Aumente o volume com `flyctl volumes extend <volume-id> --size <gb>`.
