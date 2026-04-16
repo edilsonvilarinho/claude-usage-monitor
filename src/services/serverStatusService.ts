@@ -22,6 +22,7 @@ class ServerStatusService {
   private clientCountListeners: Set<ClientCountCallback> = new Set();
   private pingInterval: NodeJS.Timeout | null = null;
   private clientCount: number = 0;
+  private myClientId: string | null = null;
 
   connect(): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -44,7 +45,10 @@ class ServerStatusService {
       this.ws.on('message', (data: Buffer) => {
         try {
           const msg = JSON.parse(data.toString());
-          if (msg.type === 'ping') {
+          if (msg.type === 'connected' && msg.clientId) {
+            this.myClientId = msg.clientId;
+            console.log('[ServerStatus] My clientId:', this.myClientId);
+          } else if (msg.type === 'ping') {
             this.ws?.send(JSON.stringify({ type: 'pong' }));
           } else if (msg.type === 'client_count') {
             this.handleClientCount(msg.count);
@@ -85,6 +89,7 @@ class ServerStatusService {
       this.ws.close();
       this.ws = null;
     }
+    this.myClientId = null;
     this.setStatus('disconnected');
     this.handleClientCount(0);
   }
