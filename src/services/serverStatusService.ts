@@ -28,7 +28,8 @@ class ServerStatusService {
       return;
     }
 
-    this.setStatus('connecting');
+    const isReconnecting = this.reconnectAttempts > 0;
+    this.setStatus(isReconnecting ? 'disconnected' : 'connecting');
 
     try {
       this.ws = new WebSocket(SERVER_URL);
@@ -63,13 +64,13 @@ class ServerStatusService {
 
       this.ws.on('error', (err) => {
         console.error('[ServerStatus] Error:', err.message);
-        this.setStatus('error', err.message);
+        this.setStatus('disconnected');
         this.cleanup();
         this.scheduleReconnect();
       });
     } catch (err) {
       console.error('[ServerStatus] Failed to create WebSocket:', err);
-      this.setStatus('error', String(err));
+      this.setStatus('disconnected');
       this.scheduleReconnect();
     }
   }

@@ -2,9 +2,9 @@
 
 **Data criação:** 2026-04-16
 **Hora criação:** 09:17:35
-**Última atualização:** 2026-04-16 09:43:39
+**Última atualização:** 2026-04-16 09:57:40
 **Branch:** feature/server-online-indicator
-**Status:** EM ANDAMENTO (v3 - Correção + Indicador Usuários)
+**Status:** CONCLUÍDO (v1 + v2 + v3 + v4)
 
 ---
 
@@ -102,7 +102,7 @@
 | 1 | Atualizar `styles.css` - pulse suave + CSS vars | ✅ Concluído | 2026-04-16 09:44:00 |
 | 2 | Garantir mapeamento `disconnected` → `server-status-disconnected` | ✅ Concluído | 2026-04-16 09:44:30 |
 | 3 | Build + Testes | ✅ Concluído | 2026-04-16 09:46:48 |
-| 4 | Commit + Push | 🔄 Pendente | - |
+| 4 | Commit + Push | ✅ Concluído | 2026-04-16 09:47:49 |
 
 ---
 
@@ -181,7 +181,7 @@ Renderer (Header UI)
 | 4 | Renderer: HTML + CSS do indicador | ✅ Concluído | 2026-04-16 09:45:30 |
 | 5 | Renderer: conectar IPC e atualizar UI | ✅ Concluído | 2026-04-16 09:46:00 |
 | 6 | Build + Testes | ✅ Concluído | 2026-04-16 09:46:48 |
-| 7 | Commit + Push | 🔄 Pendente | - |
+| 7 | Commit + Push | ✅ Concluído | 2026-04-16 09:47:49 |
 
 ---
 
@@ -290,3 +290,43 @@ http://104.131.23.0:3030
 ```
 feat: adicionar indicador de servidor online via WebSocket
 ```
+
+---
+
+## Plano v4: Corrigir Indicador Durante Reconexão
+
+**Data:** 2026-04-16 10:00:00
+**Status:** CONCLUÍDO
+
+### Problema Atual:
+- Tentativas de reconexão mostram "connecting" (amarelo) → confunde usuário
+- Loop infinito sem feedback claro
+
+### Solução:
+Quando o servidor falhou e está tentando reconectar nos bastidores, mostrar **"offline"** (vermelho pulsante) ao invés de **"connecting"** (amarelo).
+
+### Comportamento Proposto:
+
+| Situação | Status | Cor | Animação |
+|----------|--------|-----|----------|
+| Conectando pela 1ª vez | `connecting` | Amarelo | Pulse |
+| Reconectando após falha | `disconnected` | Cinza | Pulse |
+| Conectado | `connected` | Verde | Pulse |
+| Erro | `error` | Vermelho | Pulse |
+
+### Código - `serverStatusService.ts`:
+
+```typescript
+// No connect():
+const isReconnecting = this.reconnectAttempts > 0;
+this.setStatus(isReconnecting ? 'disconnected' : 'connecting');
+```
+
+### Etapas v4:
+
+| # | Descrição | Status | Data/Hora |
+|---|-----------|--------|-----------|
+| 1 | Modificar `connect()` - não mostrar 'connecting' se `reconnectAttempts > 0` | ✅ Concluído | 2026-04-16 09:57:00 |
+| 2 | Modificar handlers `on('close')` e `on('error')` | ✅ Concluído | 2026-04-16 09:57:20 |
+| 3 | Build + Testes | ✅ Concluído | 2026-04-16 09:57:40 |
+| 4 | Commit + Push | 🔄 Pendente | - |
