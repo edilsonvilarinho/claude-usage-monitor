@@ -107,6 +107,14 @@ Dois círculos estilo "usuários":
 ### v5: Fix Mapeamento CSS (Concluído)
 - Corrigido status 'connected' → classe 'online'
 
+### v6: Contador n-1 + Ícone Melhorado (Concluído)
+- Server gera clientId único por conexão
+- Broadcast count = size - 1 (exclui você)
+- Ícone: dois círculos SVG
+
+### v7: Ícone Emoji (Concluído)
+- Ícone SVG circles substituído por emoji 👤
+
 ---
 
 ## IP do Servidor (hardcoded)
