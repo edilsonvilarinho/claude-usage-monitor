@@ -1583,7 +1583,9 @@ async function loadSettings(): Promise<void> {
   const SERVER_IP = '104.131.23.0:3030';
 
   function updateServerStatusUI(status: string): void {
-    const cssStatus = status === 'disconnected' ? 'disconnected' : status;
+    const cssStatus = status === 'disconnected' ? 'disconnected'
+                    : status === 'connected' ? 'online'
+                    : status;
     serverStatusDot.className = 'server-status-dot server-status-' + cssStatus;
     const t = tr();
     const statusLabels: Record<string, string> = {

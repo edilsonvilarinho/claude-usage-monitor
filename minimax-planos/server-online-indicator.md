@@ -330,3 +330,46 @@ this.setStatus(isReconnecting ? 'disconnected' : 'connecting');
 | 2 | Modificar handlers `on('close')` e `on('error')` | ✅ Concluído | 2026-04-16 09:57:20 |
 | 3 | Build + Testes | ✅ Concluído | 2026-04-16 09:57:40 |
 | 4 | Commit + Push | 🔄 Pendente | - |
+
+---
+
+## Plano v5: Corrigir Mapeamento CSS para Status "connected"
+
+**Data:** 2026-04-16 10:25:00
+**Status:** CONCLUÍDO
+
+### Problema Identificado
+
+O ícone do servidor fica invisível quando status é `connected` porque há **incompatibilidade entre o status e a classe CSS**:
+
+| Status (código) | Classe CSS esperada | Classe CSS existente |
+|-----------------|-------------------|-------------------|
+| `connected` | `.server-status-connected` | ❌ Não existe |
+| `connected` | `.server-status-online` | ✅ Existe (mas não é usada) |
+| `connecting` | `.server-status-connecting` | ✅ Existe |
+| `disconnected` | `.server-status-disconnected` | ✅ Existe |
+| `error` | `.server-status-error` | ✅ Existe |
+
+**Causa:** O código JavaScript envia status `'connected'` mas o CSS usa classe `.server-status-online`.
+
+### Solução
+
+Em `src/renderer/app.ts`, função `updateServerStatusUI`, adicionar mapeamento:
+
+```typescript
+function updateServerStatusUI(status: string): void {
+  const cssStatus = status === 'disconnected' ? 'disconnected'
+                  : status === 'connected' ? 'online'
+                  : status;
+  serverStatusDot.className = 'server-status-dot server-status-' + cssStatus;
+  // ...
+}
+```
+
+### Etapas v5:
+
+| # | Descrição | Status | Data/Hora |
+|---|-----------|--------|-----------|
+| 1 | Corrigir mapeamento `connected` → `online` em `updateServerStatusUI` | ✅ Concluído | 2026-04-16 10:31:00 |
+| 2 | Build + Testar localmente | ✅ Concluído | 2026-04-16 10:31:38 |
+| 3 | Commit + Push | ✅ Concluído | 2026-04-16 10:32:05 |
