@@ -290,6 +290,10 @@ const translations = {
     costBudgetOf: 'of',
     costBudgetLabel: 'Monthly budget:',
     costWarning: '⚠️ Estimated value based on standard API rates. Team/Enterprise plans may have different rates.',
+    serverStatusOnline: 'Server online',
+    serverStatusOffline: 'Server offline',
+    serverStatusConnecting: 'Connecting...',
+    serverStatusError: 'Server error',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -459,6 +463,10 @@ const translations = {
     costBudgetOf: 'de',
     costBudgetLabel: 'Orçamento mensal:',
     costWarning: '⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes.',
+    serverStatusOnline: 'Servidor online',
+    serverStatusOffline: 'Servidor offline',
+    serverStatusConnecting: 'Conectando...',
+    serverStatusError: 'Erro no servidor',
   },
 } as const;
 
@@ -1572,9 +1580,19 @@ async function loadSettings(): Promise<void> {
   const serverStatusDot = document.getElementById('server-status-dot') as HTMLElement;
   const serverStatusBtn = document.getElementById('btn-server-status') as HTMLElement;
   serverStatusBtn.style.display = '';
+  const SERVER_IP = '104.131.23.0:3030';
 
   function updateServerStatusUI(status: string): void {
     serverStatusDot.className = 'server-status-dot server-status-' + status;
+    const t = tr();
+    const statusLabels: Record<string, string> = {
+      connected: t.serverStatusOnline,
+      disconnected: t.serverStatusOffline,
+      connecting: t.serverStatusConnecting,
+      error: t.serverStatusError,
+    };
+    const label = statusLabels[status] ?? status;
+    serverStatusBtn.title = `${label} (${SERVER_IP})`;
   }
 
   window.claudeUsage.server.onStatusChange((event) => {

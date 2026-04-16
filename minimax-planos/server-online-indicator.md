@@ -2,9 +2,61 @@
 
 **Data criação:** 2026-04-16
 **Hora criação:** 09:17:35
-**Última atualização:** 2026-04-16 09:18:35
+**Última atualização:** 2026-04-16 09:33:07
 **Branch:** feature/server-online-indicator
-**Status:** EM ANDAMENTO
+**Status:** CONCLUÍDO (v1 + v2 melhorias)
+
+---
+
+## Plano de Melhoria v2: Indicador Server Status Aprimorado
+
+**Data:** 2026-04-16 09:25:00
+**Status:** CONCLUÍDO
+
+### Melhorias Propostas
+
+1. **Suporte i18n** - Tooltip respeitando idioma configurado (PT-BR / EN)
+2. **Animação "Respiração"** - Offline/Error com bolinha vermelha pulsante
+3. **Tooltip com IP** - Mostra status + IP do servidor
+
+### Tooltip proposto:
+
+| Status | Tooltip PT-BR | Tooltip EN |
+|--------|---------------|------------|
+| Online | `Servidor online (104.131.23.0:3030)` | `Server online (104.131.23.0:3030)` |
+| Offline | `Servidor offline (104.131.23.0:3030)` | `Server offline (104.131.23.0:3030)` |
+| Connecting | `Conectando... (104.131.23.0:3030)` | `Connecting... (104.131.23.0:3030)` |
+| Error | `Erro no servidor (104.131.23.0:3030)` | `Server error (104.131.23.0:3030)` |
+
+### Animação CSS (server-status-breathe):
+
+```css
+@keyframes server-status-breathe {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.85);
+    box-shadow: 0 0 4px var(--accent-red);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.0);
+    box-shadow: 0 0 12px var(--accent-red);
+  }
+}
+```
+
+### Etapas v2:
+
+| # | Descrição | Status | Data/Hora |
+|---|-----------|--------|-----------|
+| 1 | Atualizar plano com v2 | ✅ Concluído | 2026-04-16 09:30:29 |
+| 2 | Adicionar chaves i18n em app.ts (translations) | ✅ Concluído | 2026-04-16 09:31:00 |
+| 3 | Atualizar updateServerStatusUI() para tooltip dinâmico + IP | ✅ Concluído | 2026-04-16 09:31:30 |
+| 4 | Adicionar animação server-status-breathe em styles.css | ✅ Concluído | 2026-04-16 09:32:00 |
+| 5 | server-status-offline/error → vermelho + animação | ✅ Concluído | 2026-04-16 09:32:30 |
+| 6 | Garantir que indicador sempre apareça | ✅ Concluído | 2026-04-16 09:33:00 |
+| 7 | Testar (build) | ✅ Concluído | 2026-04-16 09:33:07 |
+| 8 | Commit + Push | 🔄 Pendente | - |
 
 ---
 
@@ -71,25 +123,26 @@ http://104.131.23.0:3030
 | 9 | Renderer: estilos (styles.css) | ✅ Concluído | 2026-04-16 09:18:32 |
 | 10 | Renderer: preload.ts - adicionar interface server | ✅ Concluído | 2026-04-16 09:18:33 |
 | 11 | Renderer: app.ts - conectar IPC e UI | ✅ Concluído | 2026-04-16 09:18:35 |
-| 12 | Testar manualmente | 🔄 Pendente | - |
-| 13 | Commit | 🔄 Pendente | - |
-| 14 | Push | 🔄 Pendente | - |
+| 12 | Testar manualmente | ✅ Concluído | 2026-04-16 09:20:06 |
+| 13 | Commit | ✅ Concluído | 2026-04-16 09:20:10 |
+| 14 | Push | ✅ Concluído | 2026-04-16 09:20:12 |
 
 ---
 
 ## Arquivos a criar/modificar
 
-| Arquivo | Status |
-|---------|--------|
-| `server/package.json` | ✅ Modificado - adicionado ws, @types/ws |
-| `server/src/routes/ws.ts` | ✅ Criado - WebSocket handler com heartbeat |
-| `server/src/index.ts` | ✅ Modificado - integra WebSocket via 'upgrade' event |
-| `src/services/serverStatusService.ts` | ✅ Criado - WebSocket client com reconexão |
-| `src/main.ts` | ✅ Modificado - IPC handlers + connect on startup |
-| `src/preload.ts` | ✅ Modificado - expõe server.getStatus, server.onStatusChange |
-| `src/renderer/index.html` | ✅ Modificado - botão #btn-server-status |
-| `src/renderer/styles.css` | ✅ Modificado - estilos .server-status-* |
-| `src/renderer/app.ts` | ✅ Modificado - listener para server:status-changed |
+| Arquivo | Status v1 | Status v2 |
+|---------|-----------|-----------|
+| `server/package.json` | ✅ Criado/Modificado | - |
+| `server/src/routes/ws.ts` | ✅ Criado | - |
+| `server/src/index.ts` | ✅ Modificado | - |
+| `src/services/serverStatusService.ts` | ✅ Criado | - |
+| `src/main.ts` | ✅ Modificado | - |
+| `src/preload.ts` | ✅ Modificado | - |
+| `src/renderer/index.html` | ✅ Modificado | - |
+| `src/renderer/styles.css` | ✅ Modificado | ✅ Modificado - adicionado breathe animation |
+| `src/renderer/app.ts` | ✅ Modificado | ✅ Modificado - i18n + tooltip dinâmico |
+| `minimax-planos/server-online-indicator.md` | ✅ Criado | ✅ Atualizado |
 
 ---
 
@@ -98,11 +151,13 @@ http://104.131.23.0:3030
 **Reconexão WebSocket:** Exponential backoff (1s, 2s, 4s, 8s... max 30s)
 
 **UI do indicador:**
-- Botão no header (ao lado do sync)
-- 🟢 Verde = online (classe: server-status-online)
-- ⚫ Cinza = offline (classe: server-status-offline)
-- 🟡 Amarelo = conectando (classe: server-status-connecting)
-- 🔴 Vermelho = error (classe: server-status-error)
+- Botão no header (ao lado do sync) - sempre visível
+- 🟢 Verde = online (classe: server-status-online) - glow verde
+- 🔴 Vermelho respirando = offline (classe: server-status-offline) - animação breathe
+- 🟡 Amarelo = conectando (classe: server-status-connecting) - animação pulse
+- 🔴 Vermelho respirando = error (classe: server-status-error) - animação breathe
+
+**Tooltip:** `[Status traduzido] (104.131.23.0:3030)`
 
 **Nota:** @hono/websocket não existe no npm. Usamos `ws` nativo com upgrade manual via 'upgrade' event.
 
