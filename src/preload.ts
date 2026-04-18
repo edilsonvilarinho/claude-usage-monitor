@@ -112,6 +112,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   getCurrentSessionWindow: (): Promise<import('./models/usageData').CurrentSessionWindow | null> =>
     ipcRenderer.invoke('get-current-session-window'),
 
+  clearAllReportData: (): Promise<void> => ipcRenderer.invoke('clear-all-report-data'),
+
+  deleteSessionWindow: (resetsAt: string): Promise<void> => ipcRenderer.invoke('delete-session-window', resetsAt),
+
   getCostEstimate: (): Promise<import('./services/costService').CostEstimate | null> =>
     ipcRenderer.invoke('get-cost-estimate'),
 

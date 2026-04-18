@@ -695,6 +695,17 @@ function registerIpcHandlers(): void {
     return { ...w, peak: Math.max(w.peak, Math.round(lastUsageData.five_hour.utilization)) };
   });
 
+  ipcMain.handle('clear-all-report-data', () => {
+    saveAccountData({ dailyHistory: [], sessionWindows: [], currentSessionWindow: null });
+  });
+
+  ipcMain.handle('delete-session-window', (_event, resetsAt: string) => {
+    const data = getAccountData();
+    saveAccountData({
+      sessionWindows: (data.sessionWindows ?? []).filter(w => w.resetsAt !== resetsAt),
+    });
+  });
+
   ipcMain.handle('backup-weekly-data', async () => {
     return backupWeeklyData();
   });

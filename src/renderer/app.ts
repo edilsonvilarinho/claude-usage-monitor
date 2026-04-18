@@ -813,6 +813,24 @@ async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
   modal.classList.remove('hidden');
 
+  const isPtBRHeader = currentLang === 'pt-BR';
+  const headerEl = modal.querySelector('.day-detail-header')!;
+  if (!headerEl.querySelector('#btn-clear-report')) {
+    const clearBtn = document.createElement('button');
+    clearBtn.id = 'btn-clear-report';
+    clearBtn.className = 'report-clear-btn';
+    clearBtn.textContent = isPtBRHeader ? 'Limpar tudo' : 'Clear all';
+    clearBtn.onclick = async () => {
+      const msg = isPtBRHeader
+        ? 'Apagar todo o histórico e janelas de sessão? Essa ação não pode ser desfeita.'
+        : 'Delete all history and session windows? This cannot be undone.';
+      if (!confirm(msg)) return;
+      await window.claudeUsage.clearAllReportData();
+      await openReportModal();
+    };
+    headerEl.insertBefore(clearBtn, headerEl.querySelector('#btn-close-report'));
+  }
+
   const [dailyHistory, sessionWindows, currentWindow] = await Promise.all([
     window.claudeUsage.getDailyHistory(),
     window.claudeUsage.getSessionWindows(),
@@ -940,10 +958,14 @@ async function openReportModal(): Promise<void> {
     const peakTimeHtml = peakTimeStr
       ? `<span class="window-peak-time">${isPtBR ? 'pico' : 'peak at'} ${peakTimeStr}</span>`
       : '';
+    const deleteBtn = !effectiveIsOpen
+      ? `<button class="window-delete-btn" data-resets-at="${resetsAt}" title="${isPtBR ? 'Remover' : 'Remove'}">🗑</button>`
+      : '';
     return `<div class="report-window-row">
       <span class="report-window-label">${label} ${badge}</span>
       <span class="report-window-date">${rangeStr}</span>
       <span class="report-window-peak" style="color:${color}">${pct}%${peakTimeHtml}</span>
+      ${deleteBtn}
     </div>`;
   };
 
@@ -955,6 +977,13 @@ async function openReportModal(): Promise<void> {
   windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, w.final ?? w.peak, idx++, false, w.peakTs)).join('');
 
   windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` + windowRows;
+
+  windowsEl.querySelectorAll<HTMLButtonElement>('.window-delete-btn').forEach(btn => {
+    btn.onclick = async () => {
+      await window.claudeUsage.deleteSessionWindow(btn.dataset.resetsAt!);
+      await openReportModal();
+    };
+  });
 
   // Resumo analítico
   const analyticsEl = document.getElementById('report-analytics');
