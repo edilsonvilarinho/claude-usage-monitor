@@ -1,8 +1,10 @@
 # Plano: Ações de limpeza no modal de Relatório de Uso
 
-**Status:** concluído — issue #103 | branch `feat/modal-relatorio-limpeza#103`
+**Status:** concluído (com fixes posteriores) — issue #103 | PR #104
 
 ## Checklist de progresso
+
+### feat: implementação inicial (PR #104)
 - [x] Issue criada (#103)
 - [x] Branch criada (`feat/modal-relatorio-limpeza#103`)
 - [x] IPC handlers adicionados em `main.ts`
@@ -11,7 +13,16 @@
 - [x] Estilos adicionados em `styles.css`
 - [x] `npm run build` sem erros
 - [x] Commit criado
-- [x] PR aberto
+- [x] PR aberto (#104)
+
+### fix: janela aberta sumindo + limpar tudo preservar sessão aberta (PR #106, closes #105)
+- [x] Early return em `openReportModal()` corrigido — janela aberta agora aparece mesmo sem fechadas
+- [x] `clear-all-report-data` não apaga mais `currentSessionWindow`
+- [x] `isPtBR`, `fmt`, `recentWindows` movidos para antes do bloco condicional
+
+### fix: janela aberta exibia pico histórico em vez do valor atual (PR #108, closes #107)
+- [x] `buildRow` corrigido: usa `final` (valor atual) para ambas aberta e fechada, não `peak`
+- [x] IPC `get-current-session-window` atualiza `final` com valor ao vivo do `lastUsageData`
 
 ## Contexto
 O modal de relatório (`#report-modal`) exibe gráfico, cards de estatísticas e lista de até 10 janelas de sessão recentes. O usuário quer duas novas ações:
