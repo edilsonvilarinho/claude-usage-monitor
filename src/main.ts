@@ -696,7 +696,7 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('clear-all-report-data', () => {
-    saveAccountData({ dailyHistory: [], sessionWindows: [], currentSessionWindow: null });
+    saveAccountData({ dailyHistory: [], sessionWindows: [] });
   });
 
   ipcMain.handle('delete-session-window', (_event, resetsAt: string) => {

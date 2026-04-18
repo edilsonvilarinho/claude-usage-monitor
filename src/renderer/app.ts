@@ -927,14 +927,14 @@ async function openReportModal(): Promise<void> {
 
   // Session windows list
   const windowsEl = document.getElementById('report-windows')!;
-  if (!sessionWindows || sessionWindows.length === 0) {
-    windowsEl.innerHTML = '';
-    return;
-  }
-  const recentWindows = [...sessionWindows].reverse().slice(0, 10);
-  const windowsTitle = currentLang === 'pt-BR' ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
   const isPtBR = currentLang === 'pt-BR';
   const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  const recentWindows = [...(sessionWindows ?? [])].reverse().slice(0, 10);
+
+  if (recentWindows.length === 0 && !currentWindow) {
+    windowsEl.innerHTML = '';
+  } else {
+  const windowsTitle = isPtBR ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
 
   const buildRow = (resetsAt: string, peak: number, final: number, index: number, isOpen: boolean, peakTs?: number) => {
     const endDt   = new Date(resetsAt);
@@ -984,6 +984,7 @@ async function openReportModal(): Promise<void> {
       await openReportModal();
     };
   });
+  } // end else (has windows or currentWindow)
 
   // Resumo analítico
   const analyticsEl = document.getElementById('report-analytics');
