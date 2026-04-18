@@ -972,6 +972,10 @@ body {
 }
 
 /* ── Generic confirm modal ─────────────────────────────────────────── */
+#generic-confirm-modal {
+  z-index: 200;
+}
+
 #generic-confirm-cancel {
   background: transparent;
   color: var(--text-secondary);
