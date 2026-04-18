@@ -824,7 +824,12 @@ async function openReportModal(): Promise<void> {
       const msg = isPtBRHeader
         ? 'Apagar todo o histórico e janelas de sessão? Essa ação não pode ser desfeita.'
         : 'Delete all history and session windows? This cannot be undone.';
-      if (!confirm(msg)) return;
+      const ok = await showConfirm(
+        msg,
+        isPtBRHeader ? 'Limpar' : 'Clear',
+        isPtBRHeader ? 'Cancelar' : 'Cancel',
+      );
+      if (!ok) return;
       await window.claudeUsage.clearAllReportData();
       await openReportModal();
     };
@@ -980,6 +985,12 @@ async function openReportModal(): Promise<void> {
 
   windowsEl.querySelectorAll<HTMLButtonElement>('.window-delete-btn').forEach(btn => {
     btn.onclick = async () => {
+      const ok = await showConfirm(
+        isPtBR ? 'Remover esta janela de sessão?' : 'Remove this session window?',
+        isPtBR ? 'Remover' : 'Remove',
+        isPtBR ? 'Cancelar' : 'Cancel',
+      );
+      if (!ok) return;
       await window.claudeUsage.deleteSessionWindow(btn.dataset.resetsAt!);
       await openReportModal();
     };
@@ -1972,6 +1983,27 @@ function applySectionVisibility(s: Pick<AppSettings, 'showDailyChart' | 'showExt
 
 function showForceRefreshModal(): void {
   document.getElementById('force-refresh-modal')!.classList.remove('hidden');
+}
+
+function showConfirm(msg: string, okLabel: string, cancelLabel: string): Promise<boolean> {
+  return new Promise(resolve => {
+    const modal = document.getElementById('generic-confirm-modal')!;
+    document.getElementById('generic-confirm-msg')!.textContent = msg;
+    const okBtn = document.getElementById('generic-confirm-ok') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('generic-confirm-cancel') as HTMLButtonElement;
+    okBtn.textContent = okLabel;
+    cancelBtn.textContent = cancelLabel;
+    modal.classList.remove('hidden');
+    const cleanup = (result: boolean) => {
+      modal.classList.add('hidden');
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+  });
 }
 
 // ── Cloud Sync UI ─────────────────────────────────────────────────────────────

@@ -971,6 +971,28 @@ body {
   background: rgba(59, 130, 246, 0.8);
 }
 
+/* ── Generic confirm modal ─────────────────────────────────────────── */
+#generic-confirm-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+#generic-confirm-cancel:hover {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+#generic-confirm-ok {
+  background: #ef4444;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+#generic-confirm-ok:hover {
+  background: rgba(239, 68, 68, 0.8);
+}
+
 /* ── Credential missing modal ──────────────────────────────────────── */
 .credential-modal-box {
   width: 280px;
