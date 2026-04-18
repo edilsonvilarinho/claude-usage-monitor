@@ -91,7 +91,7 @@ describe('updateDailySnapshot', () => {
     const history: DailySnapshot[] = [
       { date: TODAY, maxWeekly: 50, maxSession: 70, sessionWindowCount: 1, sessionAccum: 0 },
     ];
-    // currentWindow.peak = 70, mas último valor polled seria 50 — nova lógica usa o peak
+    // currentWindow.peak = 70; nova janela inicia sempre com peak: 0 (sem herança residual)
     const window = makeWindow(RESET_A, 70);
     const { dailyHistory, currentWindow, completedWindow } =
       updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), window);
@@ -99,7 +99,7 @@ describe('updateDailySnapshot', () => {
     expect(dailyHistory[0].sessionAccum).toBe(70);  // usa peak, não último valor polled
     expect(dailyHistory[0].sessionWindowCount).toBe(2);
     expect(dailyHistory[0].maxSession).toBe(14);    // reinicia com valor da nova janela
-    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 14, final: 0, date: TODAY });
+    expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 0, final: 0, date: TODAY, peakTs: undefined });
     expect(completedWindow).toMatchObject({ resetsAt: RESET_A, peak: 70, final: 70, date: TODAY });
   });
 

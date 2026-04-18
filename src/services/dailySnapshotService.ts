@@ -96,7 +96,7 @@ export function updateDailySnapshot(
 
   // ── Atualizar currentWindow ─────────────────────────────────────────────────
   const newCurrentWindow: CurrentSessionWindow = sessionResetOccurred
-    ? { resetsAt: newResetsAt, peak: sessionPctInt >= (completedWindow?.peak ?? 0) ? 0 : sessionPctInt, final: 0, date: today, peakTs: undefined }
+    ? { resetsAt: newResetsAt, peak: 0, final: 0, date: today, peakTs: undefined }
     : !currentWindow
       ? { resetsAt: newResetsAt, peak: sessionPctInt, final: sessionPctInt, date: today, peakTs: now }
       : { resetsAt: currentWindow.resetsAt, peak: Math.max(currentWindow.peak, sessionPctInt), final: sessionPctInt, date: currentWindow.date ?? today, peakTs: sessionPctInt > currentWindow.peak ? now : currentWindow.peakTs };

@@ -692,7 +692,7 @@ function registerIpcHandlers(): void {
     // Para a janela aberta, o peak real é o valor ao vivo: dentro de uma sessão de 5h o uso
     // só cresce, então o valor atual É o máximo observado. Isso também corrige peaks corrompidos
     // que foram herdados do valor final da sessão anterior no momento do reset.
-    return { ...w, peak: Math.round(lastUsageData.five_hour.utilization) };
+    return { ...w, peak: Math.max(w.peak, Math.round(lastUsageData.five_hour.utilization)) };
   });
 
   ipcMain.handle('backup-weekly-data', async () => {
