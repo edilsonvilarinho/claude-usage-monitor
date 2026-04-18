@@ -813,6 +813,29 @@ async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
   modal.classList.remove('hidden');
 
+  const isPtBRHeader = currentLang === 'pt-BR';
+  const headerEl = modal.querySelector('.day-detail-header')!;
+  if (!headerEl.querySelector('#btn-clear-report')) {
+    const clearBtn = document.createElement('button');
+    clearBtn.id = 'btn-clear-report';
+    clearBtn.className = 'report-clear-btn';
+    clearBtn.textContent = isPtBRHeader ? 'Limpar tudo' : 'Clear all';
+    clearBtn.onclick = async () => {
+      const msg = isPtBRHeader
+        ? 'Apagar todo o histórico e janelas de sessão? Essa ação não pode ser desfeita.'
+        : 'Delete all history and session windows? This cannot be undone.';
+      const ok = await showConfirm(
+        msg,
+        isPtBRHeader ? 'Limpar' : 'Clear',
+        isPtBRHeader ? 'Cancelar' : 'Cancel',
+      );
+      if (!ok) return;
+      await window.claudeUsage.clearAllReportData();
+      await openReportModal();
+    };
+    headerEl.insertBefore(clearBtn, headerEl.querySelector('#btn-close-report'));
+  }
+
   const [dailyHistory, sessionWindows, currentWindow] = await Promise.all([
     window.claudeUsage.getDailyHistory(),
     window.claudeUsage.getSessionWindows(),
@@ -909,14 +932,14 @@ async function openReportModal(): Promise<void> {
 
   // Session windows list
   const windowsEl = document.getElementById('report-windows')!;
-  if (!sessionWindows || sessionWindows.length === 0) {
-    windowsEl.innerHTML = '';
-    return;
-  }
-  const recentWindows = [...sessionWindows].reverse().slice(0, 10);
-  const windowsTitle = currentLang === 'pt-BR' ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
   const isPtBR = currentLang === 'pt-BR';
   const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  const recentWindows = [...(sessionWindows ?? [])].reverse().slice(0, 10);
+
+  if (recentWindows.length === 0 && !currentWindow) {
+    windowsEl.innerHTML = '';
+  } else {
+  const windowsTitle = isPtBR ? 'Janelas recentes (5h)' : 'Recent windows (5h)';
 
   const buildRow = (resetsAt: string, peak: number, final: number, index: number, isOpen: boolean, peakTs?: number) => {
     const endDt   = new Date(resetsAt);
@@ -928,7 +951,7 @@ async function openReportModal(): Promise<void> {
     const rangeStr = effectiveIsOpen
       ? `${startStr} → ${isPtBR ? 'em andamento' : 'ongoing'}`
       : `${startStr} → ${fmtDate(endDt)} ${fmt(endDt)}`;
-    const pct   = effectiveIsOpen ? Math.min(peak, 200) : Math.min(final, 200);
+    const pct   = Math.min(final, 200);
     const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
     const label = isPtBR ? `Janela ${index}` : `Window ${index}`;
     const badge = effectiveIsOpen
@@ -940,10 +963,14 @@ async function openReportModal(): Promise<void> {
     const peakTimeHtml = peakTimeStr
       ? `<span class="window-peak-time">${isPtBR ? 'pico' : 'peak at'} ${peakTimeStr}</span>`
       : '';
+    const deleteBtn = !effectiveIsOpen
+      ? `<button class="window-delete-btn" data-resets-at="${resetsAt}" title="${isPtBR ? 'Remover' : 'Remove'}">🗑</button>`
+      : '';
     return `<div class="report-window-row">
       <span class="report-window-label">${label} ${badge}</span>
       <span class="report-window-date">${rangeStr}</span>
       <span class="report-window-peak" style="color:${color}">${pct}%${peakTimeHtml}</span>
+      ${deleteBtn}
     </div>`;
   };
 
@@ -955,6 +982,20 @@ async function openReportModal(): Promise<void> {
   windowRows += recentWindows.map(w => buildRow(w.resetsAt, w.peak, w.final ?? w.peak, idx++, false, w.peakTs)).join('');
 
   windowsEl.innerHTML = `<div class="report-windows-title">${windowsTitle}</div>` + windowRows;
+
+  windowsEl.querySelectorAll<HTMLButtonElement>('.window-delete-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const ok = await showConfirm(
+        isPtBR ? 'Remover esta janela de sessão?' : 'Remove this session window?',
+        isPtBR ? 'Remover' : 'Remove',
+        isPtBR ? 'Cancelar' : 'Cancel',
+      );
+      if (!ok) return;
+      await window.claudeUsage.deleteSessionWindow(btn.dataset.resetsAt!);
+      await openReportModal();
+    };
+  });
+  } // end else (has windows or currentWindow)
 
   // Resumo analítico
   const analyticsEl = document.getElementById('report-analytics');
@@ -1942,6 +1983,27 @@ function applySectionVisibility(s: Pick<AppSettings, 'showDailyChart' | 'showExt
 
 function showForceRefreshModal(): void {
   document.getElementById('force-refresh-modal')!.classList.remove('hidden');
+}
+
+function showConfirm(msg: string, okLabel: string, cancelLabel: string): Promise<boolean> {
+  return new Promise(resolve => {
+    const modal = document.getElementById('generic-confirm-modal')!;
+    document.getElementById('generic-confirm-msg')!.textContent = msg;
+    const okBtn = document.getElementById('generic-confirm-ok') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('generic-confirm-cancel') as HTMLButtonElement;
+    okBtn.textContent = okLabel;
+    cancelBtn.textContent = cancelLabel;
+    modal.classList.remove('hidden');
+    const cleanup = (result: boolean) => {
+      modal.classList.add('hidden');
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+  });
 }
 
 // ── Cloud Sync UI ─────────────────────────────────────────────────────────────

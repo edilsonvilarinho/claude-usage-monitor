@@ -971,6 +971,32 @@ body {
   background: rgba(59, 130, 246, 0.8);
 }
 
+/* ── Generic confirm modal ─────────────────────────────────────────── */
+#generic-confirm-modal {
+  z-index: 200;
+}
+
+#generic-confirm-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+#generic-confirm-cancel:hover {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+#generic-confirm-ok {
+  background: #ef4444;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+#generic-confirm-ok:hover {
+  background: rgba(239, 68, 68, 0.8);
+}
+
 /* ── Credential missing modal ──────────────────────────────────────── */
 .credential-modal-box {
   width: 280px;
@@ -1435,6 +1461,36 @@ body {
 .report-window-peak {
   font-weight: 600;
   font-size: 14px;
+}
+
+.report-clear-btn {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+.report-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.window-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.window-delete-btn:hover {
+  opacity: 1;
 }
 
 /* ── Day detail modal ───────────────────────────────────────────────── */
