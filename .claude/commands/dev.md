@@ -1,8 +1,6 @@
 # /dev — Unified Development Command
 
-> Use `/dev` apenas para execução de código. Análises e explicações — pergunte diretamente sem o `/dev` (~1k tokens economizados).
-
----
+> Use `/dev` apenas para execução de código. Análises/explicações — pergunte diretamente sem o `/dev`.
 
 ## Tipo da tarefa
 
@@ -13,66 +11,43 @@
 | "refatora", "renomeia", "reorganiza", "simplifica" | REFACTOR |
 | "release", "versão", "publica", "lança" | RELEASE |
 
-## Complexidade
-
 **SIMPLES** — escopo claro, ≤3 arquivos, sem decisões arquiteturais → execução direta.
 **COMPLEXA** — escopo incerto, muitos arquivos, decisões de design → Plan Mode + issue + branch + PR.
 
-> Tente 2–3 Glob/Grep antes de spawnar Explore agent. Use Explore só se escopo genuinamente incerto.
+> Tente 2–3 Glob/Grep antes de spawnar Explore agent.
 
----
+## BUSINESS_RULES.md (obrigatório)
 
-## Passo obrigatório — BUSINESS_RULES.md
-
-**Antes de qualquer alteração de código** (bug fix, feature, refactor), ler as seções relevantes do `BUSINESS_RULES.md` e verificar:
-- A mudança não viola nenhuma regra de negócio documentada
-- Se alterar polling, credenciais, smart scheduler, sync ou persistência: ler o módulo correspondente integralmente
-
-**Após qualquer alteração de código**, atualizar o `BUSINESS_RULES.md` se a mudança:
-- Adicionar nova lógica, threshold, intervalo ou comportamento
-- Remover ou substituir uma regra existente
-- Modificar fórmulas, condições ou fluxos documentados
-- Introduzir novo módulo ou serviço com lógica de domínio
-
-A atualização do `BUSINESS_RULES.md` vai no **mesmo commit** da mudança de código — nunca em commit separado posterior.
-
-> Não pule este passo mesmo em mudanças "triviais" — regressões de lógica geralmente ocorrem em alterações que parecem seguras.
-
----
+- **Antes** de qualquer mudança de código: ler seções relevantes; verificar que a mudança não viola regras existentes
+- **Após** qualquer mudança: atualizar se adicionou/removeu lógica, threshold, intervalo ou comportamento
+- A atualização vai no **mesmo commit** — nunca separado
 
 ## Caminhos de execução
 
 **SIMPLES (BUG FIX / FEATURE / REFACTOR)**
-1. Ler seções relevantes do `BUSINESS_RULES.md`
-2. Ler arquivos relevantes do código
-3. Aplicar mudança
-4. `npm run build` (confirmar exit 0)
-5. `git add + commit + push` para master — sem issue, sem branch, sem PR
+1. Ler `BUSINESS_RULES.md` (seções relevantes)
+2. Ler arquivos relevantes → aplicar mudança
+3. `npm run build` (exit 0) → `git add + commit + push` para master
 
 **COMPLEXA (BUG FIX / FEATURE / REFACTOR)**
-1. Ler seções relevantes do `BUSINESS_RULES.md`
-2. Plan Mode (1 Explore agent se necessário) → aguardar aprovação
-3. `gh issue create`
-4. `git checkout -b <tipo>/<slug>#<issue>`
-5. @implementer executa
-6. `npm run build` (confirmar exit 0)
-7. @tester (só se lógica crítica: IPC, state, polling, credentials)
-8. commit + PR
+1. Ler `BUSINESS_RULES.md` → Plan Mode (1 Explore se necessário) → aguardar aprovação
+2. `gh issue create` → `git checkout -b <tipo>/<slug>#<issue>`
+3. @implementer executa → `npm run build` (exit 0)
+4. @tester (só se: IPC, state, polling, credentials) → commit + PR
 
-**REFACTOR**: SIMPLES se renomeia/extrai/move sem mudar contratos. COMPLEXA se reestrutura módulos ou altera interfaces.
+**REFACTOR**: SIMPLES se renomeia/extrai/move sem mudar contratos. COMPLEXA se reestrutura módulos.
 **RELEASE**: bump version → `npm run dist` → tag → push → `gh release create`. Sem Plan Mode.
-**ANALYSIS**: avisar que não precisava do `/dev`, responder diretamente sem código, agents ou Plan Mode.
-
----
+**ANALYSIS**: avisar que não precisava do `/dev`, responder diretamente.
 
 ## Regras
 
-- **BUSINESS_RULES.md é lei** — nenhuma mudança viola regras existentes sem atualizar o documento; nenhuma regra nova entra no código sem entrar no documento
+- **BUSINESS_RULES.md é lei** — nenhuma mudança viola regras sem atualizar o documento
 - Padrão é SIMPLES — só escala para COMPLEXA se genuinamente necessário
 - @tester: só para lógica crítica (IPC, state, polling, credentials)
 - Plan Mode: só para decisões arquiteturais, nunca para tarefas mecânicas
 
 ## Transparência
+
 Confirmo em uma linha antes de executar:
 > `→ [SIMPLES BUG FIX] lendo 2 arquivos, commit para master`
 > `→ [COMPLEXA FEATURE] abrindo plan mode — escopo envolve 5+ arquivos`
