@@ -946,7 +946,7 @@ async function openReportModal(): Promise<void> {
     const rangeStr = effectiveIsOpen
       ? `${startStr} → ${isPtBR ? 'em andamento' : 'ongoing'}`
       : `${startStr} → ${fmtDate(endDt)} ${fmt(endDt)}`;
-    const pct   = effectiveIsOpen ? Math.min(peak, 200) : Math.min(final, 200);
+    const pct   = Math.min(final, 200);
     const color = pct >= 100 ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#22c55e';
     const label = isPtBR ? `Janela ${index}` : `Window ${index}`;
     const badge = effectiveIsOpen
