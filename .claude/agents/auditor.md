@@ -17,6 +17,8 @@ Caminhos: memória em `C:\Users\edils\.claude\projects\C--Users-edils-workspace-
 1. **MEMORY.md** — remover entradas de arquivos deletados; se `project_*.md` tem "CONCLUÍDO/mergeado/fechado" → deletar arquivo e remover do índice
 2. **Duplicação com CLAUDE.md** — remover de memórias tudo que já está em CLAUDE.md (arquitetura, serviços, build); manter só contexto único (motivações, decisões, preferências)
 3. **Verbosidade** — arquivo >30 linhas (excluindo frontmatter) → condensar para ≤15 linhas
+4. **Planos concluídos** — verificar se há planos em `minimax-planos/` ou `claude-code-planos/` com status ✅ Concluído que precisam de PR/merge
+5. **Dead code** — verificar se `components/modais/` ou outros diretórios com código nunca importado foram removidos
 
 ## Relatório
 
@@ -29,4 +31,4 @@ Caminhos: memória em `C:\Users\edils\.claude\projects\C--Users-edils-workspace-
 
 ## Proibido
 
-Commitar/push/branches | modificar `src/`, `package.json`, tsconfig, `build-renderer.js` | deletar feedbacks válidos | modificar `CLAUDE.md`
+Commitar/push/branches | modificar `src/`, `package.json`, tsconfig, `build-renderer.js` | deletar feedbacks válidos | modificar `CLAUDE.md` | modificar `AGENTS.md`
