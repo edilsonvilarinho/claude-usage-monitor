@@ -81,4 +81,4 @@ No modal de relatório de uso, o botão 🗑 (`.window-delete-btn`) para excluir
 - [x] Implementar CSS
 - [x] Build + testes
 - [x] Commit + push
-- [ ] PR
+- [x] PR #113
