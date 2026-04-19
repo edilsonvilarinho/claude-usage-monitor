@@ -36,7 +36,7 @@ Remover o HTML estático duplicado do `index.html` (linhas 670-679):
   </div>
 ```
 
-O componente moderno já é injetado via `injectAllModals()` em `components/modais/index.js`.
+O componente em `components/modais/day-curve-popup.js` era dead code — nunca foi importado ou utilizado.
 
 ---
 

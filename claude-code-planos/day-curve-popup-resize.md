@@ -40,27 +40,9 @@ Substituir o estilo atual do `.day-curve-popup` (tooltip posicionado absolutamen
 .day-curve-chart-wrap { height: 190px; position: relative; }
 ```
 
-### 2. HTML — `src/renderer/components/modais/day-curve-popup.js`
+### 2. HTML — Remover dead code
 
-Adicionar wrapper com `modal-overlay` para centralizar o popup com backdrop:
-
-```javascript
-// ANTES
-export const DAY_CURVE_POPUP_HTML = `
-<div id="day-curve-popup" class="day-curve-popup hidden">
-  ...
-</div>
-`;
-
-// DEPOIS
-export const DAY_CURVE_POPUP_HTML = `
-<div id="day-curve-overlay" class="modal-overlay hidden">
-  <div id="day-curve-popup" class="day-curve-popup">
-    ...
-  </div>
-</div>
-`;
-```
+O componente `src/renderer/components/modais/day-curve-popup.js` era dead code e foi removido. O HTML estático já existe no `index.html`.
 
 ### 3. TypeScript — `src/renderer/app.ts`
 
@@ -74,7 +56,6 @@ Atualizar `openDayCurvePopup` e `closeDayCurvePopup` para manipular `#day-curve-
 | Arquivo | O que muda |
 |---|---|
 | `src/renderer/styles.css` | Dimensões `.day-curve-popup` (width→400px, max-height→88vh) e `.day-curve-chart-wrap` (height→190px) |
-| `src/renderer/components/modais/day-curve-popup.js` | Adicionar wrapper `#day-curve-overlay` com classe `modal-overlay` |
 | `src/renderer/app.ts` | Ajustar `openDayCurvePopup`/`closeDayCurvePopup` para usar overlay |
 
 ## Verificação
