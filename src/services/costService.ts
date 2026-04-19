@@ -101,10 +101,8 @@ export function calculateCostEstimate(
     model,
   };
 
-  const monthlyPct = weeklyPct * 4;
-  const { weeklyInput: _mInput, weeklyOutput: _mOutput, sessionInput: _sInput, sessionOutput: _sOutput } = estimateTokensFromPercent(monthlyPct, monthlyPct * 7, model);
-  const monthlyInput = Math.round(_mInput * 4.3);
-  const monthlyOutput = Math.round(_mOutput * 4.3);
+  const monthlyInput = Math.round(weeklyInput * (30 / 7));
+  const monthlyOutput = Math.round(weeklyOutput * (30 / 7));
 
   const monthly = {
     total: calculateCost(monthlyInput, monthlyOutput, model),
