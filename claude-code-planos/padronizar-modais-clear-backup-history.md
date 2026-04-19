@@ -106,4 +106,4 @@ Nenhuma mudança em HTML ou CSS necessária — o `generic-confirm-modal` já ex
 4. Confirmar que botão Cancelar não aparece no modal de backup (apenas OK)
 
 ## Status
-- [ ] Implementar
+- [x] Implementar

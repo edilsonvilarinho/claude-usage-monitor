@@ -1,6 +1,6 @@
 # Plano: Ajustar tamanho do modal day-curve-popup
 
-**Status:** Aguardando aprovação
+**Status:** ✅ Concluído
 
 ## Contexto
 O `day-curve-popup` exibe a curva de uso do dia ao clicar em uma data no histórico. Atualmente está configurado como um tooltip pequeno (230px × ~110px) posicionado dinamicamente próximo ao elemento âncora. O usuário quer que tenha o mesmo padrão visual/tamanho do modal de relatório de uso (`report-modal-box`: 400px de largura, max-height 88vh).

@@ -1,6 +1,6 @@
 # fix: acumulado incorreto ao fechar sessão com 0%
 
-**Status:** em andamento
+**Status:** ✅ Concluído
 **Branch:** fix/session-accumulated-on-reset#101
 **Issue:** edilsonvilarinho/claude-usage-monitor#101
 **Tipo:** bug fix

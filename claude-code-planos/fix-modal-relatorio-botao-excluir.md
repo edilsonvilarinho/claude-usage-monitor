@@ -46,3 +46,6 @@ O problema raiz é que `.report-modal-box` declara `overflow-y: auto`. Por espec
 3. Verificar que o botão 🗑 aparece visível para janelas fechadas, inclusive em linhas com horário de pico longo
 4. Verificar que ao passar o mouse o botão fica com `opacity: 1`
 5. Confirmar que o texto de pico longo é truncado com `…` sem quebrar o layout
+
+## Status
+**Status:** ✅ Concluído
