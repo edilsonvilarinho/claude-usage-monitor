@@ -1906,8 +1906,17 @@ body {
 /* Cost Modal */
 .cost-modal-box {
   width: 280px;
-  min-height: 360px;
+  max-height: 88vh;
   padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cost-content {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .cost-modal-header {

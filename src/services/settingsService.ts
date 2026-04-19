@@ -376,6 +376,8 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.showCloudSyncSettings !== undefined) store.set('showCloudSyncSettings', settings.showCloudSyncSettings);
   if (settings.cloudSync !== undefined) store.set('cloudSync', settings.cloudSync);
   if (settings.workSchedule !== undefined) store.set('workSchedule', settings.workSchedule);
+  if (settings.monthlyBudget !== undefined) store.set('monthlyBudget', settings.monthlyBudget);
+  if (settings.costModel !== undefined) store.set('costModel', settings.costModel);
 }
 
 // ─── Cloud sync secrets (JWT encriptado em store separado) ────────────────────
