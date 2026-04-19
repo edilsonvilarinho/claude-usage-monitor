@@ -1,6 +1,6 @@
 # Fix: Aumentar tamanho dos ícones do header
 
-**Status:** Aguardando confirmação para PR
+**Status:** ✅ Concluído
 **Branch:** `fix/header-icons-size`
 
 ---
@@ -38,4 +38,5 @@ Aumentar tamanho dos botões/ícones do header para melhor visibilidade e área 
 - [x] Implementar CSS
 - [x] Build + testes
 - [x] Commit + push
-- [ ] PR (aguardando confirmação)
+- [x] PR #117
+- [x] Merge para master
