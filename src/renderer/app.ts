@@ -1041,6 +1041,19 @@ async function openReportModal(): Promise<void> {
   }
 }
 
+function filterChangedPoints(points: { session: number; weekly: number; credits?: number | null; ts: number }[]) {
+  if (points.length === 0) return [];
+  const result = [points[0]];
+  for (let i = 1; i < points.length; i++) {
+    const prev = result[result.length - 1];
+    const curr = points[i];
+    if (curr.session !== prev.session || curr.weekly !== prev.weekly || curr.credits !== prev.credits) {
+      result.push(curr);
+    }
+  }
+  return result;
+}
+
 async function openDayDetailModal(date: string): Promise<void> {
   const modal    = document.getElementById('day-detail-modal')!;
   const titleEl  = document.getElementById('day-detail-title')!;
@@ -1062,6 +1075,32 @@ async function openDayDetailModal(date: string): Promise<void> {
     window.claudeUsage.getDayTimeSeries(date),
     window.claudeUsage.getSessionWindows(),
   ]);
+
+  const exportBtn = document.getElementById('day-detail-export') as HTMLButtonElement;
+  exportBtn.style.display = points && points.length > 0 ? '' : 'none';
+  exportBtn.onclick = () => {
+    const filtered = filterChangedPoints(points);
+    const payload = {
+      date,
+      exportedAt: new Date().toISOString(),
+      totalPoints: points.length,
+      filteredPoints: filtered.length,
+      timeSeries: filtered.map(p => ({
+        ts: p.ts,
+        time: new Date(p.ts).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+        session: p.session,
+        weekly: p.weekly,
+        ...(p.credits != null ? { credits: p.credits } : {}),
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `claude-usage-${date}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (!points || points.length === 0) {
     canvas.style.display = 'none';
