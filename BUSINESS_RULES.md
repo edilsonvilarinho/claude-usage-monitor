@@ -787,3 +787,69 @@ npm run test:coverage  # Com Coverage
 ---
 
 *Última atualização: 2026-04-14 — feat: Testes renderer (+68 testes)*
+
+---
+
+## 11. Módulo de Verificação de Atualizações
+
+**Arquivos:** `src/services/updateService.ts`, `src/main.ts`
+
+### Fonte de dados
+
+Consulta a GitHub Releases API:
+```
+GET https://api.github.com/repos/edilsonvilarinho/claude-usage-monitor/releases/latest
+```
+
+O payload retorna `tag_name`, `html_url` e `assets[]` com as URLs de download de cada plataforma.
+
+### Frequência de verificação
+
+| Quando | Frequência | `forceCheck` |
+|--------|-----------|-------------|
+| Startup | 5s após início | `false` (respeita cooldown 24h) |
+| Periódico | A cada 30min | `true` (sempre verifica) |
+| Manual (tray / header) | On demand | `true` |
+
+O cooldown de 24h (`lastUpdateCheck`) aplica-se apenas à verificação de startup, evitando chamadas redundantes em restarts rápidos. O intervalo de 30min sempre executa independente do cooldown.
+
+### Estado `pendingUpdate` (em memória)
+
+```typescript
+pendingUpdate: {
+  version: string;      // ex: "2.0.0"
+  url: string;          // página de releases GitHub
+  downloadUrl: string;  // URL direta do asset Setup.exe ('' se não disponível)
+  isMajor: boolean;     // true quando major version muda (1.x → 2.x)
+} | null
+```
+
+Não persiste entre restarts — a verificação em 5s no startup recupera o estado.
+
+Quando o popup reabre (`togglePopup()`), o `pendingUpdate` é re-enviado via IPC `update-available`, garantindo que o banner e/ou modal apareçam mesmo que o popup estivesse fechado quando a atualização foi detectada.
+
+### Detecção de Major Update
+
+```
+isMajor = major(latest) !== major(current)
+Ex: "1.5.2" → "2.0.0" = true (major mudou)
+Ex: "1.5.2" → "1.6.0" = false (apenas minor)
+```
+
+### Auto-download (Windows)
+
+1. Filtrar `assets[]` pelo asset terminando em `Setup.exe`
+2. Fazer download com progresso via Node `https` para `%TEMP%\claude-usage-monitor-setup.exe`
+3. Seguir redirects HTTP 301–308 manualmente (GitHub redireciona assets para CDN)
+4. Progresso emitido via IPC `update-download-progress` (0–100%)
+5. Ao concluir: `shell.openPath(destPath)` abre o installer NSIS
+6. Fallback (sem `downloadUrl`): `shell.openExternal(releaseUrl)` abre o navegador
+
+### UX
+
+| Tipo de update | Interface |
+|----------------|-----------|
+| Minor/patch | Banner azul no popup (persiste até o usuário atualizar ou fechar) |
+| Major | Banner + modal de aviso com botão "Baixar vX.Y" |
+| Download em progresso | Barra de progresso no modal |
+| "Mais tarde" | Modal fecha; `pendingUpdate` limpo via IPC `dismiss-update` |

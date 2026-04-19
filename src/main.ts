@@ -10,7 +10,7 @@ import { checkAndNotify, syncWindowState, sendTestNotification } from './service
 import { getMainTranslations } from './i18n/mainTranslations';
 import { UsageData, ProfileData, UsageSnapshot, DailySnapshot } from './models/usageData';
 import { fetchProfileData } from './services/usageApiService';
-import { checkForUpdate } from './services/updateService';
+import { checkForUpdate, downloadUpdate } from './services/updateService';
 import { updateDailySnapshot } from './services/dailySnapshotService';
 import { computeSmartStatus } from './services/smartScheduleService';
 import { serverStatusService } from './services/serverStatusService';
@@ -61,6 +61,7 @@ let lastResponseInfo: LastResponseInfo | null = null;
 let credentialMissing = false;
 let credentialExpiredSent = false;
 let credentialPath = '';
+let pendingUpdate: { version: string; url: string; downloadUrl: string; isMajor: boolean } | null = null;
 let cachedProfile: ProfileData | null = null;
 let cachedProfileAt = 0;
 
@@ -224,6 +225,15 @@ function togglePopup(): void {
     if (credentialExpiredSent) {
       popup.webContents.send('credentials-expired');
     }
+    // Re-send pending update state when popup reopens
+    if (pendingUpdate) {
+      popup.webContents.send('update-available', {
+        version: pendingUpdate.version,
+        url: pendingUpdate.url,
+        downloadUrl: pendingUpdate.downloadUrl,
+        isMajor: pendingUpdate.isMajor,
+      });
+    }
     // Send actual next poll time so countdown shows correct remaining time
     const npa = pollingService.nextPollAt;
     if (npa > Date.now()) {
@@ -334,9 +344,20 @@ async function runUpdateCheck(forceCheck = false): Promise<void> {
     const result = await checkForUpdate(app.getVersion());
     saveSettings({ lastUpdateCheck: Date.now() });
     if (result.hasUpdate) {
+      pendingUpdate = {
+        version: result.latestVersion,
+        url: result.releaseUrl,
+        downloadUrl: result.downloadUrl,
+        isMajor: result.isMajorUpdate,
+      };
       showUpdateAvailableToast(result.latestVersion, result.releaseUrl);
       if (popup) {
-        popup.webContents.send('update-available', { version: result.latestVersion, url: result.releaseUrl });
+        popup.webContents.send('update-available', {
+          version: result.latestVersion,
+          url: result.releaseUrl,
+          downloadUrl: result.downloadUrl,
+          isMajor: result.isMajorUpdate,
+        });
       }
     }
   } catch {
@@ -788,6 +809,25 @@ function registerIpcHandlers(): void {
       positionPopup(h);
     }
   });
+
+  ipcMain.handle('download-update', async () => {
+    if (!pendingUpdate?.downloadUrl) {
+      if (pendingUpdate?.url) await shell.openExternal(pendingUpdate.url);
+      return;
+    }
+    const tmpDir = app.getPath('temp');
+    const destPath = path.join(tmpDir, 'claude-usage-monitor-setup.exe');
+    await downloadUpdate(pendingUpdate.downloadUrl, destPath, (pct) => {
+      if (popup && !popup.isDestroyed()) {
+        popup.webContents.send('update-download-progress', pct);
+      }
+    });
+    await shell.openPath(destPath);
+  });
+
+  ipcMain.on('dismiss-update', () => {
+    pendingUpdate = null;
+  });
 }
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
@@ -1030,6 +1070,7 @@ app.whenReady().then(() => {
   setTimeout(() => {
     void runUpdateCheck();
   }, 5000);
+  setInterval(() => { void runUpdateCheck(true); }, 30 * 60 * 1000);
 });
 
 app.on('window-all-closed', () => {

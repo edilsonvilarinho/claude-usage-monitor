@@ -55,12 +55,20 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.send('set-window-height', height);
   },
 
-  onUpdateAvailable: (cb: (info: { version: string; url: string }) => void): void => {
-    ipcRenderer.on('update-available', (_event, info: { version: string; url: string }) => cb(info));
+  onUpdateAvailable: (cb: (info: { version: string; url: string; downloadUrl: string; isMajor: boolean }) => void): void => {
+    ipcRenderer.on('update-available', (_event, info: { version: string; url: string; downloadUrl: string; isMajor: boolean }) => cb(info));
   },
 
   openReleaseUrl: (url: string): void => {
     ipcRenderer.send('open-release-url', url);
+  },
+
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke('download-update'),
+
+  dismissUpdate: (): void => { ipcRenderer.send('dismiss-update'); },
+
+  onUpdateDownloadProgress: (cb: (pct: number) => void): void => {
+    ipcRenderer.on('update-download-progress', (_event, pct: number) => cb(pct));
   },
 
   onCredentialMissing: (cb: (credPath: string) => void): void => {

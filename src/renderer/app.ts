@@ -86,7 +86,10 @@ declare global {
       sendTrayIcon: (dataUrl: string) => void;
       closeWindow: () => void;
       setWindowHeight: (h: number) => void;
-      onUpdateAvailable: (cb: (info: { version: string; url: string }) => void) => void;
+      onUpdateAvailable: (cb: (info: { version: string; url: string; downloadUrl: string; isMajor: boolean }) => void) => void;
+      downloadUpdate: () => Promise<void>;
+      dismissUpdate: () => void;
+      onUpdateDownloadProgress: (cb: (pct: number) => void) => void;
       openReleaseUrl: (url: string) => void;
       onCredentialMissing: (cb: (credPath: string) => void) => void;
       getAppVersion: () => Promise<string>;
@@ -2513,20 +2516,64 @@ window.claudeUsage.onCredentialsExpired(() => {
     }
   });
 
-  window.claudeUsage.onUpdateAvailable(({ version, url }) => {
+  window.claudeUsage.onUpdateAvailable(({ version, url, downloadUrl, isMajor }) => {
     const banner = document.getElementById('update-banner') as HTMLElement;
     const label  = document.getElementById('update-version-label') as HTMLElement;
     if (banner && label) {
-      label.textContent = `v${version} available`;
+      label.textContent = `v${version} disponível`;
       banner.style.display = 'flex';
       banner.dataset.url = url;
+      banner.dataset.downloadUrl = downloadUrl;
       fitWindow();
+    }
+    if (isMajor) {
+      const modal = document.getElementById('update-major-modal') as HTMLElement;
+      const desc  = document.getElementById('update-major-modal-desc') as HTMLElement;
+      const btn   = document.getElementById('update-major-download-btn') as HTMLButtonElement;
+      if (modal && desc) {
+        desc.textContent = `A versão v${version} inclui mudanças importantes. Recomendamos atualizar para continuar recebendo suporte.`;
+        if (btn) btn.textContent = `Baixar v${version}`;
+        modal.classList.remove('hidden');
+      }
     }
   });
 
   document.getElementById('btn-update-download')!.addEventListener('click', () => {
-    const url = (document.getElementById('update-banner') as HTMLElement)?.dataset.url;
-    if (url) window.claudeUsage.openReleaseUrl(url);
+    const banner = document.getElementById('update-banner') as HTMLElement;
+    const downloadUrl = banner?.dataset.downloadUrl;
+    const releaseUrl = banner?.dataset.url;
+    if (downloadUrl) {
+      void window.claudeUsage.downloadUpdate();
+    } else if (releaseUrl) {
+      window.claudeUsage.openReleaseUrl(releaseUrl);
+    }
+  });
+
+  document.getElementById('update-major-later-btn')!.addEventListener('click', () => {
+    document.getElementById('update-major-modal')!.classList.add('hidden');
+    window.claudeUsage.dismissUpdate();
+  });
+
+  document.getElementById('update-major-download-btn')!.addEventListener('click', async () => {
+    const progressWrap  = document.getElementById('update-major-progress-wrap') as HTMLElement;
+    const btn = document.getElementById('update-major-download-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Baixando...';
+    progressWrap.style.display = 'block';
+    try {
+      await window.claudeUsage.downloadUpdate();
+      document.getElementById('update-major-modal')!.classList.add('hidden');
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Tentar novamente';
+    }
+  });
+
+  window.claudeUsage.onUpdateDownloadProgress((pct) => {
+    const fill  = document.getElementById('update-major-progress-fill') as HTMLElement;
+    const label = document.getElementById('update-major-progress-label') as HTMLElement;
+    if (fill)  fill.style.width = `${pct}%`;
+    if (label) label.textContent = `${Math.round(pct)}%`;
   });
 
   document.getElementById('btn-close')!.addEventListener('click', () => {
