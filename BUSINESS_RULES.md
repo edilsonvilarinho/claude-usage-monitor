@@ -588,13 +588,15 @@ O módulo calcula uma **estimativa de custo** baseada na utilização de tokens,
 | Sonnet | $3.00 | $15.00 |
 | Opus | $15.00 | $75.00 |
 
-### Tokens por modelo (total assumido em 100% de utilização)
+### Tokens por modelo (base em 100% de utilização)
 
-| Modelo | Tokens em 100% | Justificativa |
-|--------|---------------|---------------|
-| Haiku | 4.000.000 | Modelo mais barato — quota maior |
-| Sonnet | 1.000.000 | Referência base |
-| Opus | 200.000 | Modelo mais caro — quota menor (≈ 5× menos que Sonnet) |
+| Modelo | Tokens em 100% | Custo estimado em 100% | Justificativa |
+|--------|---------------|------------------------|---------------|
+| Haiku | 4.000.000 | ~$3,00 | Base 4× maior — modelo barato, plano permite muito mais tokens |
+| Sonnet | 1.000.000 | ~$9,00 | Referência base |
+| Opus | 1.000.000 | ~$45,00 | Mesma base do Sonnet — diferença de custo vem das taxas 5× maiores |
+
+**Princípio do seletor de modelo:** mesma % de utilização com Opus deve custar ~5× mais que Sonnet. Se Opus tivesse base 5× menor (200K), o custo seria idêntico ao Sonnet — o que tornaria o seletor inútil. A base compartilhada garante que a diferença de custo reflita a diferença real de preço entre modelos.
 
 **Split:** 50% input / 50% output assumido (média de workloads de chat).
 

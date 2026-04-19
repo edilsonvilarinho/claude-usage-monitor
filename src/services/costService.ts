@@ -11,18 +11,22 @@ const MODEL_RATES = {
 
 type ModelType = keyof typeof MODEL_RATES;
 
-// Total tokens assumed at 100% utilization per model.
-// Haiku has a larger quota (cheaper model); Opus a smaller quota (premium model).
-// These are estimates — the Anthropic API does not expose raw token limits.
+// Base de tokens assumida em 100% de utilização.
+// O seletor de modelo representa "qual modelo estou usando na sessão".
+// A mesma % de utilização com Opus deve custar ~5× mais que Sonnet (taxas 5× maiores).
+// Por isso Sonnet e Opus usam a mesma base de tokens — a diferença de custo vem
+// exclusivamente das taxas por token. Haiku tem base 4× maior pois é um modelo
+// muito mais barato e o plano permite muito mais tokens com ele.
+// Valores são estimativas — a API não expõe limites brutos de tokens.
 function getTokensPerPercent(model: ModelType): number {
   switch (model) {
     case 'haiku':
-      return 4_000_000;
+      return 4_000_000;  // 4× mais tokens que Sonnet → custo 100% ≈ $3
     case 'opus':
-      return 200_000;
+      return 1_000_000;  // mesma base do Sonnet → custo 100% ≈ $45 (5× Sonnet)
     case 'sonnet':
     default:
-      return 1_000_000;
+      return 1_000_000;  // custo 100% ≈ $9
   }
 }
 
