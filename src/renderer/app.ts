@@ -185,6 +185,9 @@ const translations = {
     importSuccess: (n: number) => `${n} day(s) imported`,
     backupSuccess: (p: string) => `Saved: ${p}`,
     clearHistoryConfirm: 'Clear usage history?',
+    confirmOk: 'OK',
+    confirmCancel: 'Cancel',
+    confirmClear: 'Clear',
     tooltipSession: 'Session',
     tooltipWeekly: 'Weekly',
     tooltipCredits: 'Credits',
@@ -358,6 +361,9 @@ const translations = {
     importSuccess: (n: number) => `${n} dia(s) importado(s)`,
     backupSuccess: (p: string) => `Salvo: ${p}`,
     clearHistoryConfirm: 'Limpar histórico de uso?',
+    confirmOk: 'OK',
+    confirmCancel: 'Cancelar',
+    confirmClear: 'Limpar',
     tooltipSession: 'Sessão',
     tooltipWeekly: 'Semanal',
     tooltipCredits: 'Créditos',
@@ -2006,6 +2012,29 @@ function showConfirm(msg: string, okLabel: string, cancelLabel: string): Promise
   });
 }
 
+function showInfo(msg: string, okLabel: string): Promise<void> {
+  return new Promise(resolve => {
+    const modal = document.getElementById('generic-confirm-modal')!;
+    document.getElementById('generic-confirm-msg')!.textContent = msg;
+    const okBtn = document.getElementById('generic-confirm-ok') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('generic-confirm-cancel') as HTMLButtonElement;
+    okBtn.textContent = okLabel;
+    okBtn.style.background = '#3b82f6';
+    cancelBtn.style.display = 'none';
+    modal.classList.remove('hidden');
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      okBtn.onclick = null;
+      modal.onclick = null;
+      okBtn.style.background = '';
+      cancelBtn.style.display = '';
+      resolve();
+    };
+    okBtn.onclick = cleanup;
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
+  });
+}
+
 // ── Cloud Sync UI ─────────────────────────────────────────────────────────────
 
 function formatRelativeTime(ts: number): string {
@@ -2259,14 +2288,17 @@ function init(): void {
   });
 
   document.getElementById('btn-clear-history')!.addEventListener('click', async () => {
-    if (!confirm(tr().clearHistoryConfirm)) return;
+    const t = tr();
+    const ok = await showConfirm(t.clearHistoryConfirm, t.confirmClear, t.confirmCancel);
+    if (!ok) return;
     await window.claudeUsage.clearDailyHistory();
     if (lastWeeklyResetsAt) renderDailyChart([], lastWeeklyResetsAt);
   });
 
   document.getElementById('btn-backup-history')!.addEventListener('click', async () => {
+    const t = tr();
     const filepath = await window.claudeUsage.backupWeeklyData();
-    alert(tr().backupSuccess(filepath));
+    await showInfo(t.backupSuccess(filepath), t.confirmOk);
   });
 
   document.getElementById('btn-import-history')!.addEventListener('click', async () => {

@@ -932,6 +932,8 @@ body {
   color: var(--text-primary);
   margin-bottom: 14px;
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .modal-actions {
