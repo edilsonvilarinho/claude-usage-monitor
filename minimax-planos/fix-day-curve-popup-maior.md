@@ -1,6 +1,6 @@
 # Fix: Aumentar tamanho do day-curve-popup
 
-**Status:** Em progresso
+**Status:** ✅ Concluído
 **Branch:** `fix/day-curve-popup-maior`
 
 ---
@@ -34,7 +34,8 @@ O `day-curve-popup` foi redimensionado de `230px` para `400px` pelo plano `claud
 
 - [x] Plano criado
 - [x] Branch criada
-- [ ] Implementar CSS
-- [ ] Build + testes
-- [ ] Commit + push
-- [ ] PR + merge
+- [x] Implementar CSS
+- [x] Build + testes
+- [x] Commit + push
+- [x] PR #114
+- [x] Merge para master
