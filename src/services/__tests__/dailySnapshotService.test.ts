@@ -98,7 +98,7 @@ describe('updateDailySnapshot', () => {
 
     expect(dailyHistory[0].sessionAccum).toBe(70);  // usa peak, não último valor polled
     expect(dailyHistory[0].sessionWindowCount).toBe(2);
-    expect(dailyHistory[0].maxSession).toBe(14);    // reinicia com valor da nova janela
+    expect(dailyHistory[0].maxSession).toBe(70);    // Math.max(maxSession anterior=70, peak=70) — preserva máximo do dia
     expect(currentWindow).toEqual({ resetsAt: RESET_B, peak: 0, final: 0, date: TODAY, peakTs: undefined });
     expect(completedWindow).toMatchObject({ resetsAt: RESET_A, peak: 70, final: 70, date: TODAY });
   });
@@ -156,18 +156,18 @@ describe('updateDailySnapshot', () => {
     const r1 = updateDailySnapshot(history, TODAY, makeUsageData(14, 52, RESET_B), makeWindow(RESET_A, 70));
     expect(r1.dailyHistory[0].sessionAccum).toBe(70);
     expect(r1.dailyHistory[0].sessionWindowCount).toBe(2);
-    expect(r1.dailyHistory[0].maxSession).toBe(14);
+    expect(r1.dailyHistory[0].maxSession).toBe(70); // Math.max(70 anterior, peak=70) — preserva máximo
 
-    // Janela 2 cresce até 50
+    // Janela 2 cresce até 50 — maxSession já é 70, não desce
     const r2 = updateDailySnapshot(r1.dailyHistory, TODAY, makeUsageData(50, 53, RESET_B), makeWindow(RESET_B, 50));
-    expect(r2.dailyHistory[0].maxSession).toBe(50);
+    expect(r2.dailyHistory[0].maxSession).toBe(70); // Math.max(70, 50) = 70 mantém o pico do dia
     expect(r2.currentWindow.peak).toBe(50);
 
     // Segundo reset — pico da janela 2 = 50
     const r3 = updateDailySnapshot(r2.dailyHistory, TODAY, makeUsageData(5, 54, RESET_C), makeWindow(RESET_B, 50));
     expect(r3.dailyHistory[0].sessionAccum).toBe(120); // 70 + 50
     expect(r3.dailyHistory[0].sessionWindowCount).toBe(3);
-    expect(r3.dailyHistory[0].maxSession).toBe(5);
+    expect(r3.dailyHistory[0].maxSession).toBe(70); // Math.max(70, peak=50) = 70 — pico do dia preservado
     expect(r3.completedWindow).toMatchObject({ resetsAt: RESET_B, peak: 50 });
   });
 
