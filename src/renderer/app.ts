@@ -1373,22 +1373,18 @@ async function updateWeeklyBurnRate(): Promise<void> {
 }
 
 async function openDayCurvePopup(date: string, anchorEl: HTMLElement): Promise<void> {
-  const popup = document.getElementById('day-curve-popup') as HTMLElement;
+  const overlay = document.getElementById('day-curve-overlay') as HTMLElement;
   const titleEl = document.getElementById('day-curve-title') as HTMLElement;
   const emptyEl = document.getElementById('day-curve-empty') as HTMLElement;
   const closeBtn = document.getElementById('day-curve-close') as HTMLElement;
 
-  if (dayCurveOpenDate === date && !popup.classList.contains('hidden')) {
+  if (dayCurveOpenDate === date && !overlay.classList.contains('hidden')) {
     closeDayCurvePopup();
     return;
   }
 
-  const rect = anchorEl.getBoundingClientRect();
-  popup.style.left = `${Math.min(rect.left, window.innerWidth - 250)}px`;
-  popup.style.top = `${rect.bottom + 4}px`;
-
   titleEl.textContent = new Date(date + 'T12:00:00').toLocaleDateString([], { day: '2-digit', month: 'short' });
-  popup.classList.remove('hidden');
+  overlay.classList.remove('hidden');
   dayCurveOpenDate = date;
 
   if (dayCurveChart) { dayCurveChart.destroy(); dayCurveChart = null; }
@@ -1434,8 +1430,8 @@ async function openDayCurvePopup(date: string, anchorEl: HTMLElement): Promise<v
 }
 
 function closeDayCurvePopup(): void {
-  const popup = document.getElementById('day-curve-popup');
-  if (popup) popup.classList.add('hidden');
+  const overlay = document.getElementById('day-curve-overlay');
+  if (overlay) overlay.classList.add('hidden');
   if (dayCurveChart) { dayCurveChart.destroy(); dayCurveChart = null; }
   dayCurveOpenDate = null;
 }
