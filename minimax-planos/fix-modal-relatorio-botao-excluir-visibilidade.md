@@ -1,6 +1,6 @@
 # Fix: botão excluir no modal de relatório — ícone pouco visível
 
-**Status:** Em progresso
+**Status:** ✅ Concluído
 **Branch:** `fix/modal-relatorio-botao-excluir-visibilidade`
 
 ---
@@ -78,7 +78,7 @@ No modal de relatório de uso, o botão 🗑 (`.window-delete-btn`) para excluir
 
 - [x] Plano criado
 - [x] Branch criada
-- [ ] Implementar CSS
-- [ ] Build + testes
-- [ ] Commit + push
+- [x] Implementar CSS
+- [x] Build + testes
+- [x] Commit + push
 - [ ] PR
