@@ -2732,9 +2732,9 @@ window.claudeUsage.onCredentialsExpired(() => {
     btn.addEventListener('click', () => {
       const tabId = (btn as HTMLElement).dataset.costTab!;
       document.querySelectorAll('.cost-tab').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.cost-pane').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.cost-pane').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById(`cost-${tabId}`)!.classList.remove('hidden');
+      document.getElementById(`cost-${tabId}`)!.classList.add('active');
     });
   });
 
