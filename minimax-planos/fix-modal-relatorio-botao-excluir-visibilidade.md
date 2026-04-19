@@ -82,3 +82,4 @@ No modal de relatório de uso, o botão 🗑 (`.window-delete-btn`) para excluir
 - [x] Build + testes
 - [x] Commit + push
 - [x] PR #113
+- [x] Merge para master
