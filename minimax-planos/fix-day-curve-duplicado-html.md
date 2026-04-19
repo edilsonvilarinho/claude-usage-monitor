@@ -1,6 +1,6 @@
 # Fix: Remover HTML duplicado do day-curve-popup no index.html
 
-**Status:** Em progresso
+**Status:** ✅ Concluído
 **Branch:** `fix/day-curve-duplicado-html`
 
 ---
@@ -60,7 +60,8 @@ O componente moderno já é injetado via `injectAllModals()` em `components/moda
 
 - [x] Plano criado
 - [x] Branch criada
-- [ ] Remover HTML duplicado
-- [ ] Build + testes
-- [ ] Commit + push
-- [ ] PR + merge
+- [x] Remover HTML duplicado
+- [x] Build + testes
+- [x] Commit + push
+- [x] PR #115
+- [x] Merge para master
