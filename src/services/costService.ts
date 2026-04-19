@@ -11,12 +11,15 @@ const MODEL_RATES = {
 
 type ModelType = keyof typeof MODEL_RATES;
 
+// Total tokens assumed at 100% utilization per model.
+// Haiku has a larger quota (cheaper model); Opus a smaller quota (premium model).
+// These are estimates — the Anthropic API does not expose raw token limits.
 function getTokensPerPercent(model: ModelType): number {
   switch (model) {
     case 'haiku':
       return 4_000_000;
     case 'opus':
-      return 10_000;
+      return 200_000;
     case 'sonnet':
     default:
       return 1_000_000;
@@ -39,6 +42,8 @@ export interface CostBreakdown {
   input: number;
   output: number;
   model: ModelType;
+  inputTokens: number;
+  outputTokens: number;
 }
 
 export interface CostEstimate {
@@ -47,6 +52,9 @@ export interface CostEstimate {
   monthly: CostBreakdown;
   budget: number;
   budgetPercentage: number;
+  sessionPct: number;
+  weeklyPct: number;
+  modelRates: { input: number; output: number };
 }
 
 export function percentToTokens(percent: number, model: ModelType = 'sonnet'): number {
@@ -60,9 +68,11 @@ function estimateTokensFromPercent(
 ): { sessionInput: number; sessionOutput: number; weeklyInput: number; weeklyOutput: number } {
   const tokensPerPct = getTokensPerPercent(model);
 
+  // 50% input / 50% output split assumed (industry average for chat workloads)
   const sessionInput = Math.round((sessionPercent / 100) * tokensPerPct * 0.5);
   const sessionOutput = Math.round((sessionPercent / 100) * tokensPerPct * 0.5);
 
+  // Weekly quota estimated as 7× the per-session quota
   const weeklyInput = Math.round((weeklyPercent / 100) * tokensPerPct * 7 * 0.5);
   const weeklyOutput = Math.round((weeklyPercent / 100) * tokensPerPct * 7 * 0.5);
 
@@ -92,6 +102,8 @@ export function calculateCostEstimate(
     input: calculateCost(sessionInput, 0, model),
     output: calculateCost(0, sessionOutput, model),
     model,
+    inputTokens: sessionInput,
+    outputTokens: sessionOutput,
   };
 
   const weekly = {
@@ -99,8 +111,11 @@ export function calculateCostEstimate(
     input: calculateCost(weeklyInput, 0, model),
     output: calculateCost(0, weeklyOutput, model),
     model,
+    inputTokens: weeklyInput,
+    outputTokens: weeklyOutput,
   };
 
+  // Monthly = weekly extrapolated by 30/7 ≈ 4.3
   const monthlyInput = Math.round(weeklyInput * (30 / 7));
   const monthlyOutput = Math.round(weeklyOutput * (30 / 7));
 
@@ -109,6 +124,8 @@ export function calculateCostEstimate(
     input: calculateCost(monthlyInput, 0, model),
     output: calculateCost(0, monthlyOutput, model),
     model,
+    inputTokens: monthlyInput,
+    outputTokens: monthlyOutput,
   };
 
   const budgetPercentage = Math.round((monthly.total / budget) * 100);
@@ -119,6 +136,9 @@ export function calculateCostEstimate(
     monthly,
     budget,
     budgetPercentage,
+    sessionPct,
+    weeklyPct,
+    modelRates: MODEL_RATES[model],
   };
 }
 

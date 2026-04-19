@@ -588,13 +588,25 @@ O módulo calcula uma **estimativa de custo** baseada na utilização de tokens,
 | Sonnet | $3.00 | $15.00 |
 | Opus | $15.00 | $75.00 |
 
+### Tokens por modelo (total assumido em 100% de utilização)
+
+| Modelo | Tokens em 100% | Justificativa |
+|--------|---------------|---------------|
+| Haiku | 4.000.000 | Modelo mais barato — quota maior |
+| Sonnet | 1.000.000 | Referência base |
+| Opus | 200.000 | Modelo mais caro — quota menor (≈ 5× menos que Sonnet) |
+
+**Split:** 50% input / 50% output assumido (média de workloads de chat).
+
 ### Cálculo por Período
 
 | Período | Base de Cálculo |
 |---------|-----------------|
-| Session (5h) | `five_hour.utilization` × tokens por 1% × rates |
-| Weekly (7d) | `seven_day.utilization` × tokens por 1% × 7 dias × rates |
-| Monthly | Weekly × 4.3 (estimativa mensal) |
+| Session (5h) | `five_hour.utilization` × tokensPerPct × 0,5 (input) + × 0,5 (output) × rates |
+| Weekly (7d) | `seven_day.utilization` × tokensPerPct × 7 dias × 0,5 (input+output) × rates |
+| Monthly | Weekly × (30/7) ≈ 4,3 (semanas/mês) |
+
+**Retorno `CostEstimate` inclui:** `sessionPct`, `weeklyPct`, `modelRates` (para exibição de fórmula na UI).
 
 ### Settings do Módulo
 

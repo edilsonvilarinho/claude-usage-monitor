@@ -2021,6 +2021,36 @@ body {
   margin-bottom: 4px;
 }
 
+.cost-formula {
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: rgba(99, 102, 241, 0.07);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid rgba(99, 102, 241, 0.35);
+}
+
+.cost-formula-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.cost-formula-row {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+.cost-formula-note {
+  opacity: 0.7;
+  font-style: italic;
+  margin-top: 4px;
+}
+
 .cost-warning {
   font-size: 10px;
   color: var(--amber);

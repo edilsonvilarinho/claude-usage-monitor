@@ -293,6 +293,15 @@ const translations = {
     costBudgetOf: 'of',
     costBudgetLabel: 'Monthly budget:',
     costWarning: '⚠️ Estimated value based on standard API rates. Team/Enterprise plans may have different rates.',
+    costFormulaTitle: 'How it was calculated',
+    costFormulaUsage: '5h usage:',
+    costFormulaUsageWeekly: '7d usage:',
+    costFormulaModel: 'Model:',
+    costFormulaRates: 'rates:',
+    costFormulaTokens: 'Est. tokens:',
+    costFormulaSplit: 'Assumed split: 50% input / 50% output',
+    costFormulaWeeklyNote: 'Base: 7d usage × session limit × 7 · 50/50 split',
+    costFormulaMonthlyNote: 'Projection: weekly base × 4.3 (30 ÷ 7 weeks/month)',
     serverStatusOnline: 'Server online',
     serverStatusOffline: 'Server offline',
     serverStatusConnecting: 'Connecting...',
@@ -469,6 +478,15 @@ const translations = {
     costBudgetOf: 'de',
     costBudgetLabel: 'Orçamento mensal:',
     costWarning: '⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes.',
+    costFormulaTitle: 'Como foi calculado',
+    costFormulaUsage: 'Uso 5h:',
+    costFormulaUsageWeekly: 'Uso 7d:',
+    costFormulaModel: 'Modelo:',
+    costFormulaRates: 'taxa:',
+    costFormulaTokens: 'Tokens est.:',
+    costFormulaSplit: 'Distribuição assumida: 50% input / 50% output',
+    costFormulaWeeklyNote: 'Base: uso 7d × limite sessão × 7 · split 50/50',
+    costFormulaMonthlyNote: 'Projeção: base semanal × 4,3 (30 ÷ 7 semanas/mês)',
     serverStatusOnline: 'Servidor online',
     serverStatusOffline: 'Servidor offline',
     serverStatusConnecting: 'Conectando...',
@@ -2778,6 +2796,30 @@ window.claudeUsage.onCredentialsExpired(() => {
     if (costGaugeChart) {
       updateGauge(costGaugeChart, cost.budgetPercentage);
     }
+
+    // Formula sections
+    const modelLabel = cost.session.model.charAt(0).toUpperCase() + cost.session.model.slice(1);
+    const ratesLabel = `$${cost.modelRates.input}/M in · $${cost.modelRates.output}/M out`;
+    const fmtTokens = (n: number) => n >= 1_000_000
+      ? `${(n / 1_000_000).toFixed(2)}M`
+      : n >= 1_000
+        ? `${(n / 1_000).toFixed(1)}K`
+        : String(n);
+
+    document.getElementById('cost-formula-session-pct')!.textContent = `${cost.sessionPct.toFixed(1)}%`;
+    document.getElementById('cost-formula-session-model')!.textContent = modelLabel;
+    document.getElementById('cost-formula-session-rates')!.textContent = ratesLabel;
+    document.getElementById('cost-formula-session-tokens')!.textContent =
+      `${fmtTokens(cost.session.inputTokens)} in + ${fmtTokens(cost.session.outputTokens)} out`;
+
+    document.getElementById('cost-formula-weekly-pct')!.textContent = `${cost.weeklyPct.toFixed(1)}%`;
+    document.getElementById('cost-formula-weekly-model')!.textContent = modelLabel;
+    document.getElementById('cost-formula-weekly-rates')!.textContent = ratesLabel;
+    document.getElementById('cost-formula-weekly-tokens')!.textContent =
+      `${fmtTokens(cost.weekly.inputTokens)} in + ${fmtTokens(cost.weekly.outputTokens)} out`;
+
+    document.getElementById('cost-formula-monthly-tokens')!.textContent =
+      `${fmtTokens(cost.monthly.inputTokens)} in + ${fmtTokens(cost.monthly.outputTokens)} out`;
   }
 
   function initCostGauge(): void {
