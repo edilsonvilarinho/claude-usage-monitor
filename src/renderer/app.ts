@@ -291,6 +291,7 @@ const translations = {
     costPeriodWeekly: 'Last 7 days',
     costPeriodMonthly: 'This month',
     costBudgetOf: 'of',
+    costModelLabel: 'Model:',
     costBudgetLabel: 'Monthly budget:',
     costWarning: '⚠️ Estimated value based on standard API rates. Team/Enterprise plans may have different rates.',
     costFormulaTitle: 'How it was calculated',
@@ -476,6 +477,7 @@ const translations = {
     costPeriodWeekly: 'Últimos 7 dias',
     costPeriodMonthly: 'Este mês',
     costBudgetOf: 'de',
+    costModelLabel: 'Modelo:',
     costBudgetLabel: 'Orçamento mensal:',
     costWarning: '⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes.',
     costFormulaTitle: 'Como foi calculado',
@@ -2820,6 +2822,11 @@ window.claudeUsage.onCredentialsExpired(() => {
 
     document.getElementById('cost-formula-monthly-tokens')!.textContent =
       `${fmtTokens(cost.monthly.inputTokens)} in + ${fmtTokens(cost.monthly.outputTokens)} out`;
+
+    // Sync active state of model buttons
+    document.querySelectorAll<HTMLElement>('.cost-model-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.model === cost.session.model);
+    });
   }
 
   function initCostGauge(): void {
@@ -2851,6 +2858,14 @@ window.claudeUsage.onCredentialsExpired(() => {
     const budget = Math.max(1, Math.min(1000, Number((e.target as HTMLInputElement).value)));
     await window.claudeUsage.saveSettings({ monthlyBudget: budget });
     loadCostData();
+  });
+
+  document.querySelectorAll<HTMLElement>('.cost-model-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const model = btn.dataset.model as 'haiku' | 'sonnet' | 'opus';
+      await window.claudeUsage.saveSettings({ costModel: model });
+      loadCostData();
+    });
   });
 }
 
