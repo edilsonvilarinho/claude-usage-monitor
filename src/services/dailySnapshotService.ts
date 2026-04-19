@@ -59,12 +59,13 @@ export function updateDailySnapshot(
           ?? dailyHistory[dailyHistory.length - 1];
         completedWindow = { resetsAt: currentWindow.resetsAt, peak, final, date: prevDay.date, peakTs: currentWindow.peakTs };
         prevDay.sessionAccum = (prevDay.sessionAccum ?? 0) + peak;
+        // Não contamina o maxSession de hoje com o pico de uma janela que começou ontem
       } else {
         completedWindow = { resetsAt: currentWindow.resetsAt, peak, final, date: today, peakTs: currentWindow.peakTs };
         existingDay.sessionAccum  = (existingDay.sessionAccum  ?? 0) + peak;
         existingDay.sessionWindowCount = (existingDay.sessionWindowCount ?? 1) + 1;
+        existingDay.maxSession    = Math.max(existingDay.maxSession ?? 0, peak);
       }
-      existingDay.maxSession    = Math.max(existingDay.maxSession ?? 0, peak);
     } else {
       existingDay.maxSession = Math.max(existingDay.maxSession ?? 0, sessionPctInt);
     }
