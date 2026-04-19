@@ -1461,6 +1461,12 @@ body {
 .report-window-peak {
   font-weight: 600;
   font-size: 14px;
+  flex-shrink: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 }
 
 .report-clear-btn {
@@ -1484,7 +1490,7 @@ body {
   cursor: pointer;
   font-size: 12px;
   padding: 0 2px;
-  opacity: 0.4;
+  opacity: 0.6;
   transition: opacity 0.15s;
   flex-shrink: 0;
 }
