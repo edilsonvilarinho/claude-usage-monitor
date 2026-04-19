@@ -1,6 +1,6 @@
 # Chore: Remover dead code — components/modais/ e components/modals/
 
-**Status:** Em progresso
+**Status:** ✅ Concluído
 **Branch:** `chore/remove-dead-code-components`
 
 ---
@@ -75,5 +75,6 @@ Remover o diretório `src/renderer/components/modais/` (10 arquivos) e `src/rend
 - [x] Remover pastas
 - [x] Atualizar planos afetados
 - [x] Build + testes
-- [ ] Commit + push
-- [ ] PR + merge
+- [x] Commit + push
+- [x] PR #116
+- [x] Merge para master
