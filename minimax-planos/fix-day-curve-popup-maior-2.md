@@ -1,6 +1,6 @@
 # Fix: Aumentar ainda mais o day-curve-popup
 
-**Status:** Aguardando aprovação para PR
+**Status:** ✅ Concluído
 **Branch:** `fix/day-curve-popup-maior-2`
 
 ---
