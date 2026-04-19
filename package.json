@@ -1,6 +1,6 @@
 {
   "name": "claude-usage-monitor",
-  "version": "15.0.0",
+  "version": "16.0.0",
   "description": "Windows system tray app to monitor Claude AI usage limits",
   "author": {
     "name": "Edilson Vilarinho",
