@@ -65,11 +65,12 @@ export async function bootstrap(): Promise<void> {
     updateDashboard(data, v => { lastWeeklyResetsAt = v; });
     void burnRate.updateSession();
     void burnRate.updateWeekly();
-  });
-
-  window.claudeUsage.onUsageUpdated(() => {
     if (lastWeeklyResetsAt) {
-      window.claudeUsage.getDailyHistory().then(d => dailyChart.render(d, lastWeeklyResetsAt!));
+      const liveSession = data.five_hour.utilization;
+      const liveWeekly  = data.seven_day.utilization;
+      window.claudeUsage.getDailyHistory().then(d =>
+        dailyChart.render(d, lastWeeklyResetsAt!, liveWeekly, liveSession)
+      );
     }
   });
 
