@@ -1,5 +1,6 @@
 /* ── CSS Variables ─────────────────────────────────────────────────── */
 :root {
+  --fs: 1;
   --bg: rgba(20, 20, 20, 0.82);
   --bg-solid: rgb(38, 38, 38);
   --surface: rgba(40, 40, 40, 0.7);
@@ -74,21 +75,25 @@
 
 /* ── Size variants ──────────────────────────────────────────────────── */
 body[data-size="normal"] {
+  --fs: 1;
   --gauge-w: 110px;
   --gauge-h: 60px;
   --gauge-pct-size: 19px;
 }
 body[data-size="medium"] {
+  --fs: 1.09;
   --gauge-w: 126px;
   --gauge-h: 74px;
   --gauge-pct-size: 22px;
 }
 body[data-size="large"] {
+  --fs: 1.18;
   --gauge-w: 134px;
   --gauge-h: 90px;
   --gauge-pct-size: 27px;
 }
 body[data-size="xlarge"] {
+  --fs: 1.27;
   --gauge-w: 134px;
   --gauge-h: 110px;
   --gauge-pct-size: 33px;
@@ -170,7 +175,7 @@ body {
 }
 
 .app-title {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--text-primary);
@@ -193,7 +198,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: calc(16px * var(--fs));
   transition: all 0.2s var(--ease-out);
 }
 
@@ -277,7 +282,7 @@ body {
   align-items: center;
   gap: 4px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
 }
 #online-users-count {
   font-weight: 500;
@@ -299,7 +304,7 @@ body {
   border-radius: 50%;
   background: var(--accent-blue);
   color: #fff;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -315,7 +320,7 @@ body {
 }
 
 .account-name {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -324,7 +329,7 @@ body {
 }
 
 .account-email {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -332,7 +337,7 @@ body {
 }
 
 .account-plan {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 10px;
@@ -383,7 +388,7 @@ body {
 }
 
 .gauge-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -416,13 +421,13 @@ body {
 }
 
 .gauge-reset {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   text-align: center;
 }
 
 .gauge-reset-at {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   text-align: center;
   opacity: 0.6;
@@ -450,7 +455,7 @@ body {
 }
 
 .extra-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -459,7 +464,7 @@ body {
 }
 
 .extra-pct {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -497,18 +502,18 @@ body {
 }
 
 .updated-text {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
 }
 
 .next-poll-text {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .last-resp-text {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -522,13 +527,13 @@ body {
 }
 
 .app-version {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   opacity: 0.6;
 }
 
 .refresh-btn {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   color: var(--accent-blue);
   background: none;
@@ -549,7 +554,7 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: var(--radius-sm);
   padding: 6px 10px;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--accent-red);
   margin-bottom: 10px;
   display: none;
@@ -578,7 +583,7 @@ body {
 }
 
 .rl-icon {
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
   flex-shrink: 0;
 }
 
@@ -589,7 +594,7 @@ body {
 }
 
 .rl-text #rl-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   font-weight: 700;
   color: var(--accent-yellow);
   text-transform: uppercase;
@@ -597,7 +602,7 @@ body {
 }
 
 .rl-text #rl-timer {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
@@ -616,20 +621,20 @@ body {
 }
 
 .update-icon {
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
   flex-shrink: 0;
   color: var(--accent-blue);
 }
 
 .update-text {
   flex: 1;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   color: var(--accent-blue);
 }
 
 #btn-update-download {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   color: var(--accent-blue);
   background: rgba(59, 130, 246, 0.15);
@@ -689,7 +694,7 @@ body {
 }
 
 .settings-title {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -707,7 +712,7 @@ body {
 }
 
 .settings-row label:first-child {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-primary);
 }
 
@@ -763,7 +768,7 @@ body {
 
 .spinner-input {
   width: 56px;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 700;
   font-family: inherit;
   background: var(--surface);
@@ -781,13 +786,13 @@ body {
 }
 
 .spinner-unit {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-secondary);
 }
 
 /* Select controls */
 .setting-select {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-primary);
@@ -798,7 +803,7 @@ body {
 
 /* Settings hint */
 .settings-hint {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   text-align: right;
   margin-top: -4px;
@@ -806,7 +811,7 @@ body {
 
 /* Test button */
 .test-btn {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   color: var(--accent-blue);
   background: var(--surface);
@@ -829,7 +834,7 @@ body {
 /* ── Cloud Sync section ──────────────────────────────────────────────────────── */
 
 .sync-text-input {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-family: inherit;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -858,7 +863,7 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
 }
 
 .sync-status-label {
@@ -895,7 +900,7 @@ body {
 }
 
 .sync-error-msg {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--accent-red);
   margin-top: 4px;
   word-break: break-word;
@@ -934,7 +939,7 @@ body {
 }
 
 .modal-msg {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-primary);
   margin-bottom: 14px;
   line-height: 1.5;
@@ -949,7 +954,7 @@ body {
 }
 
 .modal-actions button {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   font-family: inherit;
   padding: 5px 16px;
@@ -1014,14 +1019,14 @@ body {
 }
 
 .credential-modal-icon {
-  font-size: 28px;
+  font-size: calc(28px * var(--fs));
   color: var(--accent-yellow);
   text-align: center;
   margin-bottom: 6px;
 }
 
 .credential-modal-title {
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 8px 0;
@@ -1029,14 +1034,14 @@ body {
 }
 
 .credential-modal-desc {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   margin: 0 0 10px 0;
   line-height: 1.4;
 }
 
 .credential-steps {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-primary);
   padding-left: 16px;
   margin: 0 0 10px 0;
@@ -1053,21 +1058,21 @@ body {
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 1px 5px;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   font-family: monospace;
   color: var(--text-primary);
   margin-top: 2px;
 }
 
 .credential-path-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   margin: 0 0 2px 0;
 }
 
 .credential-path {
   display: block;
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   color: var(--text-secondary);
   word-break: break-all;
   background: rgba(255, 255, 255, 0.05);
@@ -1095,7 +1100,7 @@ body {
 .credential-details-summary {
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   user-select: none;
 }
 
@@ -1114,14 +1119,14 @@ body {
 }
 
 .credential-how-to-title {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   color: var(--text-secondary);
   margin: 0 0 6px 0;
 }
 
 .credential-how-to-steps {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   padding-left: 14px;
   margin: 0;
@@ -1138,14 +1143,14 @@ body {
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 1px 4px;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   font-family: monospace;
   color: var(--text-primary);
 }
 
 .credential-how-to-path {
   display: block;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   word-break: break-all;
   background: rgba(255, 255, 255, 0.05);
@@ -1157,7 +1162,7 @@ body {
 }
 
 .credential-input-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-secondary);
 }
 
@@ -1167,7 +1172,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 8px;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   resize: vertical;
   font-family: monospace;
 }
@@ -1179,7 +1184,7 @@ body {
   border-radius: 4px;
   padding: 8px 16px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   align-self: flex-start;
 }
 
@@ -1188,7 +1193,7 @@ body {
 }
 
 .credential-status-msg {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
 }
 
@@ -1207,7 +1212,7 @@ body {
   border-radius: 6px;
   padding: 10px 24px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
   font-weight: 600;
   width: 100%;
   transition: background 0.15s;
@@ -1251,13 +1256,13 @@ body {
 .legend-dot.reset   { background: var(--accent-orange); }
 
 .legend-text {
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   color: var(--text-secondary);
   margin-right: 4px;
 }
 
 .clear-history-btn {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   padding: 3px 10px;
   border-radius: 5px;
   border: 1px solid var(--border);
@@ -1285,7 +1290,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 6px;
   padding: 6px 9px;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   line-height: 1.7;
   white-space: nowrap;
   z-index: 50;
@@ -1319,7 +1324,7 @@ body {
 .tip-dot.credits { background: var(--accent-blue); }
 
 .tip-resets {
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   color: rgba(180, 180, 180, 0.9);
   padding-left: 10px;
   margin-bottom: 2px;
@@ -1370,7 +1375,7 @@ body {
 .reset-badge {
   background: var(--accent-orange);
   color: #fff;
-  font-size: 7px;
+  font-size: calc(7px * var(--fs));
   font-weight: 700;
   min-width: 12px;
   height: 12px;
@@ -1411,7 +1416,7 @@ body {
 }
 
 .daily-day {
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   color: var(--text-secondary);
   text-transform: capitalize;
   white-space: nowrap;
@@ -1423,7 +1428,7 @@ body {
 
 
 .history-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1448,7 +1453,7 @@ body {
 }
 
 .slider-value {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   min-width: 32px;
   text-align: right;
@@ -1472,7 +1477,7 @@ body {
 }
 
 .edit-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   flex: 1;
 }
@@ -1533,20 +1538,20 @@ body {
 }
 
 .stat-value {
-  font-size: 22px;
+  font-size: calc(22px * var(--fs));
   font-weight: 700;
   color: var(--accent-green);
   line-height: 1.2;
 }
 
 .stat-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-secondary);
   margin-top: 2px;
 }
 
 .report-windows-title {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1559,7 +1564,7 @@ body {
   align-items: center;
   padding: 4px 0;
   border-bottom: 1px solid var(--border);
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
 }
 
 .report-window-row:last-child {
@@ -1576,7 +1581,7 @@ body {
 }
 
 .window-badge {
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
@@ -1604,7 +1609,7 @@ body {
 
 .report-window-peak {
   font-weight: 600;
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
   flex-shrink: 1;
   min-width: 0;
   white-space: nowrap;
@@ -1614,7 +1619,7 @@ body {
 }
 
 .report-clear-btn {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   padding: 3px 8px;
   border-radius: 4px;
   border: 1px solid var(--border);
@@ -1632,7 +1637,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: calc(16px * var(--fs));
   padding: 2px 6px;
   opacity: 1;
   transition: opacity 0.15s;
@@ -1663,7 +1668,7 @@ body {
 }
 
 .day-detail-title-text {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -1673,7 +1678,7 @@ body {
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   line-height: 1;
@@ -1692,7 +1697,7 @@ body {
 
 .day-detail-empty {
   text-align: center;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   padding: 38px 0;
 }
@@ -1716,18 +1721,21 @@ body {
 }
 
 .settings-modal-title {
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .settings-tabs {
   display: flex;
-  gap: 2px;
-  padding: 8px 12px 0;
+  gap: 0;
+  padding: 8px 8px 0;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.settings-tabs::-webkit-scrollbar { display: none; }
 
 .tab-btn {
   background: none;
@@ -1735,11 +1743,12 @@ body {
   border-bottom: 2px solid transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
+  font-size: calc(11px * var(--fs));
   font-family: inherit;
-  padding: 6px 10px 8px;
+  padding: 6px 8px 8px;
   transition: color 0.15s, border-color 0.15s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-btn:hover {
@@ -1797,7 +1806,7 @@ body {
 
 /* ── Smart Recommendation Bar ── */
 .smart-rec-bar {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   line-height: 1.5;
   padding: 6px 12px 6px 10px;
   border-left: 3px solid transparent;
@@ -1816,7 +1825,7 @@ body {
   color: var(--text);
   border-radius: 4px;
   padding: 2px 6px;
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
 }
 
 /* ── Smart Scheduler Modal ── */
@@ -1830,7 +1839,7 @@ body {
   border-radius: 6px;
   color: #fff;
   font-weight: 600;
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   line-height: 1.4;
   margin-bottom: 12px;
 }
@@ -1849,7 +1858,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: calc(22px * var(--fs));
   font-weight: 600;
   color: var(--text);
 }
@@ -1905,7 +1914,7 @@ body {
 .sp-marker-label {
   position: absolute;
   top: 26px;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   white-space: nowrap;
   pointer-events: none;
@@ -1915,7 +1924,7 @@ body {
   position: absolute;
   top: 26px;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 600;
   pointer-events: none;
   display: none;
@@ -1923,7 +1932,7 @@ body {
 .sp-timeline-labels {
   position: relative;
   height: 16px;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   margin-top: 4px;
 }
@@ -1935,7 +1944,7 @@ body {
   font-weight: 600;
 }
 .sp-timeline-title {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1944,13 +1953,13 @@ body {
 }
 .sp-donut-subtitle {
   text-align: center;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   margin: 2px 0 8px;
 }
 .sp-summary {
   text-align: center;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-secondary);
   background: var(--surface);
   border-radius: 6px;
@@ -1962,7 +1971,7 @@ body {
   display: flex;
   gap: 12px;
   margin-top: 6px;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   justify-content: center;
 }
@@ -1983,10 +1992,10 @@ body {
   opacity: 0.5;
   border-radius: 1px;
 }
-.sp-legend-reset-icon { font-size: 9px; }
+.sp-legend-reset-icon { font-size: calc(9px * var(--fs)); }
 .form-error {
   color: var(--accent-red);
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   margin-top: 6px;
 }
 .form-error:not(.hidden) {
@@ -1997,12 +2006,12 @@ body {
   margin-bottom: 8px;
 }
 .sp-time-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   min-width: 28px;
 }
 .burn-rate-line {
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   color: var(--text-secondary);
   text-align: center;
   margin-top: 2px;
@@ -2023,10 +2032,10 @@ body {
 }
 .day-curve-chart-wrap { height: 550px; position: relative; }
 .day-curve-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.day-curve-title { font-size: 10px; color: var(--text-secondary); }
-.day-curve-empty { font-size: 10px; color: var(--text-secondary); text-align: center; padding: 16px 0; }
+.day-curve-title { font-size: calc(10px * var(--fs)); color: var(--text-secondary); }
+.day-curve-empty { font-size: calc(10px * var(--fs)); color: var(--text-secondary); text-align: center; padding: 16px 0; }
 .window-peak-time {
-  font-size: 9px;
+  font-size: calc(9px * var(--fs));
   color: var(--text-secondary);
   margin-left: 4px;
   opacity: 0.8;
@@ -2041,7 +2050,7 @@ body {
 }
 .analytics-title {
   width: 100%;
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2071,7 +2080,7 @@ body {
 }
 
 .cost-modal-title {
-  font-size: 14px;
+  font-size: calc(14px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -2085,7 +2094,7 @@ body {
 .cost-tab {
   flex: 1;
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   font-weight: 500;
   background: transparent;
   border: 1px solid var(--border);
@@ -2116,14 +2125,14 @@ body {
 }
 
 .cost-value {
-  font-size: 26px;
+  font-size: calc(26px * var(--fs));
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 .cost-period {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   margin-bottom: 10px;
 }
@@ -2145,13 +2154,13 @@ body {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 18px;
+  font-size: calc(18px * var(--fs));
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .cost-budget {
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-secondary);
   margin-bottom: 12px;
 }
@@ -2169,7 +2178,7 @@ body {
 .cost-breakdown-row {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   margin-bottom: 4px;
 }
@@ -2183,7 +2192,7 @@ body {
 }
 
 .cost-formula-title {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -2192,7 +2201,7 @@ body {
 }
 
 .cost-formula-row {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
   margin-bottom: 3px;
   line-height: 1.4;
@@ -2205,7 +2214,7 @@ body {
 }
 
 .cost-warning {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--amber);
   background: rgba(245, 158, 11, 0.1);
   padding: 6px 8px;
@@ -2225,7 +2234,7 @@ body {
 }
 
 .cost-settings label {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
 }
 
@@ -2236,7 +2245,7 @@ body {
 
 .cost-model-btn {
   padding: 3px 10px;
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -2261,14 +2270,14 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   color: var(--text-primary);
 }
 
 .cost-budget-input-wrap input {
   width: 60px;
   padding: 4px 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--fs));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -2283,20 +2292,20 @@ body {
 }
 
 .update-major-modal-icon {
-  font-size: 28px;
+  font-size: calc(28px * var(--fs));
   color: var(--accent-blue);
   margin-bottom: 6px;
 }
 
 .update-major-modal-title {
-  font-size: 13px;
+  font-size: calc(13px * var(--fs));
   font-weight: 600;
   color: var(--text-primary);
   margin: 0 0 6px 0;
 }
 
 .update-major-modal-desc {
-  font-size: 11px;
+  font-size: calc(11px * var(--fs));
   color: var(--text-secondary);
   margin: 0 0 12px 0;
 }
@@ -2319,6 +2328,6 @@ body {
 }
 
 .update-major-progress-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--fs));
   color: var(--text-secondary);
 }

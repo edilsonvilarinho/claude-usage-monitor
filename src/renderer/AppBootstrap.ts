@@ -32,6 +32,7 @@ export async function bootstrap(): Promise<void> {
   setupCloudSync();
   setupUpdateHandlers();
   setupHeaderHandlers();
+  setupServerStatus();
   setupModalClosers();
   setupVisibilityHandler();
   setupThemeHandler();
@@ -47,6 +48,7 @@ export async function bootstrap(): Promise<void> {
 
   window.claudeUsage.onSmartStatusUpdated((status) => {
     currentSmartStatus = status;
+    setCurrentSmartStatus(status);
     applySmartIndicator(status);
   });
 
@@ -245,6 +247,40 @@ function setupUpdateHandlers(): void {
     const labelEl = document.getElementById('update-major-progress-label') as HTMLElement;
     if (fill) fill.style.width = `${pct}%`;
     if (labelEl) labelEl.textContent = `${Math.round(pct)}%`;
+  });
+}
+
+function setupServerStatus(): void {
+  const serverStatusDot = document.getElementById('server-status-dot') as HTMLElement;
+  const serverStatusBtn = document.getElementById('btn-server-status') as HTMLElement;
+  const onlineUsersBtn = document.getElementById('btn-online-users') as HTMLElement;
+  const onlineUsersCount = document.getElementById('online-users-count') as HTMLElement;
+
+  if (serverStatusBtn) serverStatusBtn.style.display = '';
+  if (onlineUsersBtn) onlineUsersBtn.style.display = '';
+
+  const updateServerStatusUI = (status: string): void => {
+    if (!serverStatusDot || !serverStatusBtn) return;
+    const cssStatus = status === 'connected' ? 'online' : status === 'disconnected' ? 'disconnected' : status;
+    serverStatusDot.className = 'server-status-dot server-status-' + cssStatus;
+    const t = tr();
+    const labels: Record<string, string> = {
+      connected: t.serverStatusOnline,
+      disconnected: t.serverStatusOffline,
+      connecting: t.serverStatusConnecting,
+      error: t.serverStatusError,
+    };
+    serverStatusBtn.title = labels[status] ?? status;
+  };
+
+  window.claudeUsage.server.onStatusChange((event) => updateServerStatusUI(event.status));
+  void window.claudeUsage.server.getStatus().then((status) => updateServerStatusUI(status));
+
+  window.claudeUsage.server.onClientCountChange((count) => {
+    if (onlineUsersCount) onlineUsersCount.textContent = count > 0 ? String(count) : '—';
+  });
+  void window.claudeUsage.server.getClientCount().then((count) => {
+    if (onlineUsersCount) onlineUsersCount.textContent = count > 0 ? String(count) : '—';
   });
 }
 
@@ -519,7 +555,11 @@ function setupSettingsHandlers(): void {
         if (labels[0]) labels[0].textContent = t2.sessionLabel;
         if (labels[1]) labels[1].textContent = t2.weeklyLabel;
       }, 0);
-      if (lastWeeklyResetsAt) dailyChart.render([], lastWeeklyResetsAt);
+      if (lastWeeklyResetsAt) {
+        window.claudeUsage.getDailyHistory().then(d => {
+          dailyChart.render(d, lastWeeklyResetsAt!);
+        });
+      }
     }
   });
 }
@@ -596,6 +636,7 @@ async function loadSettings(): Promise<void> {
     applySize(settings.windowSize);
     applySectionVisibility(settings);
     applyAutoRefresh(settings.autoRefresh, settings.autoRefreshInterval);
+    setLang(settings.language as Lang);
     applyTranslations();
 
     (document.getElementById('setting-startup') as HTMLInputElement).checked = settings.launchAtStartup;
@@ -810,13 +851,13 @@ function applyProfile(profile: { account: { display_name: string; email: string;
   }
 }
 
-function updateUI(data: { five_hour: { utilization: number; resets_at: string }; seven_day: { utilization: number } }): void {
+function updateUI(data: { five_hour: { utilization: number; resets_at: string }; seven_day: { utilization: number; resets_at: string } }): void {
   const sessionPct = data.five_hour.utilization / 100;
   const weeklyPct = data.seven_day.utilization / 100;
 
-  sessionGauge.update(sessionPct);
-  weeklyGauge.update(weeklyPct);
-  trayIcon.render(sessionPct, weeklyPct);
+  sessionGauge.update(sessionPct * 100);
+  weeklyGauge.update(weeklyPct * 100);
+  trayIcon.render(sessionPct * 100, weeklyPct * 100);
 
   const pctSessionEl = document.getElementById('pct-session');
   const pctWeeklyEl = document.getElementById('pct-weekly');
@@ -828,13 +869,14 @@ function updateUI(data: { five_hour: { utilization: number; resets_at: string };
   if (pctSessionEl) pctSessionEl.textContent = `${Math.round(sessionPct * 100)}%`;
   if (pctWeeklyEl) pctWeeklyEl.textContent = `${Math.round(weeklyPct * 100)}%`;
 
-  const resetAt = new Date(data.five_hour.resets_at);
-  if (resetSessionEl) resetSessionEl.textContent = formatResetsIn(data.five_hour.resets_at, resetAt, tr());
-  if (resetAtSessionEl) resetAtSessionEl.textContent = formatResetAt(resetAt, tr());
-  if (resetWeeklyEl) resetWeeklyEl.textContent = formatResetsIn(data.five_hour.resets_at, resetAt, tr());
-  if (resetAtWeeklyEl) resetAtWeeklyEl.textContent = formatResetAt(resetAt, tr());
+  const resetAtSession = new Date(data.five_hour.resets_at);
+  const resetAtWeekly = new Date(data.seven_day.resets_at);
+  if (resetSessionEl) resetSessionEl.textContent = formatResetsIn(data.five_hour.resets_at, resetAtSession, tr());
+  if (resetAtSessionEl) resetAtSessionEl.textContent = formatResetAt(resetAtSession, tr());
+  if (resetWeeklyEl) resetWeeklyEl.textContent = formatResetsIn(data.seven_day.resets_at, resetAtWeekly, tr());
+  if (resetAtWeeklyEl) resetAtWeeklyEl.textContent = formatResetAt(resetAtWeekly, tr());
 
-  lastWeeklyResetsAt = data.five_hour.resets_at;
+  lastWeeklyResetsAt = data.seven_day.resets_at;
   lastWeeklyPct = weeklyPct;
   lastSessionPct = sessionPct;
 

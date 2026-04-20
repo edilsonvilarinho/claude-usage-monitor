@@ -1,59 +1,60 @@
 import { tr } from '../../layouts/i18n';
 
-let resolvePromise: ((result: boolean) => void) | null = null;
-
 export function showConfirm(message: string, okText?: string, cancelText?: string): Promise<boolean> {
-  const modal = document.getElementById('confirm-modal') as HTMLElement;
-  const msgEl = document.getElementById('confirm-message') as HTMLElement;
-  const okBtn = document.getElementById('confirm-ok-btn') as HTMLElement;
-  const cancelBtn = document.getElementById('confirm-cancel-btn') as HTMLElement;
-
-  if (!modal || !msgEl) return Promise.resolve(false);
-
-  msgEl.textContent = message;
-  if (okBtn) okBtn.textContent = okText ?? tr().confirmOk;
-  if (cancelBtn) cancelBtn.textContent = cancelText ?? tr().confirmCancel;
-
-  modal.classList.remove('hidden');
-
   return new Promise(resolve => {
-    resolvePromise = resolve;
+    const modal = document.getElementById('generic-confirm-modal')!;
+    const msgEl = document.getElementById('generic-confirm-msg')!;
+    const okBtn = document.getElementById('generic-confirm-ok') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('generic-confirm-cancel') as HTMLButtonElement;
 
-    const cleanup = () => {
+    if (!modal || !msgEl) { resolve(false); return; }
+
+    msgEl.textContent = message;
+    if (okBtn) okBtn.textContent = okText ?? tr().confirmOk;
+    if (cancelBtn) { cancelBtn.textContent = cancelText ?? tr().confirmCancel; cancelBtn.style.display = ''; }
+
+    modal.classList.remove('hidden');
+
+    const cleanup = (result: boolean) => {
       modal.classList.add('hidden');
-      okBtn.removeEventListener('click', handleOk);
-      cancelBtn.removeEventListener('click', handleCancel);
+      okBtn.onclick = null;
+      cancelBtn.onclick = null;
+      modal.onclick = null;
+      resolve(result);
     };
 
-    const handleOk = () => { cleanup(); resolvePromise!(true); resolvePromise = null; };
-    const handleCancel = () => { cleanup(); resolvePromise!(false); resolvePromise = null; };
-
-    okBtn.addEventListener('click', handleOk, { once: true });
-    cancelBtn.addEventListener('click', handleCancel, { once: true });
+    okBtn.onclick = () => cleanup(true);
+    cancelBtn.onclick = () => cleanup(false);
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
   });
 }
 
 export function showInfo(message: string, okText?: string): Promise<void> {
-  const modal = document.getElementById('info-modal') as HTMLElement;
-  const msgEl = document.getElementById('info-message') as HTMLElement;
-  const okBtn = document.getElementById('info-ok-btn') as HTMLElement;
-
-  if (!modal || !msgEl) return Promise.resolve();
-
-  msgEl.textContent = message;
-  if (okBtn) okBtn.textContent = okText ?? tr().confirmOk;
-
-  modal.classList.remove('hidden');
-
   return new Promise(resolve => {
+    const modal = document.getElementById('generic-confirm-modal')!;
+    const msgEl = document.getElementById('generic-confirm-msg')!;
+    const okBtn = document.getElementById('generic-confirm-ok') as HTMLButtonElement;
+    const cancelBtn = document.getElementById('generic-confirm-cancel') as HTMLButtonElement;
+
+    if (!modal || !msgEl) { resolve(); return; }
+
+    msgEl.textContent = message;
+    if (okBtn) { okBtn.textContent = okText ?? tr().confirmOk; okBtn.style.background = '#3b82f6'; }
+    if (cancelBtn) cancelBtn.style.display = 'none';
+
+    modal.classList.remove('hidden');
+
     const cleanup = () => {
       modal.classList.add('hidden');
-      okBtn.removeEventListener('click', handleOk);
+      okBtn.onclick = null;
+      modal.onclick = null;
+      okBtn.style.background = '';
+      if (cancelBtn) cancelBtn.style.display = '';
+      resolve();
     };
 
-    const handleOk = () => { cleanup(); resolve(); };
-
-    okBtn.addEventListener('click', handleOk, { once: true });
+    okBtn.onclick = cleanup;
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
   });
 }
 

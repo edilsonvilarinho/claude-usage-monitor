@@ -1,17 +1,14 @@
-export interface Tab {
-  bind(settings: any): void;
-  read(): Partial<any>;
-}
-
-export function setupTabSwitcher(wrapperId: string, tabs: Tab[]): void {
-  const buttons = document.queryAll<HTMLElement>(`#${wrapperId} .settings-tab-btn`);
-  buttons.forEach((btn, i) => {
+export function setupTabSwitcher(): void {
+  const buttons = document.querySelectorAll<HTMLElement>('.settings-tabs .tab-btn');
+  const panes = document.querySelectorAll<HTMLElement>('.tab-pane');
+  panes.forEach((pane, i) => pane.classList.toggle('hidden', i !== 0));
+  buttons.forEach(btn => {
     btn.addEventListener('click', () => {
+      const tabId = btn.dataset.tab;
+      if (!tabId) return;
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      document.queryAll(`#${wrapperId} .settings-tab-content`).forEach((c, j) => {
-        c.classList.toggle('hidden', j !== i);
-      });
+      panes.forEach(pane => pane.classList.toggle('hidden', pane.id !== tabId));
     });
   });
 }

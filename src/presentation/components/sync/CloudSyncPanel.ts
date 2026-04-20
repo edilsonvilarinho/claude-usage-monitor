@@ -1,8 +1,18 @@
 import { syncStore } from '../../../renderer/stores/syncStore';
 import { tr } from '../../layouts/i18n';
 import type { Lang } from '../../layouts/i18n';
+import type { SyncStatus } from '../../../services/syncService';
 
 export class CloudSyncPanel {
+  applyCloudSyncStatus(status: SyncStatus): void {
+    this.updateHeaderIcon({ enabled: status.enabled });
+    if (status.enabled) {
+      this.renderEnabled({ email: status.email, lastSyncAt: status.lastSyncAt, pendingOps: status.pendingOps });
+    } else {
+      this.renderDisabled();
+    }
+  }
+
   renderEnabled(status: { email: string; lastSyncAt: number; pendingOps: number }): void {
     const setup = document.getElementById('cloud-sync-setup') as HTMLElement;
     const panel = document.getElementById('cloud-sync-status') as HTMLElement;

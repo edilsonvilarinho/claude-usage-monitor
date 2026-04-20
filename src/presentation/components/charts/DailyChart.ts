@@ -1,4 +1,4 @@
-import { tr } from '../../layouts/i18n';
+import { tr, getLang } from '../../layouts/i18n';
 
 interface DailySnapshot { date: string; maxWeekly: number; maxSession: number; maxCredits?: number; sessionWindowCount?: number; sessionAccum?: number }
 
@@ -26,7 +26,7 @@ export class DailyChart {
     }[] = [];
     const now = new Date();
     const todayStr = now.toLocaleDateString('sv');
-    const locale = 'en';
+    const locale = getLang();
 
     for (let i = 0; i < 7; i++) {
       const d = new Date(cycleStartMs + i * 24 * 60 * 60 * 1000);
