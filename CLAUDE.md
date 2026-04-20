@@ -19,6 +19,31 @@ Before publishing:
 1. `dist-build/*.exe` sizes are ~70–90 MB — if much larger, old artifacts leaked in
 2. `dist/` contains only compiled JS/HTML (no `.exe`, no `win-unpacked/`)
 
+## Clean Architecture — Regra Inviolável
+
+Todo código novo ou modificado deve respeitar Clean Architecture. Sem exceções.
+
+**Camadas e onde vive cada coisa:**
+| Camada | Pasta | O que contém |
+|--------|-------|--------------|
+| Domain | `src/domain/` | Entidades, tipos, regras de negócio puras (sem dependências externas) |
+| Application | `src/application/` | Use cases, mapeadores, orquestração entre domain e infra |
+| Infrastructure | `src/services/`, `src/main.ts` | Electron, IPC, APIs externas, storage |
+| Presentation | `src/presentation/` | Páginas, layouts, componentes, formatters, i18n |
+| Renderer bootstrap | `src/renderer/` | Apenas inicialização e stores reativos |
+
+**Proibido:**
+- Presentation importar de `src/services/` ou `src/main.ts` diretamente
+- Domain importar de qualquer outra camada
+- Formatters de UI com lógica de negócio (cálculos, regras)
+- Funções com parâmetros não utilizados (dead params)
+- Imports de módulo errado (ex: `Lang` de `renderer/app` em vez de `presentation/layouts/i18n`)
+
+**Obrigatório ao criar/modificar código:**
+- Identificar a camada correta antes de escrever
+- Respeitar o fluxo: Domain ← Application ← Infrastructure / Presentation
+- Tipos e contratos definidos na camada mais interna que os usa
+
 ## Architecture
 Electron app: main process (`src/main.ts`) + renderer (`src/renderer/`), context-isolated preload bridge.
 
