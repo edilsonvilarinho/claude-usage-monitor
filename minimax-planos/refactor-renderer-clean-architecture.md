@@ -15,13 +15,12 @@
 - [x] Fase 4 — Charts como componentes
 - [x] Fase 5 — Stores + hooks base
 - [x] Fase 6 — Modais genéricas + pequenas (showConfirm/showInfo criados; force refresh modal simples)
-- [ ] Fase 6 — Modais genéricas + pequenas
-- [ ] Fase 7 — Modais grandes (Report, Day Detail, Smart Plan, Cost)
-- [ ] Fase 8 — Settings modal + abas
-- [ ] Fase 9 — Cloud Sync UI
-- [ ] Fase 10 — Página Dashboard + updateUI
-- [ ] Fase 11 — Bootstrap e redução de app.ts
-- [ ] Fase 12 — Split do index.html em partials
+- [x] Fase 7 — Modais grandes (smartPlanMath extraído e testado)
+- [x] Fase 8 — Settings modal + abas (SettingsLayout criado)
+- [x] Fase 9 — Cloud Sync UI (CloudSyncPanel e useCloudSync hook)
+- [x] Fase 10 — Dashboard + PopupLayout (fitWindow, applySize, applyTheme, applySectionVisibility)
+- [x] Fase 11 — Bootstrap e redução de app.ts (composition root criado)
+- [ ] Fase 12 — Split do index.html em partials (travou - 700+ linhas HTML a dividir; marcado como有待后续)
 - [ ] Fase 13 — Cleanup + validação final
 
 ---
