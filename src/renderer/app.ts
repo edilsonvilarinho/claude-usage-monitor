@@ -3,6 +3,27 @@ import {
   LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Legend,
 } from 'chart.js';
 
+import { colorForPct, barClass } from '../presentation/shared/colors';
+import { formatResetsIn, formatResetAt, formatMinutes } from '../presentation/shared/formatters';
+import { filterChangedPoints } from '../presentation/shared/timeSeries';
+import { getLang, setLang, tr, applyTranslations } from '../presentation/layouts/i18n';
+import { type Lang } from '../presentation/layouts/i18n';
+import { formatRelativeTime } from '../presentation/shared/formatters';
+import { GaugeChart } from '../presentation/components/charts/GaugeChart';
+import { TrayIcon } from '../presentation/components/charts/TrayIcon';
+import { DailyChart } from '../presentation/components/charts/DailyChart';
+import { BurnRate } from '../presentation/components/charts/BurnRate';
+import { DayCurvePopup } from '../presentation/components/charts/DayCurvePopup';
+import { SmartPlanDonut } from '../presentation/components/charts/SmartPlanDonut';
+
+const sessionGauge = new GaugeChart('gauge-session');
+const weeklyGauge = new GaugeChart('gauge-weekly');
+const trayIcon = new TrayIcon();
+const dailyChart = new DailyChart();
+const burnRate = new BurnRate();
+const dayCurvePopup = new DayCurvePopup();
+const smartPlanDonut = new SmartPlanDonut();
+
 Chart.register(DoughnutController, ArcElement, Tooltip, LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Legend);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -121,491 +142,6 @@ declare global {
         onEvent: (cb: (data: { type: string; payload: unknown }) => void) => void;
       };
     };
-  }
-}
-
-// ── i18n ──────────────────────────────────────────────────────────────────────
-
-type Lang = 'en' | 'pt-BR';
-
-const translations = {
-  en: {
-    sessionLabel:     'Session (5h)',
-    weeklyLabel:      'Weekly (7d)',
-    sonnetLabel:      'Sonnet',
-    creditsLabel:     'Credits',
-    reportTitle:     'Usage Report',
-    loadingText:      'Loading...',
-    refreshText:      '↺ Refresh',
-    resettingText:    'Resetting...',
-    refreshingText:   'Refreshing...',
-    retryingText:     'Retrying...',
-    credentialExpired: 'Token expired. Please log in again.',
-    credentialModalTitle: 'Credentials not found',
-    credentialModalDesc: 'Log in with your Claude account so the monitor can access your usage data.',
-    credentialLoginBrowserBtn: 'Sign in with browser',
-    credentialLoginWaiting: 'Waiting for browser login...',
-    credentialLoginSuccess: 'Login successful! Loading data...',
-    credentialLoginError: 'Login error: ',
-    credentialRetryBtn: 'Retry',
-    credentialHaveTokensLabel: 'I have the OAuth credentials',
-    credentialAccessTokenLabel: 'Access Token *',
-    credentialRefreshTokenLabel: 'Refresh Token (optional)',
-    credentialAccessTokenPlaceholder: 'Paste accessToken here...',
-    credentialRefreshTokenPlaceholder: 'Paste refreshToken here...',
-    credentialSaveBtn: 'Save credentials',
-    credentialSavingStatus: 'Saving...',
-    credentialSavedStatus: 'Credentials saved! Loading data...',
-    credentialAccessTokenRequired: 'Access Token is required.',
-    credentialUseClaudeCodeLabel: 'Use Claude Code CLI',
-    credentialInstallWin: 'Install Claude Code:<br><code>winget install Anthropic.Claude</code>',
-    credentialInstallLinux: 'Install Claude Code:<br><code>npm install -g @anthropic-ai/claude-code</code>',
-    credentialRunClaude: 'Open a terminal and run:<br><code>claude</code>',
-    credentialFollowLogin: 'Follow the browser login flow',
-    credentialPathLabel: 'Expected file:',
-    forcingText:      'Forcing...',
-    errorPrefix:      'Error: ',
-    generalTitle:     'General',
-    notifTitle:       'Notifications',
-    launchAtStartup:  'Launch at startup',
-    alwaysVisible:    'Always visible',
-    themeLabel:       'Theme',
-    themeSystem:      'System',
-    themeDark:        'Dark',
-    themeLight:       'Light',
-    languageLabel:    'Language',
-    langEn:           'English',
-    langPtBR:         'Português (BR)',
-    sizeLabel:                 'Size',
-    sizeNormal:                'Normal',
-    sizeMedium:                'Medium',
-    sizeLarge:                 'Large',
-    sizeXLarge:                'Very Large',
-    autoRefreshLabel:          'Auto refresh',
-    autoRefreshIntervalLabel:  'Interval (s)',
-    autoRefreshHint:           'Min 60s — recommended: 300s',
-    enable:              'Enable',
-    sound:               'Sound',
-    notifyOnReset:       'Notify when usage resets to 0%',
-    notifyOnDropLabel:   'Notify when usage drops',
-    resetThresholdLabel: 'Reset threshold (%)',
-    sessionThreshold:    'Session limit',
-    weeklyThreshold:     'Weekly limit',
-    test:                'Test',
-    rateLimitMsg:    'Rate limited',
-    rateLimitRetry:  (t: string) => `Retry in ${t}`,
-    rateLimitAt:     (time: string) => `(at ${time})`,
-    rateLimitNow:    'Retrying...',
-    updatedAt:  (time: string) => `Updated: ${time}`,
-    failedAt:   (time: string) => `Failed: ${time}`,
-    lastRespOk:  (time: string) => `✓ OK · ${time}`,
-    lastRespErr: (detail: string, time: string) => `✗ ${detail} · ${time}`,
-    resetsIn:   (d: number, h: number, m: number) =>
-      d > 0 ? `Resets in ${d}d ${h}h` : h > 0 ? `Resets in ${h}h ${m}m` : `Resets in ${m}m`,
-    resetsAt:   (timeStr: string) => `at ${timeStr}`,
-    nextPollIn: (t: string) => `Next update in ${t}`,
-    historyLabel: 'Usage history (24h)',
-    dailyHistoryLabel: 'Weekly cycle',
-    clearHistoryBtn: 'Clear',
-    backupHistoryBtn: 'Backup',
-    importHistoryBtn: 'Import',
-    importSuccess: (n: number) => `${n} day(s) imported`,
-    backupSuccess: (p: string) => `Saved: ${p}`,
-    clearHistoryConfirm: 'Clear usage history?',
-    confirmOk: 'OK',
-    confirmCancel: 'Cancel',
-    confirmClear: 'Clear',
-    tooltipSession: 'Session',
-    tooltipWeekly: 'Weekly',
-    tooltipCredits: 'Credits',
-    tooltipResets: (n: number) => `${n} resets`,
-    tooltipAccum: (n: number) => `${n}% accumulated`,
-    resetLegendLabel: 'Resets',
-    editHistoryBtn: '✎',
-    editSnapshotTitle: 'Edit day data',
-    editDateLabel: 'Day',
-    editSessionLabel: 'Session peak (%)',
-    editAccumLabel: 'Accumulated (%)',
-    editResetsLabel: 'No. resets',
-    editWeeklyLabel: 'Weekly max. (%)',
-    editCancelBtn: 'Cancel',
-    editSaveBtn: 'Save',
-    dayDetailTitle:   (d: string) => `Session history — ${d}`,
-    dayDetailEmpty:   'No data for this day yet',
-    dayDetailSession: 'Session (5h)',
-    dayDetailWeekly:  'Weekly (7d)',
-    dayDetailCredits: 'Credits',
-    autoBackupTitle:      'Auto Backup',
-    autoBackupModeLabel:  'Mode',
-    autoBackupNever:      'Never',
-    autoBackupBefore:     'Before poll',
-    autoBackupAfter:      'After update',
-    autoBackupAlways:     'Always',
-    autoBackupFolderLabel: 'Folder',
-    autoBackupChoose:     'Choose...',
-    autoBackupFolderDefault: 'Default folder',
-    layoutTitle:            'Layout',
-    compactModeLabel:       'Compact mode',
-    essentialModeLabel:     'Essential mode',
-    showDailyChartLabel:    'Weekly chart',
-    showExtraBarsLabel:     'Credits / Sonnet bars',
-    showFooterLabel:        'Update footer',
-    showGeneralSettingsLabel: 'General panel',
-    showNotifSettingsLabel:   'Notifications panel',
-    showBackupSettingsLabel:  'Backup panel',
-    showCloudSyncSettingsLabel: 'Cloud Sync panel',
-    syncNever:        'Never',
-    syncJustNow:      'Just now',
-    syncMinAgo:       (n: number) => `${n} min ago`,
-    syncHAgo:         (n: number) => `${n}h ago`,
-    syncDAgo:         (n: number) => `${n}d ago`,
-    syncSoon:         'Soon',
-    syncInMin:        (n: number) => `in ${n} min`,
-    syncInH:          (n: number) => `in ${n}h`,
-    syncNowBtn:       'Sync now',
-    syncSyncingBtn:   'Syncing...',
-    syncDisableBtn:   'Disable',
-    syncWipeBtn:      'Wipe remote',
-    syncLabelAccount: 'Account',
-    syncLabelServer:  'Server',
-    syncLabelLast:    'Last sync',
-    syncLabelNext:    'Next sync',
-    syncLabelPending: 'Pending ops',
-    syncLabelError:   'Last error',
-    syncLabelState:   'Status',
-    syncStateSynced:  'Synced',
-    syncStateSyncing: 'Sending...',
-    settingsTabSmartPlan: 'Smart Plan',
-    smartPlanEnableLabel: 'Enable smart scheduling',
-    smartPlanActiveDays: 'Active days',
-    smartPlanWorkHours: 'Work hours',
-    smartPlanBreakHours: 'Break',
-    smartPlanValidationError: 'Invalid schedule: break must be within work hours',
-    smartPlanStart: 'From',
-    smartPlanEnd: 'To',
-    'smartPlan.status.blue': 'Outside configured work hours. Strategic planning paused.',
-    'smartPlan.status.blue.offday': 'Today is not a configured work day. Strategic planning paused.',
-    'smartPlan.status.green': 'Clear path. Start your most complex and high-context tasks now.',
-    'smartPlan.status.yellow': 'Beware of overhead. Your reset will fall in the middle of your work window. Interleave heavy tasks with manual coding or prioritize lower-context files.',
-    'smartPlan.status.red': 'Imminent block. Avoid sending large prompts. Focus on purely manual refactoring, PR reviews, or documentation until the reset.',
-    'smartPlan.status.purple': "Workflow Synchronization: To avoid 'dead resets', we suggest sending your first message at {time} so your reset aligns perfectly with your break. Protect your focus.",
-    'smartPlan.openDetails': 'Open smart schedule details',
-    'headerCheckUpdate': 'Check for updates',
-    'headerCost': 'Estimated cost',
-    'headerSettings': 'Settings',
-    'smartPlan.resetNextDay': '+1 day at {time}',
-    dayShort0: 'Sun',
-    dayShort1: 'Mon',
-    dayShort2: 'Tue',
-    dayShort3: 'Wed',
-    dayShort4: 'Thu',
-    dayShort5: 'Fri',
-    dayShort6: 'Sat',
-    spSessionLabel: 'Session (5h)',
-    spTimelineTitle: 'Work schedule today',
-    spModalTitle: 'Smart Plan',
-    spSummaryResetAt: 'Session resets at',
-    spSummaryAfterWork: 'after end of work hours',
-    spSummaryBeforeEnd: 'before end of work hours',
-    spLegendNow: 'Now',
-    spLegendBreak: 'Break',
-    spLegendReset: 'Reset',
-    costModalTitle: 'Estimated Cost',
-    costTabSession: 'Session',
-    costTabWeekly: 'Weekly',
-    costTabMonthly: 'Monthly',
-    costPeriodSession: 'Current session (5h)',
-    costPeriodWeekly: 'Last 7 days',
-    costPeriodMonthly: 'This month',
-    costBudgetOf: 'of',
-    costModelLabel: 'Model:',
-    costBudgetLabel: 'Monthly budget:',
-    costWarning: '⚠️ Estimated value based on standard API rates. Team/Enterprise plans may have different rates.',
-    costFormulaTitle: 'How it was calculated',
-    costFormulaUsage: '5h usage:',
-    costFormulaUsageWeekly: '7d usage:',
-    costFormulaModel: 'Model:',
-    costFormulaRates: 'rates:',
-    costFormulaTokens: 'Est. tokens:',
-    costFormulaSplit: 'Assumed split: 50% input / 50% output',
-    costFormulaWeeklyNote: 'Base: 7d usage × session limit × 7 · 50/50 split',
-    costFormulaMonthlyNote: 'Projection: weekly base × 4.3 (30 ÷ 7 weeks/month)',
-    serverStatusOnline: 'Server online',
-    serverStatusOffline: 'Server offline',
-    serverStatusConnecting: 'Connecting...',
-    serverStatusError: 'Server error',
-  },
-  'pt-BR': {
-    sessionLabel:     'Sessão (5h)',
-    weeklyLabel:      'Semanal (7d)',
-    sonnetLabel:      'Sonnet',
-    creditsLabel:     'Créditos',
-    reportTitle:     'Relatório de Uso',
-    loadingText:      'Carregando...',
-    refreshText:      '↺ Atualizar',
-    resettingText:    'Reiniciando...',
-    refreshingText:   'Atualizando...',
-    retryingText:     'Tentando...',
-    forcingText:      'Forçando...',
-    errorPrefix:      'Erro: ',
-    generalTitle:     'Geral',
-    notifTitle:       'Notificações',
-    launchAtStartup:  'Iniciar com o sistema',
-    alwaysVisible:    'Sempre visível',
-    themeLabel:       'Tema',
-    themeSystem:      'Sistema',
-    themeDark:        'Escuro',
-    themeLight:       'Claro',
-    languageLabel:    'Idioma',
-    langEn:           'English',
-    langPtBR:         'Português (BR)',
-    sizeLabel:                 'Tamanho',
-    sizeNormal:                'Normal',
-    sizeMedium:                'Médio',
-    sizeLarge:                 'Grande',
-    sizeXLarge:                'Muito Grande',
-    autoRefreshLabel:          'Atualizar automaticamente',
-    autoRefreshIntervalLabel:  'Intervalo (s)',
-    autoRefreshHint:           'Mín 60s — recomendado: 300s',
-    enable:              'Ativar',
-    sound:               'Som',
-    notifyOnReset:       'Avisar quando uso zerar',
-    notifyOnDropLabel:   'Avisar quando uso cair',
-    resetThresholdLabel: 'Limiar de reset (%)',
-    sessionThreshold:    'Limite da sessão',
-    weeklyThreshold:     'Limite semanal',
-    test:                'Testar',
-    credentialExpired: 'Token expirado. Faça login novamente.',
-    credentialModalTitle: 'Credenciais não encontradas',
-    credentialModalDesc: 'Faça login com sua conta Claude para que o monitor possa acessar seus dados de uso.',
-    credentialLoginBrowserBtn: 'Entrar com o navegador',
-    credentialLoginWaiting: 'Aguardando login no navegador...',
-    credentialLoginSuccess: 'Login realizado! Carregando dados...',
-    credentialLoginError: 'Erro no login: ',
-    credentialRetryBtn: 'Tentar novamente',
-    credentialHaveTokensLabel: 'Tenho as credenciais OAuth',
-    credentialAccessTokenLabel: 'Access Token *',
-    credentialRefreshTokenLabel: 'Refresh Token (opcional)',
-    credentialAccessTokenPlaceholder: 'Cole o accessToken aqui...',
-    credentialRefreshTokenPlaceholder: 'Cole o refreshToken aqui...',
-    credentialSaveBtn: 'Salvar credenciais',
-    credentialSavingStatus: 'Salvando...',
-    credentialSavedStatus: 'Credenciais salvas! Carregando dados...',
-    credentialAccessTokenRequired: 'Access Token é obrigatório.',
-    credentialUseClaudeCodeLabel: 'Usar Claude Code CLI',
-    credentialInstallWin: 'Instale o Claude Code:<br><code>winget install Anthropic.Claude</code>',
-    credentialInstallLinux: 'Instale o Claude Code:<br><code>npm install -g @anthropic-ai/claude-code</code>',
-    credentialRunClaude: 'Abra um terminal e execute:<br><code>claude</code>',
-    credentialFollowLogin: 'Siga o fluxo de login no navegador',
-    credentialPathLabel: 'Arquivo esperado:',
-    rateLimitMsg:    'Limite de requisições',
-    rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
-    rateLimitAt:     (time: string) => `(às ${time})`,
-    rateLimitNow:    'Tentando novamente...',
-    updatedAt:  (time: string) => `Atualizado: ${time}`,
-    failedAt:   (time: string) => `Falhou: ${time}`,
-    lastRespOk:  (time: string) => `✓ OK · ${time}`,
-    lastRespErr: (detail: string, time: string) => `✗ ${detail} · ${time}`,
-    resetsIn:   (d: number, h: number, m: number) =>
-      d > 0 ? `Reinicia em ${d}d ${h}h` : h > 0 ? `Reinicia em ${h}h ${m}m` : `Reinicia em ${m}m`,
-    resetsAt:   (timeStr: string) => `às ${timeStr}`,
-    nextPollIn: (t: string) => `Próxima atualização em ${t}`,
-    historyLabel: 'Histórico de uso (24h)',
-    dailyHistoryLabel: 'Ciclo semanal',
-    clearHistoryBtn: 'Limpar',
-    backupHistoryBtn: 'Backup',
-    importHistoryBtn: 'Import',
-    importSuccess: (n: number) => `${n} dia(s) importado(s)`,
-    backupSuccess: (p: string) => `Salvo: ${p}`,
-    clearHistoryConfirm: 'Limpar histórico de uso?',
-    confirmOk: 'OK',
-    confirmCancel: 'Cancelar',
-    confirmClear: 'Limpar',
-    tooltipSession: 'Sessão',
-    tooltipWeekly: 'Semanal',
-    tooltipCredits: 'Créditos',
-    tooltipResets: (n: number) => `${n} resets`,
-    tooltipAccum: (n: number) => `${n}% acumulado`,
-    resetLegendLabel: 'Resets',
-    editHistoryBtn: '✎',
-    editSnapshotTitle: 'Editar dados do dia',
-    editDateLabel: 'Dia',
-    editSessionLabel: 'Sessão pico (%)',
-    editAccumLabel: 'Acumulado (%)',
-    editResetsLabel: 'Nº resets',
-    editWeeklyLabel: 'Semanal máx. (%)',
-    editCancelBtn: 'Cancelar',
-    editSaveBtn: 'Salvar',
-    dayDetailTitle:   (d: string) => `Histórico de sessão — ${d}`,
-    dayDetailEmpty:   'Nenhum dado para este dia ainda',
-    dayDetailSession: 'Sessão (5h)',
-    dayDetailWeekly:  'Semanal (7d)',
-    dayDetailCredits: 'Créditos',
-    autoBackupTitle:      'Backup Automático',
-    autoBackupModeLabel:  'Modo',
-    autoBackupNever:      'Nunca',
-    autoBackupBefore:     'Antes da consulta',
-    autoBackupAfter:      'Após atualizar',
-    autoBackupAlways:     'Sempre',
-    autoBackupFolderLabel: 'Pasta',
-    autoBackupChoose:     'Escolher...',
-    autoBackupFolderDefault: 'Pasta padrão',
-    layoutTitle:            'Layout',
-    compactModeLabel:       'Modo compacto',
-    essentialModeLabel:     'Modo essencial',
-    showDailyChartLabel:    'Gráfico semanal',
-    showExtraBarsLabel:     'Barras de créditos / Sonnet',
-    showFooterLabel:        'Rodapé de atualização',
-    showGeneralSettingsLabel: 'Painel Geral',
-    showNotifSettingsLabel:   'Painel Notificações',
-    showBackupSettingsLabel:  'Painel Backup',
-    showCloudSyncSettingsLabel: 'Painel Cloud Sync',
-    syncNever:        'Nunca',
-    syncJustNow:      'Agora mesmo',
-    syncMinAgo:       (n: number) => `${n} min atrás`,
-    syncHAgo:         (n: number) => `${n}h atrás`,
-    syncDAgo:         (n: number) => `${n}d atrás`,
-    syncSoon:         'Em breve',
-    syncInMin:        (n: number) => `em ${n} min`,
-    syncInH:          (n: number) => `em ${n}h`,
-    syncNowBtn:       'Sincronizar',
-    syncSyncingBtn:   'Sincronizando...',
-    syncDisableBtn:   'Desativar',
-    syncWipeBtn:      'Limpar remoto',
-    syncLabelAccount: 'Conta',
-    syncLabelServer:  'Servidor',
-    syncLabelLast:    'Última sync',
-    syncLabelNext:    'Próxima sync',
-    syncLabelPending: 'Ops pendentes',
-    syncLabelError:   'Último erro',
-    syncLabelState:   'Status',
-    syncStateSynced:  'Sincronizado',
-    syncStateSyncing: 'Enviando...',
-    settingsTabSmartPlan: 'Agenda',
-    smartPlanEnableLabel: 'Ativar agenda inteligente',
-    smartPlanActiveDays: 'Dias ativos',
-    smartPlanWorkHours: 'Horário de trabalho',
-    smartPlanBreakHours: 'Intervalo',
-    smartPlanValidationError: 'Agenda inválida: intervalo deve estar dentro do expediente',
-    smartPlanStart: 'Início',
-    smartPlanEnd: 'Fim',
-    'smartPlan.status.blue': 'Fora do horário comercial configurado. Planejamento estratégico pausado.',
-    'smartPlan.status.blue.offday': 'Hoje não é um dia de trabalho configurado. Planejamento estratégico pausado.',
-    'smartPlan.status.green': 'Caminho livre. Inicie suas tarefas mais complexas e de alto consumo de contexto agora.',
-    'smartPlan.status.yellow': 'Cuidado com o overhead. Seu reset cairá no meio da sua janela de trabalho. Intercale tarefas pesadas com codificação manual ou priorize arquivos de menor contexto.',
-    'smartPlan.status.red': 'Bloqueio iminente. Evite enviar prompts grandes. Concentre-se em refatorações puramente manuais, revisão de PRs ou documentação até o reset.',
-    'smartPlan.status.purple': "Sincronização de Fluxo de trabalho: Para evitar 'resets mortos', sugerimos disparar sua primeira mensagem às {time} para que seu reset alinhe perfeitamente com seu intervalo. Proteja seu foco.",
-    'smartPlan.openDetails': 'Abrir detalhes da agenda',
-    'headerCheckUpdate': 'Verificar atualizações',
-    'headerCost': 'Custo estimado',
-    'headerSettings': 'Configurações',
-    'smartPlan.resetNextDay': '+1 dia às {time}',
-    dayShort0: 'Dom',
-    dayShort1: 'Seg',
-    dayShort2: 'Ter',
-    dayShort3: 'Qua',
-    dayShort4: 'Qui',
-    dayShort5: 'Sex',
-    dayShort6: 'Sáb',
-    spSessionLabel: 'Sessão (5h)',
-    spTimelineTitle: 'Expediente hoje',
-    spModalTitle: 'Smart Plan',
-    spSummaryResetAt: 'Sessão reinicia às',
-    spSummaryAfterWork: 'após o fim do expediente',
-    spSummaryBeforeEnd: 'antes do fim do expediente',
-    spLegendNow: 'Agora',
-    spLegendBreak: 'Intervalo',
-    spLegendReset: 'Reset',
-    costModalTitle: 'Custo Estimado',
-    costTabSession: 'Sessão',
-    costTabWeekly: 'Semanal',
-    costTabMonthly: 'Mensal',
-    costPeriodSession: 'Sessão atual (5h)',
-    costPeriodWeekly: 'Últimos 7 dias',
-    costPeriodMonthly: 'Este mês',
-    costBudgetOf: 'de',
-    costModelLabel: 'Modelo:',
-    costBudgetLabel: 'Orçamento mensal:',
-    costWarning: '⚠️ Valor estimado baseado na API padrão. Planos Team/Enterprise podem ter taxas diferentes.',
-    costFormulaTitle: 'Como foi calculado',
-    costFormulaUsage: 'Uso 5h:',
-    costFormulaUsageWeekly: 'Uso 7d:',
-    costFormulaModel: 'Modelo:',
-    costFormulaRates: 'taxa:',
-    costFormulaTokens: 'Tokens est.:',
-    costFormulaSplit: 'Distribuição assumida: 50% input / 50% output',
-    costFormulaWeeklyNote: 'Base: uso 7d × limite sessão × 7 · split 50/50',
-    costFormulaMonthlyNote: 'Projeção: base semanal × 4,3 (30 ÷ 7 semanas/mês)',
-    serverStatusOnline: 'Servidor online',
-    serverStatusOffline: 'Servidor offline',
-    serverStatusConnecting: 'Conectando...',
-    serverStatusError: 'Erro no servidor',
-  },
-} as const;
-
-type Translations = typeof translations.en;
-
-let currentLang: Lang = 'en';
-let currentSmartStatus: import('./globals').SmartStatus | null = null;
-
-function tr(): Translations {
-  return translations[currentLang];
-}
-
-function applyTranslations(): void {
-  const t = tr();
-
-  document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(el => {
-    const key = el.dataset.i18n as keyof Translations;
-    const val = t[key];
-    if (typeof val === 'string') {
-      el.textContent = val;
-    }
-  });
-
-  document.querySelectorAll<HTMLElement>('[data-i18n-title]').forEach(el => {
-    const key = el.dataset.i18nTitle as keyof Translations;
-    const val = t[key];
-    if (typeof val === 'string') {
-      el.title = val;
-    }
-  });
-
-  document.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach(el => {
-    const key = el.dataset.i18nHtml as keyof Translations;
-    const val = t[key];
-    if (typeof val === 'string') {
-      el.innerHTML = val;
-    }
-  });
-
-  document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-i18n-placeholder]').forEach(el => {
-    const key = (el as HTMLElement).dataset.i18nPlaceholder as keyof Translations;
-    const val = t[key];
-    if (typeof val === 'string') {
-      el.placeholder = val;
-    }
-  });
-
-  const themeSelect = document.getElementById('setting-theme') as HTMLSelectElement | null;
-  if (themeSelect) {
-    themeSelect.options[0].text = t.themeSystem;
-    themeSelect.options[1].text = t.themeDark;
-    themeSelect.options[2].text = t.themeLight;
-  }
-
-const langSelect = document.getElementById('setting-language') as HTMLSelectElement | null;
-  if (langSelect) {
-    langSelect.options[0].text = t.langEn;
-    langSelect.options[1].text = t.langPtBR;
-  }
-
-  const sizeSelect = document.getElementById('setting-window-size') as HTMLSelectElement | null;
-  if (sizeSelect) {
-    sizeSelect.options[0].text = t.sizeNormal;
-    sizeSelect.options[1].text = t.sizeMedium;
-    sizeSelect.options[2].text = t.sizeLarge;
-    sizeSelect.options[3].text = t.sizeXLarge;
   }
 }
 
@@ -736,153 +272,8 @@ function clearRateLimitBanner(): void {
   document.getElementById('rate-limit-banner')!.classList.remove('visible');
 }
 
-// ── Gauge factory ─────────────────────────────────────────────────────────────
-
-function colorForPct(pct: number): string {
-  if (pct >= 80) return '#ef4444';
-  if (pct >= 60) return '#f59e0b';
-  return '#22c55e';
-}
-
-function createGauge(canvasId: string): Chart {
-  const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-  return new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-      datasets: [{
-        data: [0, 100],
-        backgroundColor: ['#22c55e', 'rgba(128,128,128,0.15)'],
-        borderWidth: 0,
-        borderRadius: 4,
-      }],
-    },
-    options: {
-      circumference: 180,
-      rotation: -90,
-      cutout: '72%',
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 400 },
-      plugins: { tooltip: { enabled: false }, legend: { display: false } },
-    },
-  });
-}
-
-function updateGauge(chart: Chart, pct: number): void {
-  const filled = Math.max(0, Math.min(100, pct));
-  chart.data.datasets[0]!.data = [filled, 100 - filled];
-  (chart.data.datasets[0] as { backgroundColor: string[] }).backgroundColor =
-    [colorForPct(pct), 'rgba(128,128,128,0.15)'];
-  chart.update('none');
-}
-
-// ── Tray icon (canvas rendering) ─────────────────────────────────────────────
-
-function updateTrayIcon(sessionPct: number, weeklyPct: number): void {
-  const canvas = document.getElementById('tray-canvas') as HTMLCanvasElement;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  // Render at 64×64 for crisp downscaling by the OS (looks sharp at 16–32px tray sizes)
-  const size = 64;
-  const cx = size / 2;
-  const cy = size / 2;
-  ctx.clearRect(0, 0, size, size);
-
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const bgColor = isDark ? 'rgba(28, 28, 28, 0.90)' : 'rgba(235, 235, 235, 0.95)';
-  const textColor = isDark ? '#ffffff' : '#111111';
-  const trackColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)';
-
-  // Background circle
-  ctx.beginPath();
-  ctx.arc(cx, cy, size / 2 - 1, 0, Math.PI * 2);
-  ctx.fillStyle = bgColor;
-  ctx.fill();
-
-  const maxPct = Math.max(sessionPct, weeklyPct);
-  const arcRadius = size / 2 - 7;  // 25px at 64px canvas
-  const arcWidth = 8;
-
-  // Track (empty arc)
-  ctx.beginPath();
-  ctx.arc(cx, cy, arcRadius, 0, Math.PI * 2);
-  ctx.strokeStyle = trackColor;
-  ctx.lineWidth = arcWidth;
-  ctx.stroke();
-
-  // Progress arc
-  const color = colorForPct(maxPct);
-  const startAngle = -Math.PI / 2;
-  const endAngle = startAngle + (Math.min(maxPct, 100) / 100) * Math.PI * 2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, arcRadius, startAngle, endAngle);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = arcWidth;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-
-  // Center label - just show colored circle, no text
-  ctx.fillStyle = textColor;
-
-  lastRenderedData = { session: sessionPct, weekly: weeklyPct };
-
-  canvas.toBlob((blob) => {
-    if (!blob) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      window.claudeUsage.sendTrayIcon(reader.result as string);
-    };
-    reader.readAsDataURL(blob);
-  }, 'image/png');
-}
-
-// ── Time formatting ───────────────────────────────────────────────────────────
-
-function formatResetsIn(isoDate: string): string {
-  const resetsAt = new Date(isoDate).getTime();
-  const now = Date.now();
-  const diffMs = resetsAt - now;
-
-  if (diffMs <= 0) return tr().resettingText;
-
-  const totalMinutes = Math.floor(diffMs / 60000);
-  const days    = Math.floor(totalMinutes / 1440);
-  const hours   = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-
-  return tr().resetsIn(days, hours, minutes);
-}
-
-function formatResetAt(isoDate: string): string {
-  const date = new Date(isoDate);
-  const diffMs = date.getTime() - Date.now();
-  const isMultiDay = diffMs > 24 * 60 * 60 * 1000;
-  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
-
-  const timeStr = date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
-
-  const tzParts = Intl.DateTimeFormat(locale, { timeZoneName: 'short' }).formatToParts(date);
-  const tz = tzParts.find((p) => p.type === 'timeZoneName')?.value ?? '';
-
-  if (isMultiDay) {
-    const dayStr = date.toLocaleDateString(locale, { weekday: 'short' });
-    return tz ? `${dayStr} ${timeStr} • ${tz}` : `${dayStr} ${timeStr}`;
-  }
-  return tz ? `${timeStr} • ${tz}` : timeStr;
-}
-
-function barClass(pct: number): string {
-  if (pct >= 80) return 'crit';
-  if (pct >= 60) return 'warn';
-  return '';
-}
-
 // ── UI update ─────────────────────────────────────────────────────────────────
 
-let sessionChart: Chart | null = null;
-let weeklyChart:  Chart | null = null;
-let costGaugeChart: Chart | null = null;
 let lastRenderedData: { session: number; weekly: number } | null = null;
 let sessionResetTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -902,7 +293,7 @@ async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
   modal.classList.remove('hidden');
 
-  const isPtBRHeader = currentLang === 'pt-BR';
+  const isPtBRHeader = getLang() === 'pt-BR';
   const headerEl = modal.querySelector('.day-detail-header')!;
   if (!headerEl.querySelector('#btn-clear-report')) {
     const clearBtn = document.createElement('button');
@@ -933,7 +324,7 @@ async function openReportModal(): Promise<void> {
 
   const sorted = [...(dailyHistory ?? [])].sort((a, b) => a.date.localeCompare(b.date));
 
-  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
+  const locale = getLang() === 'pt-BR' ? 'pt-BR' : 'en';
   const labels = sorted.map(d => {
     const dt = new Date(d.date + 'T12:00:00');
     return dt.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
@@ -959,7 +350,7 @@ async function openReportModal(): Promise<void> {
       labels,
       datasets: [
         {
-          label: currentLang === 'pt-BR' ? 'Sessão pico' : 'Session peak',
+          label: getLang() === 'pt-BR' ? 'Sessão pico' : 'Session peak',
           data: sessionData,
           borderColor: '#22c55e',
           backgroundColor: 'rgba(34,197,94,0.12)',
@@ -1002,7 +393,7 @@ async function openReportModal(): Promise<void> {
 
   // Stats cards
   const statsEl = document.getElementById('report-stats')!;
-  const statItems = currentLang === 'pt-BR'
+  const statItems = getLang() === 'pt-BR'
     ? [
         { label: 'Dias monitorados', value: `${sorted.length}` },
         { label: 'Pico de sessão',   value: `${peakSession}%` },
@@ -1021,7 +412,7 @@ async function openReportModal(): Promise<void> {
 
   // Session windows list
   const windowsEl = document.getElementById('report-windows')!;
-  const isPtBR = currentLang === 'pt-BR';
+  const isPtBR = getLang() === 'pt-BR';
   const fmt = (d: Date) => d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   const recentWindows = [...(sessionWindows ?? [])].reverse().slice(0, 10);
 
@@ -1124,19 +515,6 @@ async function openReportModal(): Promise<void> {
   }
 }
 
-function filterChangedPoints(points: { session: number; weekly: number; credits?: number | null; ts: number }[]) {
-  if (points.length === 0) return [];
-  const result = [points[0]];
-  for (let i = 1; i < points.length; i++) {
-    const prev = result[result.length - 1];
-    const curr = points[i];
-    if (curr.session !== prev.session || curr.weekly !== prev.weekly || curr.credits !== prev.credits) {
-      result.push(curr);
-    }
-  }
-  return result;
-}
-
 async function openDayDetailModal(date: string): Promise<void> {
   const modal    = document.getElementById('day-detail-modal')!;
   const titleEl  = document.getElementById('day-detail-title')!;
@@ -1146,7 +524,7 @@ async function openDayDetailModal(date: string): Promise<void> {
 
   // Format display date
   const d = new Date(date + 'T12:00:00');
-  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
+  const locale = getLang() === 'pt-BR' ? 'pt-BR' : 'en';
   titleEl.textContent = t.dayDetailTitle(d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'short' }));
 
   // Destroy previous chart
@@ -1331,7 +709,7 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, li
   }[] = [];
   const now = new Date();
   const todayStr = now.toLocaleDateString('sv');
-  const locale = currentLang === 'pt-BR' ? 'pt-BR' : 'en';
+  const locale = getLang() === 'pt-BR' ? 'pt-BR' : 'en';
 
   for (let i = 0; i < 7; i++) {
     const d = new Date(cycleStartMs + i * 24 * 60 * 60 * 1000);
@@ -1578,8 +956,8 @@ function updateUI(data: UsageData): void {
       if (sessionChart) updateGauge(sessionChart, 0);
     } else {
       (document.getElementById('pct-session') as HTMLElement).textContent = sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`;
-      (document.getElementById('reset-session') as HTMLElement).textContent = formatResetsIn(data.five_hour.resets_at);
-      (document.getElementById('reset-at-session') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.five_hour.resets_at));
+      (document.getElementById('reset-session') as HTMLElement).textContent = formatResetsIn(data.five_hour.resets_at, getLang(), tr());
+      (document.getElementById('reset-at-session') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.five_hour.resets_at, getLang()));
       if (sessionChart) updateGauge(sessionChart, sessionPct);
     }
   });
@@ -1587,8 +965,8 @@ function updateUI(data: UsageData): void {
   // Weekly gauge
   (document.getElementById('pct-weekly') as HTMLElement).textContent =
     weeklyPct > 100 ? `>${Math.min(weeklyPct, 999)}%` : `${weeklyPct}%`;
-  (document.getElementById('reset-weekly') as HTMLElement).textContent = formatResetsIn(data.seven_day.resets_at);
-  (document.getElementById('reset-at-weekly') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.seven_day.resets_at));
+  (document.getElementById('reset-weekly') as HTMLElement).textContent = formatResetsIn(data.seven_day.resets_at, getLang(), tr());
+  (document.getElementById('reset-at-weekly') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.seven_day.resets_at, getLang()));
 
   // Sonnet bar
   const sonnetRow  = document.getElementById('sonnet-row') as HTMLElement;
@@ -1673,7 +1051,7 @@ async function loadSettings(): Promise<void> {
   (document.getElementById('setting-theme') as HTMLSelectElement).value = s.theme;
 
   const lang = s.language ?? 'en';
-  currentLang = lang;
+  setLang(lang);
   applyTranslations();
   (document.getElementById('setting-language') as HTMLSelectElement).value = lang;
 
@@ -1814,7 +1192,7 @@ async function saveSettingsFromUI(): Promise<void> {
 
   showAccountBar = showAccBar;
 
-  currentLang = lang;
+  setLang(lang);
   applyTranslations();
   applyTheme(theme);
   applySize(windowSize);
@@ -1887,12 +1265,6 @@ async function saveSettingsFromUI(): Promise<void> {
 
 let spDonutChart: Chart | null = null;
 
-function formatMinutes(totalMin: number): string {
-  const h = Math.floor(totalMin / 60) % 24;
-  const m = totalMin % 60;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-}
-
 function openSmartModal(): void {
   const s = currentSmartStatus;
   if (!s) return;
@@ -1901,7 +1273,7 @@ function openSmartModal(): void {
   applyTranslations();
   
   const modal = document.getElementById('smart-scheduler-modal')!;
-  const t = translations[currentLang] as Record<string, string>;
+  const t = translations[getLang()] as Record<string, string>;
 
   // Header
   const header = document.getElementById('sp-verdict-header')!;
@@ -2155,18 +1527,6 @@ function showInfo(msg: string, okLabel: string): Promise<void> {
 
 // ── Cloud Sync UI ─────────────────────────────────────────────────────────────
 
-function formatRelativeTime(ts: number): string {
-  const t = tr();
-  if (!ts) return t.syncNever;
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t.syncJustNow;
-  if (mins < 60) return t.syncMinAgo(mins);
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return t.syncHAgo(hrs);
-  return t.syncDAgo(Math.floor(hrs / 24));
-}
-
 function applyCloudSyncStatus(status: {
   enabled: boolean;
   lastSyncAt: number;
@@ -2204,7 +1564,7 @@ function applyCloudSyncStatus(status: {
   emailEl.textContent   = status.email || '—';
   const rawUrl = settings?.cloudSync?.serverUrl || '';
   serverEl.textContent = rawUrl ? (() => { try { return new URL(rawUrl).host; } catch { return rawUrl; } })() : '—';
-  lastEl.textContent    = formatRelativeTime(status.lastSyncAt);
+  lastEl.textContent    = formatRelativeTime(status.lastSyncAt, tr());
   if (nextSyncAt) {
     const diffNext = nextSyncAt - Date.now();
     if (diffNext <= 0) {
@@ -2264,7 +1624,7 @@ function updateSyncHeaderIcon(status: { enabled: boolean; lastSyncAt: number; la
 
   const t = tr();
   const host = serverUrl ? (() => { try { return new URL(serverUrl).hostname; } catch { return serverUrl; } })() : '';
-  const lastStr = formatRelativeTime(syncLastKnownAt || status.lastSyncAt);
+  const lastStr = formatRelativeTime(syncLastKnownAt || status.lastSyncAt, t);
 
   const intervalMs = (getSettings_cache?.cloudSync?.syncIntervalMinutes ?? 15) * 60 * 1000;
   const nextSyncAt = status.lastSyncAt ? status.lastSyncAt + intervalMs : 0;
@@ -2291,7 +1651,7 @@ function refreshSyncTimes(): void {
   if (!syncLastKnownAt) return;
 
   const t = tr();
-  const lastStr = formatRelativeTime(syncLastKnownAt);
+  const lastStr = formatRelativeTime(syncLastKnownAt, t);
   const nextSyncAt = syncLastKnownAt + syncLastKnownIntervalMs;
   const diff = nextSyncAt - Date.now();
   const nextStr = diff <= 0 ? t.syncSoon
@@ -2769,7 +2129,7 @@ function init(): void {
     const target = e.target as HTMLElement;
     if (target.id === 'setting-language') {
       const newLang = (target as HTMLSelectElement).value as Lang;
-      currentLang = newLang;
+      setLang(newLang);
       applyTranslations();
       // Update gauge labels directly after translation
       setTimeout(() => {
