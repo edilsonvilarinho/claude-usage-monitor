@@ -9,11 +9,27 @@ if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 const distDir = path.join(__dirname, 'dist');
 if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
 
-// Copy HTML and CSS
-fs.copyFileSync(
-  path.join(__dirname, 'src', 'renderer', 'index.html'),
-  path.join(outDir, 'index.html')
-);
+// ── HTML Include Resolution ────────────────────────────────────────────────────
+
+function resolveIncludes(html, baseDir, seen = new Set()) {
+  const re = /([ \t]*)<!--\s*@include\s+(.+?)\s*-->/g;
+  return html.replace(re, (_, indent, relPath) => {
+    const abs = path.resolve(baseDir, relPath.trim());
+    if (seen.has(abs)) throw new Error(`Circular include: ${abs}`);
+    seen.add(abs);
+    const raw = fs.readFileSync(abs, 'utf8');
+    const indented = raw.split('\n').map((l, i) => i === 0 ? l : indent + l).join('\n');
+    return resolveIncludes(indented, baseDir, seen);
+  });
+}
+
+// Copy HTML with include resolution
+const srcIndex = path.join(__dirname, 'src', 'renderer', 'index.html');
+const rawHtml = fs.readFileSync(srcIndex, 'utf8');
+const resolved = resolveIncludes(rawHtml, path.dirname(srcIndex));
+fs.writeFileSync(path.join(outDir, 'index.html'), resolved);
+
+// Copy CSS
 fs.copyFileSync(
   path.join(__dirname, 'src', 'renderer', 'styles.css'),
   path.join(outDir, 'styles.css')
