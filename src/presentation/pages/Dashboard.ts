@@ -1,6 +1,6 @@
 import { sessionGauge, weeklyGauge, trayIcon } from '../../renderer/chartsInstance';
 import { formatResetsIn, formatResetAt } from '../shared/formatters';
-import { tr } from '../layouts/i18n';
+import { tr, getLang } from '../layouts/i18n';
 import { fitWindow } from '../layouts/PopupLayout';
 
 type UsageData = { five_hour: { utilization: number; resets_at: string }; seven_day: { utilization: number; resets_at: string } };
@@ -25,10 +25,10 @@ export function updateDashboard(data: UsageData, onResetsAtChange: (v: string) =
 
   const resetAtSession = new Date(data.five_hour.resets_at);
   const resetAtWeekly = new Date(data.seven_day.resets_at);
-  if (resetSessionEl) resetSessionEl.textContent = formatResetsIn(data.five_hour.resets_at, resetAtSession, tr());
-  if (resetAtSessionEl) resetAtSessionEl.textContent = formatResetAt(resetAtSession, tr());
-  if (resetWeeklyEl) resetWeeklyEl.textContent = formatResetsIn(data.seven_day.resets_at, resetAtWeekly, tr());
-  if (resetAtWeeklyEl) resetAtWeeklyEl.textContent = formatResetAt(resetAtWeekly, tr());
+  if (resetSessionEl) resetSessionEl.textContent = formatResetsIn(data.five_hour.resets_at, tr());
+  if (resetAtSessionEl) resetAtSessionEl.textContent = formatResetAt(resetAtSession, getLang(), tr());
+  if (resetWeeklyEl) resetWeeklyEl.textContent = formatResetsIn(data.seven_day.resets_at, tr());
+  if (resetAtWeeklyEl) resetAtWeeklyEl.textContent = formatResetAt(resetAtWeekly, getLang(), tr());
 
   onResetsAtChange(data.seven_day.resets_at);
 

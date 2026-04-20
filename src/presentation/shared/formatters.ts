@@ -1,6 +1,6 @@
-import type { Lang } from '../../renderer/app';
+import type { Lang } from '../layouts/i18n';
 
-export function formatResetsIn(isoDate: string, lang: Lang, t: {
+export function formatResetsIn(isoDate: string, t: {
   resettingText: string;
   resetsIn: (d: number, h: number, m: number) => string;
 }): string {
@@ -18,8 +18,7 @@ export function formatResetsIn(isoDate: string, lang: Lang, t: {
   return t.resetsIn(days, hours, minutes);
 }
 
-export function formatResetAt(isoDate: string, lang: Lang): string {
-  const date = new Date(isoDate);
+export function formatResetAt(date: Date, lang: Lang, t: { resetsAt: (s: string) => string }): string {
   const diffMs = date.getTime() - Date.now();
   const isMultiDay = diffMs > 24 * 60 * 60 * 1000;
   const locale = lang === 'pt-BR' ? 'pt-BR' : 'en';
@@ -29,11 +28,14 @@ export function formatResetAt(isoDate: string, lang: Lang): string {
   const tzParts = Intl.DateTimeFormat(locale, { timeZoneName: 'short' }).formatToParts(date);
   const tz = tzParts.find((p) => p.type === 'timeZoneName')?.value ?? '';
 
+  let raw: string;
   if (isMultiDay) {
     const dayStr = date.toLocaleDateString(locale, { weekday: 'short' });
-    return tz ? `${dayStr} ${timeStr} • ${tz}` : `${dayStr} ${timeStr}`;
+    raw = tz ? `${dayStr} ${timeStr} • ${tz}` : `${dayStr} ${timeStr}`;
+  } else {
+    raw = tz ? `${timeStr} • ${tz}` : timeStr;
   }
-  return tz ? `${timeStr} • ${tz}` : timeStr;
+  return t.resetsAt(raw);
 }
 
 export { formatMinutes } from './formatMinutes';
