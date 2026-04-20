@@ -828,6 +828,28 @@ function registerIpcHandlers(): void {
   ipcMain.on('dismiss-update', () => {
     pendingUpdate = null;
   });
+
+  ipcMain.handle('save-manual-credentials', (_event, creds: { accessToken: string; refreshToken?: string }) => {
+    if (!creds?.accessToken?.trim()) {
+      throw new Error('Access Token é obrigatório.');
+    }
+    const userProfile = process.env['USERPROFILE'] || process.env['HOME'] || '';
+    const claudeDir = path.join(userProfile, '.claude');
+    const credFilePath = path.join(claudeDir, '.credentials.json');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    const credentialsFile = {
+      claudeAiOauth: {
+        accessToken: creds.accessToken.trim(),
+        refreshToken: creds.refreshToken?.trim() ?? '',
+        expiresAt: Date.now() + 3600 * 1000,
+      },
+    };
+    fs.writeFileSync(credFilePath, JSON.stringify(credentialsFile, null, 2), 'utf-8');
+    credentialMissing = false;
+    credentialExpiredSent = false;
+    pollingService.triggerNow().catch(() => { /* ignore */ });
+    return { success: true };
+  });
 }
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────

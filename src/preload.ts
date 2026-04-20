@@ -75,6 +75,9 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.on('credential-missing', (_e, credPath: string) => cb(credPath));
   },
 
+  saveManualCredentials: (creds: { accessToken: string; refreshToken?: string }): Promise<{ success: boolean }> =>
+    ipcRenderer.invoke('save-manual-credentials', creds),
+
   onCredentialsExpired: (cb: () => void): void => {
     ipcRenderer.on('credentials-expired', () => {
       ipcRenderer.send('credentials-expired-received');

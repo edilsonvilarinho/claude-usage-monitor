@@ -92,6 +92,7 @@ declare global {
       onUpdateDownloadProgress: (cb: (pct: number) => void) => void;
       openReleaseUrl: (url: string) => void;
       onCredentialMissing: (cb: (credPath: string) => void) => void;
+      saveManualCredentials: (creds: { accessToken: string; refreshToken?: string }) => Promise<{ success: boolean }>;
       getAppVersion: () => Promise<string>;
       getProfile: () => Promise<ProfileData | null>;
       setPollInterval: (ms: number | null) => Promise<void>;
@@ -2515,6 +2516,27 @@ window.claudeUsage.onCredentialsExpired(() => {
       btn.textContent = originalText;
     }
   });
+
+  const saveManualCredsBtn = document.getElementById('save-manual-creds-btn');
+  const manualCredsStatus = document.getElementById('manual-creds-status');
+  if (saveManualCredsBtn) {
+    saveManualCredsBtn.addEventListener('click', async () => {
+      const accessToken = (document.getElementById('manual-access-token') as HTMLTextAreaElement)?.value?.trim();
+      const refreshToken = (document.getElementById('manual-refresh-token') as HTMLTextAreaElement)?.value?.trim();
+      if (!accessToken) {
+        if (manualCredsStatus) manualCredsStatus.textContent = 'Access Token é obrigatório.';
+        return;
+      }
+      try {
+        if (manualCredsStatus) manualCredsStatus.textContent = 'Salvando...';
+        await window.claudeUsage.saveManualCredentials({ accessToken, refreshToken: refreshToken || undefined });
+        if (manualCredsStatus) manualCredsStatus.textContent = 'Credenciais salvas! Carregando dados...';
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (manualCredsStatus) manualCredsStatus.textContent = `Erro: ${message}`;
+      }
+    });
+  }
 
   window.claudeUsage.onUpdateAvailable(({ version, url, downloadUrl, isMajor }) => {
     const banner = document.getElementById('update-banner') as HTMLElement;
