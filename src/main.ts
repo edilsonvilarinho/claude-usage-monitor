@@ -240,6 +240,10 @@ function togglePopup(): void {
     if (npa > Date.now()) {
       popup.webContents.send('next-poll-at', npa);
     }
+    // Send cached profile so account bar renders immediately on open
+    if (cachedProfile) {
+      popup.webContents.send('profile-updated', cachedProfile);
+    }
   }
 }
 

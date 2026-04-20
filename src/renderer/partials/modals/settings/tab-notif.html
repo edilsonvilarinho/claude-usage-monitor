@@ -1,0 +1,57 @@
+<div id="tab-notif" class="tab-pane hidden">
+  <div class="settings-group">
+    <div class="settings-row">
+      <label data-i18n="enable">Enable</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-notif-enabled" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="sound">Sound</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-sound-enabled" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="notifyOnReset">Notify on reset</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-notify-on-window-reset" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="notifyOnDropLabel">Notify when usage drops</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-notify-on-reset" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row" id="row-reset-threshold">
+      <label data-i18n="resetThresholdLabel">Reset threshold (%)</label>
+      <div class="slider-row">
+        <input type="range" id="setting-reset-threshold" min="1" max="99" value="50">
+        <span id="lbl-reset-threshold" class="slider-value">50%</span>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="sessionThreshold">Session limit</label>
+      <div class="slider-row">
+        <input type="range" id="setting-session-threshold" min="1" max="100" value="80">
+        <span id="lbl-session-threshold" class="slider-value">80%</span>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="weeklyThreshold">Weekly limit</label>
+      <div class="slider-row">
+        <input type="range" id="setting-weekly-threshold" min="1" max="100" value="80">
+        <span id="lbl-weekly-threshold" class="slider-value">80%</span>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label></label>
+      <button class="test-btn" id="btn-test-notif" data-i18n="test">Test</button>
+    </div>
+  </div>
+</div>

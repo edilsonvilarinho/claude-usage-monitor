@@ -16,6 +16,10 @@
 8. [Módulo de Custo Estimado](#8-módulo-de-custo-estimado)
 9. [Módulo de Interface e UX](#9-módulo-de-interface-e-ux)
 10. [Arquitetura Reativa (IPC & Eventos)](#10-arquitetura-reativa-ipc--eventos)
+11. [Testes e Qualidade](#11-testes-e-qualidade)
+12. [Módulo de Verificação de Atualizações](#12-módulo-de-verificação-de-atualizações)
+13. [Módulo OAuth PKCE (Autenticação Inicial)](#13-módulo-oauth-pkce-autenticação-inicial)
+14. [Módulo de Status do Servidor (WebSocket)](#14-módulo-de-status-do-servidor-websocket)
 
 ---
 
@@ -267,6 +271,28 @@ Exibido no final do modal de Relatório de Uso (`#report-analytics`), calculado 
 
 **Arquivo:** `src/services/notificationService.ts`
 
+### Configurações (`NotificationSettings`)
+
+```typescript
+interface NotificationSettings {
+  enabled: boolean;          // master switch — desativa todas as notificações
+  sessionThreshold: number;  // % para disparar alerta de sessão (padrão: 80)
+  weeklyThreshold: number;   // % para disparar alerta semanal (padrão: 80)
+  resetThreshold: number;    // % abaixo da qual a flag é rearmada (padrão: 50)
+  notifyOnReset: boolean;    // toast quando uso CAIR abaixo de resetThreshold (padrão: false)
+  notifyOnWindowReset: bool; // toast quando a janela de tempo (5h/7d) resetar (padrão: true)
+  soundEnabled: boolean;     // bipe de sistema junto com cada notificação (padrão: true)
+}
+```
+
+**`sessionThreshold` vs `weeklyThreshold`:** Os dois gauges têm thresholds independentes, permitindo que o usuário configure alertas mais conservadores para a semana (ex.: 70%) e mais permissivos para a sessão (ex.: 90%).
+
+**`notifyOnReset` vs `notifyOnWindowReset`:** São eventos distintos:
+- `notifyOnReset`: o *uso* caiu (ex.: você consumiu menos tokens e a API refletiu isso)
+- `notifyOnWindowReset`: a *janela temporal* em si reiniciou (novo período de 5h ou 7d)
+
+**`soundEnabled`:** Usa `Notification.sound` (macOS) ou dispara um beep via `shell.beep()` no processo principal via IPC. Silenciar por notificação é respeitado pelo SO — `soundEnabled = false` remove o som independente das configurações do sistema.
+
 ### Lógica de debounce por estado
 
 O sistema usa flags de estado (`sessionNotified`, `weeklyNotified`) para evitar spam de notificações. O ciclo completo é:
@@ -441,6 +467,75 @@ pctOf(min)       = clamp((min - timelineStartMin) / totalRange * 100, 0, 100)
 
 **Por que separar configurações de dados históricos?** Permite resetar histórico sem afetar preferências do usuário, e vice-versa. Também facilita a migração de dados entre contas — ao detectar uma nova conta de email, o sistema migra os dados legados do `config.json` para `accounts.json[email]` automaticamente.
 
+### Campos completos de `AppSettings` (`config.json`)
+
+| Campo | Tipo | Padrão | Descrição |
+|-------|------|--------|-----------|
+| `launchAtStartup` | boolean | false | Registra o app no startup do Windows |
+| `alwaysVisible` | boolean | false | Mantém popup visível mesmo ao perder foco |
+| `notifications` | NotificationSettings | ver §4 | Configurações de alerta |
+| `theme` | `'system'\|'dark'\|'light'` | `'system'` | Tema visual |
+| `language` | `'en'\|'pt-BR'` | `'en'` | Idioma da UI |
+| `pollIntervalMinutes` | number (1–60) | 7 | Intervalo de polling customizado |
+| `windowSize` | `'normal'\|'medium'\|'large'\|'xlarge'` | `'large'` | Tamanho semântico do popup |
+| `autoRefresh` | boolean | false | Atualização automática da UI em intervalo fixo |
+| `autoRefreshInterval` | number (1–3600) | 600 | Intervalo do autoRefresh em segundos |
+| `rateLimitedUntil` | number | 0 | Unix ms — expiração do rate limit ativo |
+| `rateLimitCount` | number | 0 | Contador de 429s consecutivos para backoff |
+| `rateLimitResetAt` | number | 0 | Timestamp de reset provido pela API (unix ms); 0 se ausente |
+| `lastUpdateCheck` | number | 0 | Unix ms da última verificação de updates |
+| `skippedVersion` | string | `''` | Versão que o usuário optou por pular |
+| `showHistory` | boolean | false | Exibe seção de histórico de uso no popup |
+| `autoBackupMode` | `'never'\|'before'\|'after'\|'always'` | `'never'` | Modo de backup automático |
+| `autoBackupFolder` | string | `''` | Pasta de destino do backup (vazio = padrão) |
+| `showDailyChart` | boolean | true | Exibe gráfico de barras diárias |
+| `showExtraBars` | boolean | true | Exibe barras extras no gráfico (semana completa) |
+| `showFooter` | boolean | true | Exibe rodapé com links e versão |
+| `showGeneralSettings` | boolean | true | Aba "Geral" expandida nas configurações |
+| `showNotifSettings` | boolean | true | Aba "Notificações" expandida |
+| `showBackupSettings` | boolean | true | Aba "Backup" expandida |
+| `showCloudSyncSettings` | boolean | true | Aba "Cloud Sync" expandida |
+| `compactMode` | boolean | false | Remove elementos visuais secundários (padding, ícones decorativos) |
+| `essentialMode` | boolean | false | Modo mínimo — exibe apenas gauges e texto essencial |
+| `settingsUpdatedAt` | number | 0 | Unix ms da última alteração de settings (usado no LWW do cloud sync) |
+| `cloudSync` | CloudSyncSettings | ver §7 | Configurações de sincronização em nuvem |
+| `workSchedule` | WorkSchedule | ver §5 | Horário de trabalho para Smart Scheduler |
+| `monthlyBudget` | number (1–1000) | 50 | Orçamento mensal em USD |
+| `costModel` | `'sonnet'\|'haiku'\|'opus'` | `'sonnet'` | Modelo de referência para cálculo de custo |
+
+**`alwaysVisible`:** Quando `true`, o popup não fecha ao perder o foco (`blur`). Implementado no `main.ts` com `mainWindow.on('blur', ...)` condicional.
+
+**`autoRefresh`/`autoRefreshInterval`:** Força re-fetch da API em intervalo fixo na UI, independente do polling service. Útil durante sessões ativas onde o usuário quer monitoramento mais próximo sem alterar o intervalo global de polling.
+
+**`compactMode` vs `essentialMode`:**
+- `compactMode`: reduz padding, oculta labels secundários, mantém todos os dados
+- `essentialMode`: remove seções inteiras (gráfico diário, burn rate, footer) — apenas gauge + % + semáforo
+
+**`skippedVersion`:** Quando o usuário clica em "Mais tarde" em um modal de update **minor**, o `tag_name` da versão é armazenado aqui. Na próxima verificação, se `latest.tag_name === skippedVersion`, o banner é suprimido. Para updates **major**, `skippedVersion` nunca é setado — o modal sempre reaparece.
+
+### Campos completos de `AccountData` (`accounts.json[email]`)
+
+```typescript
+interface AccountData {
+  usageHistory: UsageSnapshot[];       // Histórico de snapshots de uso
+  dailyHistory: DailySnapshot[];       // Histórico de snapshots diários (máx 8 dias)
+  rateLimitedUntil: number;            // Unix ms — expiração do rate limit por conta
+  rateLimitCount: number;              // 429s consecutivos por conta
+  rateLimitResetAt: number;            // Timestamp de reset da API (0 se ausente)
+  timeSeries: Record<string, TimeSeriesPoint[]>; // YYYY-MM-DD → pontos do dia (máx 7 dias)
+  sessionWindows: SessionWindowRecord[]; // Janelas de 5h completadas (marcadores + sessionAccum)
+  currentSessionWindow: CurrentSessionWindow | null; // Janela em curso (persiste entre restarts)
+}
+```
+
+**Por que `rateLimitedUntil` e `rateLimitResetAt` são separados?**
+- `rateLimitedUntil` = o instante até o qual o sistema *deve esperar* (calculado com backoff exponencial se a API não fornecer hint)
+- `rateLimitResetAt` = o valor bruto do header `anthropic-ratelimit-*-reset` da API (0 se ausente)
+
+Quando a API fornece `rateLimitResetAt`, o `rateLimitedUntil` é setado para o mesmo valor. Quando não fornece, o `rateLimitedUntil` é calculado pelo backoff interno. Ter os dois separados permite exibir na UI a hora exata fornecida pela Anthropic quando disponível.
+
+**`timeSeries` máx 7 dias:** A série temporal é usada para o burn rate e para o gráfico de curva no modal de detalhe do dia. Entradas mais antigas que 7 dias são removidas a cada poll.
+
 ### Regra de migração de conta
 
 ```
@@ -497,6 +592,31 @@ O electron-store valida os dados persistidos contra o schema ao iniciar. Se um c
 ## 7. Módulo de Sincronização em Nuvem (Cloud Sync)
 
 **Arquivo:** `src/services/syncService.ts`
+
+### Configurações (`CloudSyncSettings`)
+
+```typescript
+interface CloudSyncSettings {
+  enabled: boolean;            // master switch do cloud sync
+  serverUrl: string;           // URL base do servidor de sync (ex: https://sync.example.com)
+  deviceId: string;            // UUID gerado na primeira ativação do sync neste dispositivo
+  deviceLabel: string;         // Nome legível do dispositivo (ex: "PC Trabalho")
+  lastSyncAt: number;          // Unix ms do último sync bem-sucedido
+  lastSyncError: string;       // Mensagem do último erro de sync ('' se nenhum)
+  lastPullCursor: number;      // Cursor de paginação incremental para pull (evita baixar duplicatas)
+  syncIntervalMinutes: number; // Intervalo periódico de sync em minutos (padrão: 15)
+}
+```
+
+**`deviceId`:** Gerado uma única vez com `crypto.randomUUID()` na primeira ativação do cloud sync. Nunca é regenerado mesmo que o usuário desative e reative o sync — identifica o dispositivo de forma permanente para fins de merge e LWW.
+
+**`deviceLabel`:** Exibido na UI de configurações de cloud sync. O usuário pode renomear livremente — serve apenas para identificação visual em logs e no painel multi-device.
+
+**`lastPullCursor`:** O servidor de sync aceita um parâmetro `since` (unix ms) que retorna apenas entradas modificadas após esse cursor. O `lastPullCursor` é atualizado para `Date.now()` após cada pull bem-sucedido. Isso garante que pulls repetidos não reprocessem o histórico completo.
+
+**`syncIntervalMinutes`:** O timer periódico de sync roda independente do polling de uso. O sync acontece:
+- Após cada `usage-updated` (push imediato dos dados mais recentes)
+- A cada `syncIntervalMinutes` (pull periódico para receber dados de outros dispositivos)
 
 ### Fluxo de autenticação
 
@@ -727,7 +847,7 @@ Ao abrir o modal do Smart Plan, o renderer solicita via IPC `get-smart-status` s
 
 ---
 
-## 11. Testes e Qualidade
+## 11. Testes e Qualidade  <!-- renumerado: 12=Updates, 13=OAuth, 14=WebSocket adicionados abaixo -->
 
 ### Estratatégia de Testes
 
@@ -786,11 +906,11 @@ npm run test:coverage  # Com Coverage
 
 ---
 
-*Última atualização: 2026-04-14 — feat: Testes renderer (+68 testes)*
+*Última atualização: 2026-04-20 — docs: adicionar módulos 13 (OAuth PKCE) e 14 (WebSocket); detalhar NotificationSettings, AppSettings, AccountData e CloudSyncSettings*
 
 ---
 
-## 11. Módulo de Verificação de Atualizações
+## 12. Módulo de Verificação de Atualizações
 
 **Arquivos:** `src/services/updateService.ts`, `src/main.ts`
 
@@ -853,3 +973,117 @@ Ex: "1.5.2" → "1.6.0" = false (apenas minor)
 | Major | Banner + modal de aviso com botão "Baixar vX.Y" |
 | Download em progresso | Barra de progresso no modal |
 | "Mais tarde" | Modal fecha; `pendingUpdate` limpo via IPC `dismiss-update` |
+
+---
+
+## 13. Módulo OAuth PKCE (Autenticação Inicial)
+
+**Arquivo:** `src/services/oauthService.ts`
+
+### Conceito
+
+Enquanto o `credentialService.ts` *lê* as credenciais existentes, o `oauthService.ts` *gera* credenciais novas via fluxo OAuth PKCE quando o usuário ainda não tem um `~/.claude/.credentials.json` válido — ou quando deseja re-autenticar manualmente.
+
+### Parâmetros do fluxo
+
+```
+CLIENT_ID = '9d1c250a-e61b-44d9-88ed-5944d1962f5e'
+AUTH_URL  = 'https://claude.ai/oauth/authorize'
+TOKEN_HOST = 'console.anthropic.com'
+TOKEN_PATH = '/v1/oauth/token'
+SCOPES    = 'user:profile user:inference'
+REDIRECT_URI = 'https://claude.ai/oauth/callback'
+```
+
+**Por que PKCE (Proof Key for Code Exchange)?** O Electron é um cliente público — não há como armazenar um `client_secret` com segurança. PKCE substitui o client_secret por um par `code_verifier` (aleatório 32 bytes em base64url) + `code_challenge` (SHA-256 do verifier). Isso protege o fluxo contra interceptação do código de autorização.
+
+### Fluxo
+
+```
+1. buildAuthUrl():
+   codeVerifier  = randomBytes(32).toString('base64url')
+   codeChallenge = SHA-256(codeVerifier).toString('base64url')
+   state         = randomBytes(16).toString('hex')
+   → abre navegador em AUTH_URL?response_type=code&client_id=...&code_challenge=...&code_challenge_method=S256&state=...
+
+2. Usuário autentica no claude.ai → callback com code + state
+
+3. exchangeCode(code, codeVerifier):
+   POST console.anthropic.com/v1/oauth/token
+   { grant_type: 'authorization_code', code, redirect_uri, client_id, code_verifier }
+   → { access_token, refresh_token?, expires_in? }
+
+4. saveCredentials(accessToken, refreshToken, expiresIn):
+   Salva em ~/.claude/.credentials.json:
+   { claudeAiOauth: { accessToken, refreshToken, expiresAt: Date.now() + expiresIn * 1000 } }
+```
+
+**Formato idêntico ao gerado pela CLI do Claude:** O JSON salvo pelo `oauthService.saveCredentials()` tem a mesma estrutura que o `credentialService.ts` espera ler. Isso garante que o fluxo de re-autenticação in-app produza um arquivo indistinguível do gerado pela CLI oficial.
+
+**Timeout de 15s:** A requisição de troca de código tem timeout de 15 segundos (`req.setTimeout(15000, ...)`). Se o usuário demorar para completar o fluxo no navegador, o código pode expirar no servidor — nesse caso, o fluxo deve ser reiniciado do zero (novo `buildAuthUrl()`).
+
+**`expires_in` opcional:** Se a API não retornar `expires_in`, o sistema assume 3600 segundos (1 hora) como fallback. Isso cobre respostas não-padrão de OAuth sem deixar `expiresAt` zerado (que causaria renovação imediata no próximo boot).
+
+---
+
+## 14. Módulo de Status do Servidor (WebSocket)
+
+**Arquivo:** `src/services/serverStatusService.ts`
+
+### Conceito
+
+Serviço de presença leve que mantém uma conexão WebSocket com o servidor de backend do cloud sync. Seu propósito é duplo:
+
+1. **Exibir contagem de usuários ativos** — o servidor broadcast `client_count` a cada conexão/desconexão. O app exibe essa contagem como social proof na UI de cloud sync.
+2. **Indicador de saúde do servidor** — o status `connecting | connected | disconnected | error` reflete a disponibilidade do servidor em tempo real.
+
+### Endpoint
+
+```
+ws://104.131.23.0:3030/ws
+```
+
+### Protocolo de mensagens
+
+| Mensagem (servidor → cliente) | Payload | Ação do cliente |
+|-------------------------------|---------|-----------------|
+| `{ type: 'connected', clientId }` | UUID do cliente | Armazena `myClientId` |
+| `{ type: 'ping' }` | — | Responde com `{ type: 'pong' }` |
+| `{ type: 'client_count', count }` | número | Atualiza `clientCount`, notifica listeners |
+
+| Mensagem (cliente → servidor) | Quando |
+|-------------------------------|--------|
+| `{ type: 'pong' }` | Em resposta ao ping do servidor |
+| `{ type: 'pong' }` | Heartbeat a cada 30s (iniciativa do cliente) |
+
+**Por que o cliente também envia pong a cada 30s por iniciativa própria?** O servidor pode não enviar pings em intervalos regulares. O keepalive do cliente garante que o TCP não feche a conexão por inatividade em redes com NAT agressivo.
+
+### Reconexão exponencial
+
+```
+delay = min(1000 × 2^reconnectAttempts, 30000)
+```
+
+Tentativas: 1s → 2s → 4s → 8s → 16s → 30s (cap). O `reconnectAttempts` reseta para 0 após conexão bem-sucedida. Não há limite de tentativas — o serviço reconecta indefinidamente enquanto o app estiver aberto.
+
+**Durante a reconexão:** O status emitido é `'disconnected'` (não `'connecting'`) para tentativas além da primeira. Isso evita que a UI exiba "conectando..." indefinidamente e transmite o estado real.
+
+### Estados e transições
+
+```
+disconnected
+  │ connect()
+  ▼
+connecting ──────── erro/timeout ──→ disconnected
+  │ ws.open                                │
+  ▼                                        │
+connected ──────── ws.close/ws.error ──→  │
+  │                                        │
+  └──── scheduleReconnect() ──────────────┘
+```
+
+### Lifecycle no app
+
+- **Start:** chamado no bootstrap do app após login bem-sucedido (quando cloud sync habilitado)
+- **Stop (`disconnect()`):** chamado quando o usuário desabilita cloud sync ou fecha o app
+- **Listeners:** `onStatusChange(cb)` e `onClientCountChange(cb)` retornam funções de unsubscribe — o renderer registra e limpa via `visibilitychange`
