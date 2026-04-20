@@ -1,0 +1,68 @@
+<div id="tab-backup" class="tab-pane hidden">
+  <div class="settings-group">
+    <div class="settings-title" data-i18n="autoBackupTitle">Auto Backup</div>
+    <div class="settings-row">
+      <label data-i18n="autoBackupModeLabel">Modo</label>
+      <select class="setting-select" id="setting-auto-backup-mode">
+        <option value="never"  data-i18n="autoBackupNever">Nunca</option>
+        <option value="before" data-i18n="autoBackupBefore">Antes da consulta</option>
+        <option value="after"  data-i18n="autoBackupAfter">Após atualizar</option>
+        <option value="always" data-i18n="autoBackupAlways">Sempre</option>
+      </select>
+    </div>
+    <div class="settings-row" id="row-auto-backup-folder">
+      <label data-i18n="autoBackupFolderLabel">Pasta</label>
+      <button class="test-btn" id="btn-auto-backup-folder" data-i18n="autoBackupChoose">Escolher...</button>
+    </div>
+    <div class="settings-hint" id="lbl-auto-backup-folder"></div>
+  </div>
+
+  <div class="settings-group" id="settings-group-cloud-sync">
+    <div class="settings-title">Cloud Sync</div>
+    <div id="cloud-sync-setup">
+      <div class="settings-row">
+        <label>Server URL</label>
+        <input type="text" class="sync-text-input" id="sync-server-url" placeholder="http://localhost:3030" />
+      </div>
+      <div class="settings-row">
+        <label>Device label</label>
+        <input type="text" class="sync-text-input" id="sync-device-label" placeholder="my-pc" />
+      </div>
+      <div class="settings-row">
+        <label></label>
+        <button class="test-btn" id="btn-sync-enable">Sign in &amp; enable</button>
+      </div>
+      <div id="sync-setup-error" class="sync-error-msg" style="display:none"></div>
+    </div>
+    <div id="cloud-sync-status" style="display:none">
+      <div class="sync-status-panel">
+        <div class="sync-status-row">
+          <span class="sync-status-label" data-i18n="syncLabelAccount">Account</span>
+          <span class="sync-status-value" id="sync-status-email">—</span>
+        </div>
+        <div class="sync-status-row">
+          <span class="sync-status-label" data-i18n="syncLabelServer">Server</span>
+          <span class="sync-status-value" id="sync-status-server">—</span>
+        </div>
+        <div class="sync-status-row">
+          <span class="sync-status-label" data-i18n="syncLabelLast">Last sync</span>
+          <span class="sync-status-value" id="sync-status-last">Never</span>
+        </div>
+        <div class="sync-status-row">
+          <span class="sync-status-label" data-i18n="syncLabelNext">Next sync</span>
+          <span class="sync-status-value" id="sync-status-next">—</span>
+        </div>
+        <div class="sync-status-row" id="sync-status-state-row">
+          <span class="sync-status-label" data-i18n="syncLabelState">Status</span>
+          <span class="sync-status-value" id="sync-status-state">—</span>
+        </div>
+      </div>
+      <div class="sync-actions">
+        <button class="test-btn" id="btn-sync-now" data-i18n="syncNowBtn">Sync now</button>
+        <button class="test-btn sync-btn-disable" id="btn-sync-disable" data-i18n="syncDisableBtn">Disable</button>
+        <button class="test-btn sync-btn-wipe" id="btn-sync-wipe" data-i18n="syncWipeBtn">Wipe remote</button>
+      </div>
+      <div id="sync-enabled-error" class="sync-error-msg" style="display:none"></div>
+    </div>
+  </div>
+</div>

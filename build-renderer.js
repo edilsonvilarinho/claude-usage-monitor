@@ -18,8 +18,9 @@ function resolveIncludes(html, baseDir, seen = new Set()) {
     if (seen.has(abs)) throw new Error(`Circular include: ${abs}`);
     seen.add(abs);
     const raw = fs.readFileSync(abs, 'utf8');
+    const includedBaseDir = path.dirname(abs);
     const indented = raw.split('\n').map((l, i) => i === 0 ? l : indent + l).join('\n');
-    return resolveIncludes(indented, baseDir, seen);
+    return resolveIncludes(indented, includedBaseDir, seen);
   });
 }
 

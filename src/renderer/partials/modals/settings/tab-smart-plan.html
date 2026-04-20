@@ -1,0 +1,48 @@
+<div id="tab-smart-plan" class="tab-pane hidden">
+  <div id="sp-validation-error" class="form-error hidden" data-i18n="smartPlanValidationError"></div>
+  <div class="settings-group">
+    <div class="settings-row">
+      <label class="toggle">
+        <input type="checkbox" id="sp-enabled">
+        <span class="toggle-slider"></span>
+      </label>
+      <span data-i18n="smartPlanEnableLabel">Ativar agenda inteligente</span>
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-row" style="flex-wrap:wrap; gap:4px;">
+      <span data-i18n="smartPlanActiveDays" style="width:100%; margin-bottom:4px;">Dias ativos</span>
+      <label><input type="checkbox" class="sp-day" id="sp-day-0"> <span data-i18n="dayShort0">Dom</span></label>
+      <label><input type="checkbox" class="sp-day" id="sp-day-1"> <span data-i18n="dayShort1">Seg</span></label>
+      <label><input type="checkbox" class="sp-day" id="sp-day-2"> <span data-i18n="dayShort2">Ter</span></label>
+      <label><input type="checkbox" class="sp-day" id="sp-day-3"> <span data-i18n="dayShort3">Qua</span></label>
+      <label><input type="checkbox" class="sp-day" id="sp-day-4"> <span data-i18n="dayShort4">Qui</span></label>
+      <label><input type="checkbox" class="sp-day" id="sp-day-5"> <span data-i18n="dayShort5">Sex</span></label>
+      <label><input type="checkbox" class="sp-day" id="sp-day-6"> <span data-i18n="dayShort6">Sáb</span></label>
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-row">
+      <label data-i18n="smartPlanWorkHours">Horário de trabalho</label>
+    </div>
+    <div class="settings-row">
+      <span class="sp-time-label" data-i18n="smartPlanStart">Início</span>
+      <input type="time" id="sp-work-start" class="sp-time-input">
+      <span>–</span>
+      <span class="sp-time-label" data-i18n="smartPlanEnd">Fim</span>
+      <input type="time" id="sp-work-end" class="sp-time-input">
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-row">
+      <label data-i18n="smartPlanBreakHours">Intervalo</label>
+    </div>
+    <div class="settings-row">
+      <span class="sp-time-label" data-i18n="smartPlanStart">Início</span>
+      <input type="time" id="sp-break-start" class="sp-time-input">
+      <span>–</span>
+      <span class="sp-time-label" data-i18n="smartPlanEnd">Fim</span>
+      <input type="time" id="sp-break-end" class="sp-time-input">
+    </div>
+  </div>
+</div>

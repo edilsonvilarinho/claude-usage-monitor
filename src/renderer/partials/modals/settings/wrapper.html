@@ -1,0 +1,24 @@
+<div id="settings-modal" class="modal-overlay hidden">
+  <div class="modal-box settings-modal-box">
+    <div class="settings-modal-header">
+      <span class="settings-modal-title">Configurações</span>
+      <button class="icon-btn" id="btn-settings-close" title="Fechar">✕</button>
+    </div>
+    <div class="settings-tabs">
+      <button class="tab-btn active" data-tab="tab-geral">Geral</button>
+      <button class="tab-btn" data-tab="tab-exibicao">Exibição</button>
+      <button class="tab-btn" data-tab="tab-notif">Notificações</button>
+      <button class="tab-btn" data-tab="tab-backup">Backup / Sync</button>
+      <button class="tab-btn" data-tab="tab-smart-plan" data-i18n="settingsTabSmartPlan">Agenda</button>
+    </div>
+    <div class="settings-tab-content">
+
+      <!-- @include ./tab-geral.html -->
+      <!-- @include ./tab-exibicao.html -->
+      <!-- @include ./tab-notif.html -->
+      <!-- @include ./tab-backup.html -->
+      <!-- @include ./tab-smart-plan.html -->
+
+    </div><!-- /settings-tab-content -->
+  </div><!-- /settings-modal-box -->
+</div><!-- /settings-modal -->

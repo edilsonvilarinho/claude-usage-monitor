@@ -1,0 +1,64 @@
+<div id="tab-geral" class="tab-pane">
+  <div class="settings-group">
+    <div class="settings-row">
+      <label data-i18n="launchAtStartup">Launch at startup</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-startup" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="alwaysVisible">Always visible</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-always-visible" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="themeLabel">Theme</label>
+      <select class="setting-select" id="setting-theme">
+        <option value="system">System</option>
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="languageLabel">Language</label>
+      <select class="setting-select" id="setting-language">
+        <option value="en">English</option>
+        <option value="pt-BR">Português (BR)</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="sizeLabel">Size</label>
+      <select class="setting-select" id="setting-window-size">
+        <option value="normal"  data-i18n-opt="sizeNormal">Normal</option>
+        <option value="medium"  data-i18n-opt="sizeMedium">Medium</option>
+        <option value="large"   data-i18n-opt="sizeLarge">Large</option>
+        <option value="xlarge"  data-i18n-opt="sizeXLarge">Very Large</option>
+      </select>
+    </div>
+    <div class="settings-row">
+      <label data-i18n="autoRefreshLabel">Auto refresh</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-auto-refresh" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="settings-row" id="row-auto-refresh-interval">
+      <label data-i18n="autoRefreshIntervalLabel">Interval (s)</label>
+      <div class="spinner-row">
+        <input type="number" class="spinner-input" id="setting-auto-refresh-interval" min="60" max="3600" step="30" />
+        <span class="spinner-unit">s</span>
+      </div>
+    </div>
+    <div class="settings-hint" id="hint-auto-refresh" data-i18n="autoRefreshHint"></div>
+    <div class="settings-row">
+      <label data-i18n="compactModeLabel">Modo compacto</label>
+      <label class="toggle">
+        <input type="checkbox" id="setting-compact-mode" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+</div>
