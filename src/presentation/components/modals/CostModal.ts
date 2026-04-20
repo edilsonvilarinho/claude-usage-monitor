@@ -1,7 +1,47 @@
-import { costGauge } from './chartsInstance';
+import { costGauge } from '../../../renderer/chartsInstance';
 
 export function initCostGauge(): void {
   costGauge.mount();
+}
+
+export function setupCostModalHandlers(): void {
+  document.getElementById('btn-cost')?.addEventListener('click', () => {
+    document.getElementById('cost-modal')?.classList.remove('hidden');
+    initCostGauge();
+    loadCostData();
+  });
+  document.getElementById('cost-modal-close')?.addEventListener('click', () => {
+    document.getElementById('cost-modal')?.classList.add('hidden');
+  });
+  document.getElementById('cost-modal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('cost-modal')) {
+      document.getElementById('cost-modal')?.classList.add('hidden');
+    }
+  });
+
+  document.querySelectorAll<HTMLElement>('.cost-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = (btn as HTMLElement).dataset.costTab!;
+      document.querySelectorAll('.cost-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.cost-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`cost-${tabId}`)?.classList.add('active');
+    });
+  });
+
+  document.getElementById('cost-budget-input')?.addEventListener('change', async (e) => {
+    const budget = Math.max(1, Math.min(1000, Number((e.target as HTMLInputElement).value)));
+    await window.claudeUsage.saveSettings({ monthlyBudget: budget });
+    loadCostData();
+  });
+
+  document.querySelectorAll<HTMLElement>('.cost-model-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const model = btn.dataset.model as 'haiku' | 'sonnet' | 'opus';
+      await window.claudeUsage.saveSettings({ costModel: model });
+      loadCostData();
+    });
+  });
 }
 
 export function loadCostData(): void {
