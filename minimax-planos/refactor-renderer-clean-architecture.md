@@ -12,8 +12,9 @@
 - [x] Fase 1 — Build-time include para HTML
 - [x] Fase 2 — Utilitários puros (colors, formatters, timeSeries)
 - [x] Fase 3 — i18n isolado
-- [x] Fase 4 — Charts como componentes (componentes criados, integração pendente)
-- [ ] Fase 5 — Stores + hooks base
+- [x] Fase 4 — Charts como componentes
+- [x] Fase 5 — Stores + hooks base
+- [x] Fase 6 — Modais genéricas + pequenas (showConfirm/showInfo criados; force refresh modal simples)
 - [ ] Fase 6 — Modais genéricas + pequenas
 - [ ] Fase 7 — Modais grandes (Report, Day Detail, Smart Plan, Cost)
 - [ ] Fase 8 — Settings modal + abas
