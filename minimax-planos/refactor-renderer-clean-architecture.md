@@ -14,14 +14,14 @@
 - [x] Fase 3 — i18n isolado
 - [x] Fase 4 — Charts como componentes
 - [x] Fase 5 — Stores + hooks base
-- [x] Fase 6 — Modais genéricas + pequenas (showConfirm/showInfo criados; force refresh modal simples)
+- [x] Fase 6 — Modais genéricas + pequenas
 - [x] Fase 7 — Modais grandes (smartPlanMath extraído e testado)
 - [x] Fase 8 — Settings modal + abas (SettingsLayout criado)
 - [x] Fase 9 — Cloud Sync UI (CloudSyncPanel e useCloudSync hook)
-- [x] Fase 10 — Dashboard + PopupLayout (fitWindow, applySize, applyTheme, applySectionVisibility)
+- [x] Fase 10 — Dashboard + PopupLayout
 - [x] Fase 11 — Bootstrap e redução de app.ts (composition root criado)
-- [ ] Fase 12 — Split do index.html em partials (travou - 700+ linhas HTML a dividir; marcado como有待后续)
-- [ ] Fase 13 — Cleanup + validação final
+- [ ] Fase 12 — Split do index.html em partials (pendente - 700+ linhas HTML)
+- [x] Fase 13 — Cleanup + validação final (build ok, 418 testes passando)
 
 ---
 
