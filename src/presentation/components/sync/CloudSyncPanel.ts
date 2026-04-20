@@ -1,4 +1,4 @@
-import { syncStore } from '../../stores/syncStore';
+import { syncStore } from '../../../renderer/stores/syncStore';
 import { tr } from '../../layouts/i18n';
 import type { Lang } from '../../layouts/i18n';
 

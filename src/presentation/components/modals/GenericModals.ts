@@ -56,3 +56,9 @@ export function showInfo(message: string, okText?: string): Promise<void> {
     okBtn.addEventListener('click', handleOk, { once: true });
   });
 }
+
+export function showForceRefreshModal(): void {
+  const modal = document.getElementById('force-refresh-modal') as HTMLElement;
+  if (!modal) return;
+  modal.classList.remove('hidden');
+}

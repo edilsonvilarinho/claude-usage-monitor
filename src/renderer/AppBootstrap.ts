@@ -1,13 +1,15 @@
-import { tr, getLang, setLang, applyTranslations } from '../layouts/i18n';
-import type { Lang } from '../layouts/i18n';
-import { fitWindow, applySize, applySectionVisibility, applyTheme } from '../layouts/PopupLayout';
-import { showConfirm, showInfo, showForceRefreshModal } from '../components/modals/GenericModals';
-import { CloudSyncPanel } from '../components/sync/CloudSyncPanel';
-import { setupTabSwitcher } from '../components/settings/SettingsLayout';
+import { tr, getLang, setLang, applyTranslations } from '../presentation/layouts/i18n';
+import type { Lang } from '../presentation/layouts/i18n';
+import { fitWindow, applySize, applySectionVisibility, applyTheme } from '../presentation/layouts/PopupLayout';
+import { showConfirm, showInfo, showForceRefreshModal } from '../presentation/components/modals/GenericModals';
+import { CloudSyncPanel } from '../presentation/components/sync/CloudSyncPanel';
+import { setupTabSwitcher } from '../presentation/components/settings/SettingsLayout';
 import { loadCostData, initCostGauge } from './CostModal';
-import { openSmartModal, applySmartIndicator } from './SmartPlanModal';
+import { applySmartIndicator, setCurrentSmartStatus, openSmartModal } from './SmartPlanModal';
 import { sessionGauge, weeklyGauge, trayIcon, dailyChart, burnRate, costGauge } from './chartsInstance';
-import { formatResetsIn, formatResetAt } from '../../presentation/shared/formatters';
+import { formatResetsIn, formatResetAt } from '../presentation/shared/formatters';
+import { openReportModal } from './ReportModal';
+import { openDayDetailModal, closeDayDetailModal } from './DayDetailModal';
 
 let isRateLimited = false;
 let autoRefreshEnabled = false;
@@ -437,6 +439,8 @@ function setupReportHandlers(): void {
   document.getElementById('btn-close-report')?.addEventListener('click', () => {
     document.getElementById('report-modal')?.classList.add('hidden');
   });
+
+  dailyChart.setDayClickHandler((date) => void openDayDetailModal(date));
 }
 
 function setupEditSnapshotHandlers(): void {
@@ -521,9 +525,6 @@ function setupSettingsHandlers(): void {
 }
 
 function setupModalClosers(): void {
-  function closeDayDetailModal() {
-    document.getElementById('day-detail-modal')?.classList.add('hidden');
-  }
   document.getElementById('day-detail-close')?.addEventListener('click', closeDayDetailModal);
   document.getElementById('day-detail-modal')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('day-detail-modal')) closeDayDetailModal();

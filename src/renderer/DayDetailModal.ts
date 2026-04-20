@@ -1,6 +1,6 @@
 import { Chart } from 'chart.js';
-import { getLang, tr } from '../../presentation/layouts/i18n';
-import { filterChangedPoints } from '../../presentation/shared/timeSeries';
+import { getLang, tr } from '../presentation/layouts/i18n';
+import { filterChangedPoints } from '../presentation/shared/timeSeries';
 
 let dayDetailChart: Chart | null = null;
 

@@ -1,42 +1,39 @@
 import { tr } from '../layouts/i18n';
 
-export class PopupLayout {
-  fitWindow(): void {
-    requestAnimationFrame(() => {
-      const header = document.querySelector('.header') as HTMLElement;
-      const accountBar = document.getElementById('account-bar') as HTMLElement;
-      const smartRecBar = document.getElementById('smart-rec-bar') as HTMLElement;
-      const content = document.querySelector('.content') as HTMLElement;
-      const footer = document.querySelector('.footer') as HTMLElement;
-      const accountBarH = (accountBar?.style.display !== 'none' ? accountBar?.offsetHeight : 0) ?? 0;
-      const h = header.offsetHeight + accountBarH + (smartRecBar?.offsetHeight ?? 0) + content.scrollHeight + (footer?.offsetHeight ?? 0);
-      window.claudeUsage.setWindowHeight(h);
-    });
-  }
-
-  applySize(size: string): void {
-    document.body.dataset.size = size;
-    requestAnimationFrame(() => {
-      // Charts would be resized here
-      this.fitWindow();
-    });
-  }
-
-  applyTheme(theme: string): void {
-    document.body.dataset.theme = theme;
-  }
-
-  applySectionVisibility(opts: { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean }): void {
-    const dailyChart = document.getElementById('daily-chart-section');
-    const extraSection = document.getElementById('extra-section');
+export function fitWindow(): void {
+  requestAnimationFrame(() => {
+    const header = document.querySelector('.header') as HTMLElement;
+    const accountBar = document.getElementById('account-bar') as HTMLElement;
+    const smartRecBar = document.getElementById('smart-rec-bar') as HTMLElement;
+    const content = document.querySelector('.content') as HTMLElement;
     const footer = document.querySelector('.footer') as HTMLElement;
-    const accountBar = document.getElementById('account-bar');
+    const accountBarH = (accountBar?.style.display !== 'none' ? accountBar?.offsetHeight : 0) ?? 0;
+    const h = header.offsetHeight + accountBarH + (smartRecBar?.offsetHeight ?? 0) + content.scrollHeight + (footer?.offsetHeight ?? 0);
+    window.claudeUsage.setWindowHeight(h);
+  });
+}
 
-    if (dailyChart) dailyChart.style.display = opts.showDailyChart ? '' : 'none';
-    if (extraSection) extraSection.style.display = opts.showExtraBars ? '' : 'none';
-    if (footer) footer.style.display = opts.showFooter ? '' : 'none';
-    if (accountBar) accountBar.style.display = opts.showAccountBar ? '' : 'none';
+export function applySize(size: string): void {
+  document.body.dataset.size = size;
+  requestAnimationFrame(() => {
+    fitWindow();
+  });
+}
 
-    this.fitWindow();
-  }
+export function applyTheme(theme: string): void {
+  document.body.dataset.theme = theme;
+}
+
+export function applySectionVisibility(opts: { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean }): void {
+  const dailyChart = document.getElementById('daily-chart-section');
+  const extraSection = document.getElementById('extra-section');
+  const footer = document.querySelector('.footer') as HTMLElement;
+  const accountBar = document.getElementById('account-bar');
+
+  if (dailyChart) dailyChart.style.display = opts.showDailyChart ? '' : 'none';
+  if (extraSection) extraSection.style.display = opts.showExtraBars ? '' : 'none';
+  if (footer) footer.style.display = opts.showFooter ? '' : 'none';
+  if (accountBar) accountBar.style.display = opts.showAccountBar ? '' : 'none';
+
+  fitWindow();
 }

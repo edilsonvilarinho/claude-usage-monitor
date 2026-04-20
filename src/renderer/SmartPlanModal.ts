@@ -1,8 +1,8 @@
 import { Chart } from 'chart.js';
-import { applyTranslations, tr, getLang } from '../../presentation/layouts/i18n';
-import { formatMinutes } from '../../presentation/shared/formatMinutes';
-import { fitWindow } from '../../presentation/layouts/PopupLayout';
-import type { SmartStatus } from '../globals';
+import { applyTranslations, tr, getLang } from '../presentation/layouts/i18n';
+import { formatMinutes } from '../presentation/shared/formatMinutes';
+import { fitWindow } from '../presentation/layouts/PopupLayout';
+import type { SmartStatus } from './globals';
 
 let spDonutChart: Chart | null = null;
 let currentSmartStatus: SmartStatus | null = null;
