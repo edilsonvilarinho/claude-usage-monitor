@@ -93,6 +93,9 @@ declare global {
       openReleaseUrl: (url: string) => void;
       onCredentialMissing: (cb: (credPath: string) => void) => void;
       saveManualCredentials: (creds: { accessToken: string; refreshToken?: string }) => Promise<{ success: boolean }>;
+      startOAuthLogin: () => Promise<void>;
+      onOAuthLoginComplete: (cb: () => void) => void;
+      onOAuthLoginError: (cb: (message: string) => void) => void;
       getAppVersion: () => Promise<string>;
       getProfile: () => Promise<ProfileData | null>;
       setPollInterval: (ms: number | null) => Promise<void>;
@@ -139,7 +142,27 @@ const translations = {
     retryingText:     'Retrying...',
     credentialExpired: 'Token expired. Please log in again.',
     credentialModalTitle: 'Credentials not found',
-    credentialModalDesc: 'Log in to Claude Code so the monitor can access your usage data.',
+    credentialModalDesc: 'Log in with your Claude account so the monitor can access your usage data.',
+    credentialLoginBrowserBtn: 'Sign in with browser',
+    credentialLoginWaiting: 'Waiting for browser login...',
+    credentialLoginSuccess: 'Login successful! Loading data...',
+    credentialLoginError: 'Login error: ',
+    credentialRetryBtn: 'Retry',
+    credentialHaveTokensLabel: 'I have the OAuth credentials',
+    credentialAccessTokenLabel: 'Access Token *',
+    credentialRefreshTokenLabel: 'Refresh Token (optional)',
+    credentialAccessTokenPlaceholder: 'Paste accessToken here...',
+    credentialRefreshTokenPlaceholder: 'Paste refreshToken here...',
+    credentialSaveBtn: 'Save credentials',
+    credentialSavingStatus: 'Saving...',
+    credentialSavedStatus: 'Credentials saved! Loading data...',
+    credentialAccessTokenRequired: 'Access Token is required.',
+    credentialUseClaudeCodeLabel: 'Use Claude Code CLI',
+    credentialInstallWin: 'Install Claude Code:<br><code>winget install Anthropic.Claude</code>',
+    credentialInstallLinux: 'Install Claude Code:<br><code>npm install -g @anthropic-ai/claude-code</code>',
+    credentialRunClaude: 'Open a terminal and run:<br><code>claude</code>',
+    credentialFollowLogin: 'Follow the browser login flow',
+    credentialPathLabel: 'Expected file:',
     forcingText:      'Forcing...',
     errorPrefix:      'Error: ',
     generalTitle:     'General',
@@ -353,8 +376,28 @@ const translations = {
     weeklyThreshold:     'Limite semanal',
     test:                'Testar',
     credentialExpired: 'Token expirado. Faça login novamente.',
-    credentialModalTitle: 'Credenciais não encontrada',
-    credentialModalDesc: 'Faça login no Claude Code para que o monitor possa acessar seus dados de uso.',
+    credentialModalTitle: 'Credenciais não encontradas',
+    credentialModalDesc: 'Faça login com sua conta Claude para que o monitor possa acessar seus dados de uso.',
+    credentialLoginBrowserBtn: 'Entrar com o navegador',
+    credentialLoginWaiting: 'Aguardando login no navegador...',
+    credentialLoginSuccess: 'Login realizado! Carregando dados...',
+    credentialLoginError: 'Erro no login: ',
+    credentialRetryBtn: 'Tentar novamente',
+    credentialHaveTokensLabel: 'Tenho as credenciais OAuth',
+    credentialAccessTokenLabel: 'Access Token *',
+    credentialRefreshTokenLabel: 'Refresh Token (opcional)',
+    credentialAccessTokenPlaceholder: 'Cole o accessToken aqui...',
+    credentialRefreshTokenPlaceholder: 'Cole o refreshToken aqui...',
+    credentialSaveBtn: 'Salvar credenciais',
+    credentialSavingStatus: 'Salvando...',
+    credentialSavedStatus: 'Credenciais salvas! Carregando dados...',
+    credentialAccessTokenRequired: 'Access Token é obrigatório.',
+    credentialUseClaudeCodeLabel: 'Usar Claude Code CLI',
+    credentialInstallWin: 'Instale o Claude Code:<br><code>winget install Anthropic.Claude</code>',
+    credentialInstallLinux: 'Instale o Claude Code:<br><code>npm install -g @anthropic-ai/claude-code</code>',
+    credentialRunClaude: 'Abra um terminal e execute:<br><code>claude</code>',
+    credentialFollowLogin: 'Siga o fluxo de login no navegador',
+    credentialPathLabel: 'Arquivo esperado:',
     rateLimitMsg:    'Limite de requisições',
     rateLimitRetry:  (t: string) => `Tentando novamente em ${t}`,
     rateLimitAt:     (time: string) => `(às ${time})`,
@@ -525,6 +568,22 @@ function applyTranslations(): void {
     const val = t[key];
     if (typeof val === 'string') {
       el.title = val;
+    }
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach(el => {
+    const key = el.dataset.i18nHtml as keyof Translations;
+    const val = t[key];
+    if (typeof val === 'string') {
+      el.innerHTML = val;
+    }
+  });
+
+  document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-i18n-placeholder]').forEach(el => {
+    const key = (el as HTMLElement).dataset.i18nPlaceholder as keyof Translations;
+    const val = t[key];
+    if (typeof val === 'string') {
+      el.placeholder = val;
     }
   });
 
@@ -2479,7 +2538,8 @@ function init(): void {
   window.claudeUsage.onCredentialMissing((credPath: string) => {
     console.log('[Renderer] onCredentialMissing:', credPath);
     clearRateLimitBanner();
-    (document.getElementById('credential-path-value') as HTMLElement).textContent = credPath;
+    const pathEl = document.getElementById('credential-path-value') as HTMLElement;
+    if (pathEl) pathEl.textContent = credPath;
     const isLinux = credPath.startsWith('/');
     const winStep = document.getElementById('install-step-win') as HTMLElement;
     const linuxStep = document.getElementById('install-step-linux') as HTMLElement;
@@ -2489,11 +2549,12 @@ function init(): void {
     setTimeout(() => fitWindow(), 50);
   });
 
-window.claudeUsage.onCredentialsExpired(() => {
+  window.claudeUsage.onCredentialsExpired(() => {
     console.log('[Renderer] onCredentialsExpired fired');
     clearRateLimitBanner();
     const t = tr();
-    (document.getElementById('credential-path-value') as HTMLElement).textContent = t.credentialExpired ?? 'Token expired. Please log in again.';
+    const pathEl = document.getElementById('credential-path-value') as HTMLElement;
+    if (pathEl) pathEl.textContent = t.credentialExpired ?? 'Token expired. Please log in again.';
     const winStep = document.getElementById('install-step-win') as HTMLElement;
     const linuxStep = document.getElementById('install-step-linux') as HTMLElement;
     if (winStep) winStep.style.display = 'none';
@@ -2517,23 +2578,59 @@ window.claudeUsage.onCredentialsExpired(() => {
     }
   });
 
+  const oauthLoginBtn = document.getElementById('oauth-login-btn') as HTMLButtonElement | null;
+  const oauthLoginStatus = document.getElementById('oauth-login-status') as HTMLElement | null;
+  if (oauthLoginBtn) {
+    oauthLoginBtn.addEventListener('click', async () => {
+      const t = tr();
+      oauthLoginBtn.disabled = true;
+      oauthLoginBtn.textContent = t.credentialLoginWaiting;
+      if (oauthLoginStatus) oauthLoginStatus.textContent = '';
+      try {
+        await window.claudeUsage.startOAuthLogin();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (oauthLoginStatus) oauthLoginStatus.textContent = `${t.credentialLoginError}${message}`;
+        oauthLoginBtn.disabled = false;
+        oauthLoginBtn.textContent = t.credentialLoginBrowserBtn;
+      }
+    });
+  }
+
+  window.claudeUsage.onOAuthLoginComplete(() => {
+    const t = tr();
+    if (oauthLoginStatus) oauthLoginStatus.textContent = t.credentialLoginSuccess;
+    (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
+    setTimeout(() => fitWindow(), 50);
+  });
+
+  window.claudeUsage.onOAuthLoginError((message: string) => {
+    const t = tr();
+    if (oauthLoginStatus) oauthLoginStatus.textContent = `${t.credentialLoginError}${message}`;
+    if (oauthLoginBtn) {
+      oauthLoginBtn.disabled = false;
+      oauthLoginBtn.textContent = t.credentialLoginBrowserBtn;
+    }
+  });
+
   const saveManualCredsBtn = document.getElementById('save-manual-creds-btn');
   const manualCredsStatus = document.getElementById('manual-creds-status');
   if (saveManualCredsBtn) {
     saveManualCredsBtn.addEventListener('click', async () => {
+      const t = tr();
       const accessToken = (document.getElementById('manual-access-token') as HTMLTextAreaElement)?.value?.trim();
       const refreshToken = (document.getElementById('manual-refresh-token') as HTMLTextAreaElement)?.value?.trim();
       if (!accessToken) {
-        if (manualCredsStatus) manualCredsStatus.textContent = 'Access Token é obrigatório.';
+        if (manualCredsStatus) manualCredsStatus.textContent = t.credentialAccessTokenRequired;
         return;
       }
       try {
-        if (manualCredsStatus) manualCredsStatus.textContent = 'Salvando...';
+        if (manualCredsStatus) manualCredsStatus.textContent = t.credentialSavingStatus;
         await window.claudeUsage.saveManualCredentials({ accessToken, refreshToken: refreshToken || undefined });
-        if (manualCredsStatus) manualCredsStatus.textContent = 'Credenciais salvas! Carregando dados...';
+        if (manualCredsStatus) manualCredsStatus.textContent = t.credentialSavedStatus;
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        if (manualCredsStatus) manualCredsStatus.textContent = `Erro: ${message}`;
+        if (manualCredsStatus) manualCredsStatus.textContent = `${t.errorPrefix}${message}`;
       }
     });
   }

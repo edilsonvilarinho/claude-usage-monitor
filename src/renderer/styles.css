@@ -648,19 +648,22 @@ body {
 .content::-webkit-scrollbar,
 .settings-tab-content::-webkit-scrollbar,
 .report-modal-box::-webkit-scrollbar,
-.day-detail-box::-webkit-scrollbar {
+.day-detail-box::-webkit-scrollbar,
+.credential-modal-box::-webkit-scrollbar {
   width: 4px;
 }
 .content::-webkit-scrollbar-track,
 .settings-tab-content::-webkit-scrollbar-track,
 .report-modal-box::-webkit-scrollbar-track,
-.day-detail-box::-webkit-scrollbar-track {
+.day-detail-box::-webkit-scrollbar-track,
+.credential-modal-box::-webkit-scrollbar-track {
   background: transparent;
 }
 .content::-webkit-scrollbar-thumb,
 .settings-tab-content::-webkit-scrollbar-thumb,
 .report-modal-box::-webkit-scrollbar-thumb,
-.day-detail-box::-webkit-scrollbar-thumb {
+.day-detail-box::-webkit-scrollbar-thumb,
+.credential-modal-box::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 99px;
 }
@@ -1004,7 +1007,9 @@ body {
 
 /* ── Credential missing modal ──────────────────────────────────────── */
 .credential-modal-box {
-  width: 280px;
+  width: 300px;
+  max-height: 88vh;
+  overflow-y: auto;
   text-align: left;
 }
 
@@ -1081,6 +1086,140 @@ body {
 
 #credential-retry-btn:hover {
   background: rgba(59, 130, 246, 0.8);
+}
+
+.credential-details {
+  margin-top: 16px;
+}
+
+.credential-details-summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 12px;
+  user-select: none;
+}
+
+.credential-details-body {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.credential-how-to {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.credential-how-to-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+}
+
+.credential-how-to-steps {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding-left: 14px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.credential-how-to-steps li {
+  margin-bottom: 4px;
+}
+
+.credential-how-to-steps code {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-family: monospace;
+  color: var(--text-primary);
+}
+
+.credential-how-to-path {
+  display: block;
+  font-size: 10px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 5px;
+  margin: 2px 0 4px;
+  font-family: monospace;
+}
+
+.credential-input-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.credential-textarea {
+  background: #1a1a1a;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 11px;
+  resize: vertical;
+  font-family: monospace;
+}
+
+.credential-save-btn {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  align-self: flex-start;
+}
+
+.credential-save-btn:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+.credential-status-msg {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+#oauth-login-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.credential-oauth-btn {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.credential-oauth-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.85);
+}
+
+.credential-oauth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ── Usage history ─────────────────────────────────────────────────── */

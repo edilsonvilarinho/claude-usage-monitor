@@ -14,6 +14,7 @@ import { checkForUpdate, downloadUpdate } from './services/updateService';
 import { updateDailySnapshot } from './services/dailySnapshotService';
 import { computeSmartStatus } from './services/smartScheduleService';
 import { serverStatusService } from './services/serverStatusService';
+import { buildAuthUrl, exchangeCode, OAUTH_REDIRECT_URI } from './services/oauthService';
 
 /** Arredonda timestamp para o minuto mais próximo — usado para deduplicar janelas de sessão
  *  cujo resetsAt difere por milissegundos devido à precisão variável da API */
@@ -827,6 +828,81 @@ function registerIpcHandlers(): void {
 
   ipcMain.on('dismiss-update', () => {
     pendingUpdate = null;
+  });
+
+  ipcMain.handle('start-oauth-login', () => {
+    const { url: authUrl, state, codeVerifier } = buildAuthUrl();
+
+    return new Promise<void>((resolve, reject) => {
+      const authWindow = new BrowserWindow({
+        width: 900,
+        height: 700,
+        webPreferences: { nodeIntegration: false, contextIsolation: true },
+        title: 'Login — Claude',
+        autoHideMenuBar: true,
+      });
+
+      let handled = false;
+
+      const handleCallbackUrl = (redirectUrl: string): boolean => {
+        if (handled || !redirectUrl.startsWith(OAUTH_REDIRECT_URI)) return false;
+        handled = true;
+
+        try { authWindow.close(); } catch { /* already closed */ }
+
+        const parsed = new URL(redirectUrl);
+        const returnedState = parsed.searchParams.get('state');
+        const code = parsed.searchParams.get('code');
+        const error = parsed.searchParams.get('error');
+
+        if (error) {
+          const msg = `OAuth error: ${error}`;
+          popup?.webContents.send('oauth-login-error', msg);
+          reject(new Error(msg));
+          return true;
+        }
+
+        if (returnedState !== state || !code) {
+          const msg = 'Parâmetros inválidos no callback OAuth.';
+          popup?.webContents.send('oauth-login-error', msg);
+          reject(new Error(msg));
+          return true;
+        }
+
+        exchangeCode(code, codeVerifier)
+          .then(() => {
+            credentialMissing = false;
+            credentialExpiredSent = false;
+            popup?.webContents.send('oauth-login-complete');
+            pollingService.triggerNow().catch(() => { /* ignore */ });
+            resolve();
+          })
+          .catch((err: unknown) => {
+            const message = err instanceof Error ? err.message : String(err);
+            popup?.webContents.send('oauth-login-error', message);
+            reject(err);
+          });
+
+        return true;
+      };
+
+      authWindow.webContents.on('will-redirect', (_event, redirectUrl) => {
+        handleCallbackUrl(redirectUrl);
+      });
+
+      authWindow.webContents.on('will-navigate', (_event, redirectUrl) => {
+        handleCallbackUrl(redirectUrl);
+      });
+
+      authWindow.on('closed', () => {
+        if (!handled) {
+          popup?.webContents.send('oauth-login-error', 'Login cancelado.');
+          reject(new Error('Login cancelado.'));
+        }
+      });
+
+      authWindow.loadURL(authUrl);
+    });
   });
 
   ipcMain.handle('save-manual-credentials', (_event, creds: { accessToken: string; refreshToken?: string }) => {

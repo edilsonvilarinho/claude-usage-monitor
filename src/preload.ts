@@ -75,6 +75,16 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.on('credential-missing', (_e, credPath: string) => cb(credPath));
   },
 
+  startOAuthLogin: (): Promise<void> => ipcRenderer.invoke('start-oauth-login'),
+
+  onOAuthLoginComplete: (cb: () => void): void => {
+    ipcRenderer.on('oauth-login-complete', () => cb());
+  },
+
+  onOAuthLoginError: (cb: (message: string) => void): void => {
+    ipcRenderer.on('oauth-login-error', (_e, message: string) => cb(message));
+  },
+
   saveManualCredentials: (creds: { accessToken: string; refreshToken?: string }): Promise<{ success: boolean }> =>
     ipcRenderer.invoke('save-manual-credentials', creds),
 
