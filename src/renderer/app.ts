@@ -18,6 +18,7 @@ import { SmartPlanDonut } from '../presentation/components/charts/SmartPlanDonut
 
 const sessionGauge = new GaugeChart('gauge-session');
 const weeklyGauge = new GaugeChart('gauge-weekly');
+const costGauge = new GaugeChart('cost-gauge');
 const trayIcon = new TrayIcon();
 const dailyChart = new DailyChart();
 const burnRate = new BurnRate();
@@ -164,10 +165,9 @@ function fitWindow(): void {
 
 function applySize(size: AppSettings['windowSize']): void {
   document.body.dataset.size = size;
-  // Give the DOM a frame to update CSS vars, then resize charts + window
   requestAnimationFrame(() => {
-    sessionChart?.resize();
-    weeklyChart?.resize();
+    sessionGauge.resize();
+    weeklyGauge.resize();
     fitWindow();
   });
 }
@@ -286,8 +286,6 @@ let lastUpdatedTime: string | null = null;
 let currentDailyHistory: DailySnapshot[] = [];
 let dayDetailChart: Chart | null = null;
 let reportChart: Chart | null = null;
-let dayCurveChart: Chart | null = null;
-let dayCurveOpenDate: string | null = null;
 
 async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
@@ -693,254 +691,25 @@ function renderDailyChart(dailyData: DailySnapshot[], weeklyResetsAt: string, li
   const container = document.getElementById('daily-chart');
   if (!container) return;
   currentDailyHistory = dailyData;
-
-  const resetDate = new Date(weeklyResetsAt);
-  const cycleStartMs = resetDate.getTime() - 7 * 24 * 60 * 60 * 1000;
-
-  // Detectar se créditos existem em algum dia do histórico
-  const hasCredits = dailyData.some(d => d.maxCredits !== undefined);
-  const hasResets  = dailyData.some(d => (d.sessionWindowCount ?? 1) > 1);
-
-  // Build 7 day slots
-  const slots: {
-    date: string; label: string; isToday: boolean; isFuture: boolean;
-    weeklyPct: number | null; sessionPct: number | null; creditsPct: number | null;
-    sessionWindowCount: number; sessionAccum: number;
-  }[] = [];
-  const now = new Date();
-  const todayStr = now.toLocaleDateString('sv');
-  const locale = getLang() === 'pt-BR' ? 'pt-BR' : 'en';
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(cycleStartMs + i * 24 * 60 * 60 * 1000);
-    const dateStr = d.toLocaleDateString('sv');
-    const label = d.toLocaleDateString(locale, { weekday: 'short' }).replace('.', '');
-    const isFuture = dateStr > todayStr;
-    const isToday  = dateStr === todayStr;
-    const found = dailyData.find(s => s.date === dateStr);
-    slots.push({
-      date: dateStr, label, isToday, isFuture,
-      weeklyPct:    isToday && liveWeeklyPct !== undefined
-        ? Math.min(liveWeeklyPct, 100)
-        : found ? Math.min(found.maxWeekly, 100) : null,
-      sessionPct:   isToday && liveSessionPct !== undefined
-        ? Math.min(liveSessionPct, 100)
-        : found ? Math.min(found.maxSession ?? 0, 100) : null,
-      creditsPct:   (found && found.maxCredits !== undefined) ? Math.min(found.maxCredits, 100) : null,
-      sessionWindowCount: found?.sessionWindowCount ?? 1,
-      sessionAccum:  found?.sessionAccum  ?? 0,
-    });
-  }
-
-  const t   = tr();
-
-  // Legenda dinâmica
-  const legendEl = document.getElementById('daily-legend');
-  if (legendEl) {
-    legendEl.innerHTML = [
-      `<span class="legend-dot session"></span><span class="legend-text">${t.sessionLabel}</span>`,
-      `<span class="legend-dot weekly"></span><span class="legend-text">${t.weeklyLabel}</span>`,
-      ...(hasCredits ? [`<span class="legend-dot credits"></span><span class="legend-text">${t.creditsLabel}</span>`] : []),
-      ...(hasResets  ? [`<span class="legend-dot reset"></span><span class="legend-text">${t.resetLegendLabel}</span>`] : []),
-    ].join('');
-  }
-
-  const BAR_MAX_PX = 40;
-  container.innerHTML = slots.map(s => {
-    const wPx = s.weeklyPct  !== null ? Math.max(3, Math.round((s.weeklyPct  / 100) * BAR_MAX_PX)) : 0;
-    const accumTotal = s.sessionAccum + (s.sessionPct ?? 0);
-    const totalSessionPct = Math.min(accumTotal, 100);
-    const sPx = s.sessionPct !== null ? Math.max(3, Math.round((s.sessionPct / 100) * BAR_MAX_PX)) : 0;
-    const cPx = s.creditsPct !== null ? Math.max(3, Math.round((s.creditsPct / 100) * BAR_MAX_PX)) : 0;
-    const wClass = s.weeklyPct  !== null ? (s.weeklyPct  >= 80 ? 'crit' : s.weeklyPct  >= 60 ? 'warn' : 'ok') : '';
-    const sClass = s.sessionPct !== null ? (s.sessionPct >= 80 ? 'crit' : s.sessionPct >= 60 ? 'warn' : 'ok') : '';
-    const cClass = s.creditsPct !== null ? (s.creditsPct >= 80 ? 'crit' : s.creditsPct >= 60 ? 'warn' : '') : '';
-    const todayClass  = s.isToday  ? ' today'  : '';
-    const futureClass = s.isFuture ? ' future' : '';
-    const creditsBar  = hasCredits
-      ? `<div class="daily-bar credits ${cClass}" style="height:${cPx}px"></div>`
-      : '';
-    const resetBadge = (!s.isFuture && s.sessionWindowCount > 1)
-      ? `<div class="reset-badge">${Math.max(0, s.sessionWindowCount - 1)}</div>`
-      : '';
-
-    // Tooltip
-    let tooltipHtml = '';
-    if (s.weeklyPct !== null) {
-      const sessionLine = s.sessionPct !== null
-        ? `<div><span class="tip-dot session"></span>${t.tooltipSession}: <b>${s.sessionPct}%</b></div>`
-        : '';
-      const resetLine = (s.sessionAccum > 0 || s.sessionWindowCount > 1)
-        ? `<div class="tip-resets">${t.tooltipResets(Math.max(0, s.sessionWindowCount - 1))} · ${t.tooltipAccum(accumTotal)}</div>`
-        : '';
-      const weeklyLine = `<div><span class="tip-dot weekly"></span>${t.tooltipWeekly}: <b>${s.weeklyPct}%</b></div>`;
-      const creditsLine = s.creditsPct !== null
-        ? `<div><span class="tip-dot credits"></span>${t.tooltipCredits}: <b>${s.creditsPct}%</b></div>`
-        : '';
-      tooltipHtml = `<div class="daily-tooltip">${sessionLine}${resetLine}${weeklyLine}${creditsLine}</div>`;
-    }
-
-    return `<div class="daily-col${todayClass}${futureClass}" data-date="${s.date}">
-      ${tooltipHtml}
-      <div class="daily-bar-wrap">
-        <div class="session-bar-slot">
-          ${resetBadge}
-          <div class="daily-bar session ${sClass}" style="height:${sPx}px"></div>
-        </div>
-        <div class="daily-bar weekly ${wClass}" style="height:${wPx}px"></div>
-        ${creditsBar}
-      </div>
-      <span class="daily-day">${s.label}</span>
-    </div>`;
-  }).join('');
-
-  container.querySelectorAll<HTMLElement>('.daily-col:not(.future)[data-date]').forEach(col => {
-    col.addEventListener('click', () => {
-      const date = col.dataset.date;
-      if (date) void openDayDetailModal(date);
-    });
-  });
-
+  dailyChart.setDayClickHandler((date) => void openDayDetailModal(date));
+  dailyChart.render(dailyData, weeklyResetsAt, liveWeeklyPct, liveSessionPct);
   fitWindow();
 }
 
 
-async function updateBurnRate(): Promise<void> {
-  const el = document.getElementById('burn-rate-line');
-  if (!el) return;
-  const today = new Date().toLocaleDateString('sv');
-  const points = await window.claudeUsage.getDayTimeSeries(today);
-  if (points.length < 2) { el.textContent = ''; return; }
-  const newest = points[points.length - 1];
-  const minWindowMs = 10 * 60_000;
-  const oldest = [...points].slice(0, -1).reverse().find(p => newest.ts - p.ts >= minWindowMs)
-    ?? points[points.length - 2];
-  const currentSession = newest.session;
-  if (currentSession < 5) { el.textContent = ''; return; }
-  const deltaPct = newest.session - oldest.session;
-  const deltaHours = (newest.ts - oldest.ts) / 3_600_000;
-  if (deltaHours <= 0) { el.textContent = ''; return; }
-  const burnRate = deltaPct / deltaHours;
-  if (burnRate <= 0) { el.textContent = ''; return; }
-  const remainingPct = 100 - currentSession;
-  const hoursUntilFull = remainingPct / burnRate;
-  if (hoursUntilFull > 6) { el.textContent = ''; return; }
-  const estTime = new Date(newest.ts + hoursUntilFull * 3_600_000);
-  const timeStr = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const rateStr = burnRate.toFixed(1);
-  const isPtBR = document.documentElement.lang === 'pt-BR' || navigator.language.startsWith('pt');
-  el.textContent = isPtBR
-    ? `↑ ${rateStr}%/h · esgota ~${timeStr}`
-    : `↑ ${rateStr}%/h · exhausts ~${timeStr}`;
-}
-
-async function updateWeeklyBurnRate(): Promise<void> {
-  const el = document.getElementById('burn-rate-line-weekly');
-  if (!el) return;
-  const today = new Date().toLocaleDateString('sv');
-  const points = await window.claudeUsage.getDayTimeSeries(today);
-  if (points.length < 2) { el.textContent = ''; return; }
-  const newest = points[points.length - 1];
-  const minWindowMs = 10 * 60_000;
-  const oldest = [...points].slice(0, -1).reverse().find(p => newest.ts - p.ts >= minWindowMs)
-    ?? points[points.length - 2];
-  const currentWeekly = newest.weekly;
-  if (currentWeekly < 5) { el.textContent = ''; return; }
-  const deltaPct = newest.weekly - oldest.weekly;
-  const deltaHours = (newest.ts - oldest.ts) / 3_600_000;
-  if (deltaHours <= 0) { el.textContent = ''; return; }
-  const burnRate = deltaPct / deltaHours;
-  if (burnRate <= 0) { el.textContent = ''; return; }
-  const remainingPct = 100 - currentWeekly;
-  const hoursUntilFull = remainingPct / burnRate;
-  if (hoursUntilFull > 48) { el.textContent = ''; return; }
-  const estTime = new Date(newest.ts + hoursUntilFull * 3_600_000);
-  const isPtBR = document.documentElement.lang === 'pt-BR' || navigator.language.startsWith('pt');
-  const now = new Date();
-  const isToday = estTime.toLocaleDateString('sv') === now.toLocaleDateString('sv');
-  let timeStr: string;
-  if (isToday) {
-    timeStr = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } else {
-    const weekday = estTime.toLocaleDateString(isPtBR ? 'pt-BR' : 'en', { weekday: 'short' });
-    const t = estTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    timeStr = `${weekday} ${t}`;
-  }
-  const rateStr = burnRate.toFixed(1);
-  el.textContent = isPtBR
-    ? `↑ ${rateStr}%/h · esgota ~${timeStr}`
-    : `↑ ${rateStr}%/h · exhausts ~${timeStr}`;
-}
-
-async function openDayCurvePopup(date: string, anchorEl: HTMLElement): Promise<void> {
-  const overlay = document.getElementById('day-curve-overlay') as HTMLElement;
-  const titleEl = document.getElementById('day-curve-title') as HTMLElement;
-  const emptyEl = document.getElementById('day-curve-empty') as HTMLElement;
-  const closeBtn = document.getElementById('day-curve-close') as HTMLElement;
-
-  if (dayCurveOpenDate === date && !overlay.classList.contains('hidden')) {
-    closeDayCurvePopup();
-    return;
-  }
-
-  titleEl.textContent = new Date(date + 'T12:00:00').toLocaleDateString([], { day: '2-digit', month: 'short' });
-  overlay.classList.remove('hidden');
-  dayCurveOpenDate = date;
-
-  if (dayCurveChart) { dayCurveChart.destroy(); dayCurveChart = null; }
-
-  const points = await window.claudeUsage.getDayTimeSeries(date);
-
-  if (points.length < 2) {
-    document.querySelector('.day-curve-chart-wrap')!.setAttribute('style', 'display:none');
-    emptyEl.classList.remove('hidden');
-  } else {
-    document.querySelector('.day-curve-chart-wrap')!.setAttribute('style', '');
-    emptyEl.classList.add('hidden');
-    const labels = points.map(p => new Date(p.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    const canvas = document.getElementById('day-curve-canvas') as HTMLCanvasElement;
-    dayCurveChart = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          data: points.map(p => Math.min(p.session, 100)),
-          borderColor: '#4CAF50',
-          backgroundColor: 'rgba(76,175,80,0.15)',
-          borderWidth: 1.5,
-          pointRadius: 0,
-          fill: true,
-          tension: 0.3,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        scales: {
-          x: { display: false },
-          y: { display: false, min: 0, max: 100 },
-        },
-        animation: false,
-      },
-    });
-  }
-
-  closeBtn.onclick = closeDayCurvePopup;
+async function openDayCurvePopup(date: string, _anchorEl: HTMLElement): Promise<void> {
+  await dayCurvePopup.open(date);
 }
 
 function closeDayCurvePopup(): void {
-  const overlay = document.getElementById('day-curve-overlay');
-  if (overlay) overlay.classList.add('hidden');
-  if (dayCurveChart) { dayCurveChart.destroy(); dayCurveChart = null; }
-  dayCurveOpenDate = null;
+  dayCurvePopup.close();
 }
 
 function updateUI(data: UsageData): void {
   const sessionPct = Math.round(data.five_hour.utilization);
   const weeklyPct  = Math.round(data.seven_day.utilization);
 
-  if (weeklyPct) updateGauge(weeklyChart, weeklyPct);
+  if (weeklyPct) weeklyGauge.update(weeklyPct);
 
   (document.getElementById('pct-weekly') as HTMLElement).textContent =
     weeklyPct > 100 ? `>${Math.min(weeklyPct, 999)}%` : `${weeklyPct}%`;
@@ -953,12 +722,12 @@ function updateUI(data: UsageData): void {
       (document.getElementById('pct-session') as HTMLElement).textContent = '—';
       (document.getElementById('reset-session') as HTMLElement).textContent = '—';
       (document.getElementById('reset-at-session') as HTMLElement).textContent = '—';
-      if (sessionChart) updateGauge(sessionChart, 0);
+      sessionGauge.update(0);
     } else {
       (document.getElementById('pct-session') as HTMLElement).textContent = sessionPct > 100 ? `>${Math.min(sessionPct, 999)}%` : `${sessionPct}%`;
       (document.getElementById('reset-session') as HTMLElement).textContent = formatResetsIn(data.five_hour.resets_at, getLang(), tr());
       (document.getElementById('reset-at-session') as HTMLElement).textContent = tr().resetsAt(formatResetAt(data.five_hour.resets_at, getLang()));
-      if (sessionChart) updateGauge(sessionChart, sessionPct);
+      sessionGauge.update(sessionPct);
     }
   });
 
@@ -1012,7 +781,7 @@ function updateUI(data: UsageData): void {
   document.getElementById('error-banner')!.classList.remove('visible');
   clearRateLimitBanner();
 
-  updateTrayIcon(sessionPct, weeklyPct);
+  trayIcon.render(sessionPct, weeklyPct);
 
   // Store resets_at and current pcts for daily chart
   lastWeeklyResetsAt = data.seven_day.resets_at;
@@ -1025,9 +794,9 @@ function updateUI(data: UsageData): void {
   if (msUntilSessionReset > 0) {
     sessionResetTimer = setTimeout(() => {
       sessionResetTimer = null;
-      if (sessionChart) updateGauge(sessionChart, 0);
+      sessionGauge.update(0);
       (document.getElementById('pct-session') as HTMLElement).textContent = '0%';
-      updateTrayIcon(0, lastRenderedData?.weekly ?? 0);
+      trayIcon.render(0, lastRenderedData?.weekly ?? 0);
       void window.claudeUsage.refreshNow();
     }, msUntilSessionReset);
   }
@@ -1692,8 +1461,8 @@ async function loadCloudSyncStatus(): Promise<void> {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 function init(): void {
-  sessionChart = createGauge('gauge-session');
-  weeklyChart  = createGauge('gauge-weekly');
+  sessionGauge.mount();
+  weeklyGauge.mount();
 
   void loadSettings();
 
@@ -1747,8 +1516,8 @@ function init(): void {
   window.claudeUsage.onUsageUpdated((data) => {
     (document.getElementById('credential-modal') as HTMLElement).classList.add('hidden');
     updateUI(data);
-    void updateBurnRate();
-    void updateWeeklyBurnRate();
+    void burnRate.updateSession();
+    void burnRate.updateWeekly();
   });
 
   // Atualizar gráfico quando receber dados novos
@@ -2204,7 +1973,7 @@ function init(): void {
 
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (lastRenderedData) {
-      updateTrayIcon(lastRenderedData.session, lastRenderedData.weekly);
+      trayIcon.render(lastRenderedData.session, lastRenderedData.weekly);
     }
   });
 
@@ -2321,9 +2090,7 @@ function init(): void {
     document.getElementById('cost-monthly-pct')!.textContent = String(cost.budgetPercentage);
     document.getElementById('cost-budget-input')!.value = String(cost.budget);
 
-    if (costGaugeChart) {
-      updateGauge(costGaugeChart, cost.budgetPercentage);
-    }
+    costGauge.update(cost.budgetPercentage);
 
     // Formula sections
     const modelLabel = cost.session.model.charAt(0).toUpperCase() + cost.session.model.slice(1);
@@ -2356,8 +2123,7 @@ function init(): void {
   }
 
   function initCostGauge(): void {
-    if (costGaugeChart) return;
-    costGaugeChart = createGauge('cost-gauge');
+    costGauge.mount();
   }
 
   document.getElementById('btn-update-header')!.addEventListener('click', () => {
