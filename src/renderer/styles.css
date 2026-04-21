@@ -1276,6 +1276,65 @@ body {
   border-color: rgba(255,255,255,0.2);
 }
 
+/* ── History header buttons ─────────────────────────────────────────── */
+.history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-btn {
+  font-size: calc(10px * var(--fs));
+  font-family: inherit;
+  padding: 2px 8px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.history-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+  color: var(--text-primary);
+}
+
+.history-icon-btn {
+  width: 24px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(12px * var(--fs));
+  transition: all 0.15s;
+  padding: 0;
+}
+.history-icon-btn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
+  color: var(--text-primary);
+}
+
+#btn-report-history {
+  color: var(--accent-blue);
+  border-color: rgba(59,130,246,0.25);
+  background: rgba(59,130,246,0.07);
+}
+#btn-report-history:hover {
+  background: rgba(59,130,246,0.14);
+  border-color: rgba(59,130,246,0.45);
+  color: #7ab8fb;
+}
+
 /* Daily chart tooltip */
 .daily-col { position: relative; }
 .daily-col:not(.future) { cursor: pointer; }

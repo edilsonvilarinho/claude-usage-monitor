@@ -1,10 +1,18 @@
 <div class="history-header">
       <span class="history-label" data-i18n="dailyHistoryLabel">Ciclo semanal</span>
-      <button class="clear-history-btn" id="btn-clear-history" data-i18n="clearHistoryBtn">Limpar</button>
-      <button class="clear-history-btn" id="btn-backup-history" data-i18n="backupHistoryBtn">Backup</button>
-      <button class="clear-history-btn" id="btn-import-history" data-i18n="importHistoryBtn">Import</button>
-      <button class="clear-history-btn" id="btn-edit-history" data-i18n="editHistoryBtn">✎</button>
-      <button class="clear-history-btn" id="btn-report-history" title="Relatório de uso">📈</button>
+      <div class="history-header-actions">
+        <button class="history-btn" id="btn-clear-history" data-i18n="clearHistoryBtn">Limpar</button>
+        <button class="history-btn" id="btn-backup-history" data-i18n="backupHistoryBtn">Backup</button>
+        <button class="history-btn" id="btn-import-history" data-i18n="importHistoryBtn">Import</button>
+        <button class="history-icon-btn" id="btn-edit-history" data-i18n="editHistoryBtn" title="Editar">✎</button>
+        <button class="history-icon-btn" id="btn-report-history" title="Relatório de uso">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="6" width="2" height="5" rx="0.5" fill="currentColor"/>
+            <rect x="5" y="3.5" width="2" height="7.5" rx="0.5" fill="currentColor"/>
+            <rect x="9" y="1" width="2" height="10" rx="0.5" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
     </div>
     <div id="history-section">
       <div id="daily-chart" class="daily-chart"></div>
