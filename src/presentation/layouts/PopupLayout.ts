@@ -31,7 +31,7 @@ export function applySectionVisibility(opts: { showDailyChart: boolean; showExtr
   const accountBar = document.getElementById('account-bar');
 
   if (dailyChart) dailyChart.style.display = opts.showDailyChart ? '' : 'none';
-  if (extraSection && !opts.showExtraBars) extraSection.style.display = 'none';
+  if (extraSection) extraSection.style.display = opts.showExtraBars ? '' : 'none';
   if (footer) footer.style.display = opts.showFooter ? '' : 'none';
   if (accountBar) accountBar.style.display = opts.showAccountBar ? '' : 'none';
 

@@ -3,7 +3,9 @@ import { formatResetsIn, formatResetAt } from '../shared/formatters';
 import { tr, getLang } from '../layouts/i18n';
 import { fitWindow } from '../layouts/PopupLayout';
 
-type UsageData = { five_hour: { utilization: number; resets_at: string }; seven_day: { utilization: number; resets_at: string } };
+type UsageWindow = { utilization: number; resets_at: string };
+type ExtraUsage = { is_enabled: boolean; monthly_limit: number; used_credits: number };
+type UsageData = { five_hour: UsageWindow; seven_day: UsageWindow; seven_day_sonnet?: UsageWindow; extra_usage?: ExtraUsage };
 
 export function updateDashboard(data: UsageData, onResetsAtChange: (v: string) => void): void {
   const sessionPct = data.five_hour.utilization / 100;
@@ -31,6 +33,35 @@ export function updateDashboard(data: UsageData, onResetsAtChange: (v: string) =
   if (resetAtWeeklyEl) resetAtWeeklyEl.textContent = formatResetAt(resetAtWeekly, getLang(), tr());
 
   onResetsAtChange(data.seven_day.resets_at);
+
+  const sonnetRow = document.getElementById('sonnet-row');
+  if (sonnetRow) {
+    if (data.seven_day_sonnet) {
+      const pct = Math.min(100, data.seven_day_sonnet.utilization);
+      const bar = document.getElementById('bar-sonnet');
+      const label = document.getElementById('pct-sonnet');
+      if (bar) bar.style.width = `${pct}%`;
+      if (label) label.textContent = `${Math.round(pct)}%`;
+      sonnetRow.style.display = '';
+    } else {
+      sonnetRow.style.display = 'none';
+    }
+  }
+
+  const creditsRow = document.getElementById('credits-row');
+  if (creditsRow) {
+    const ex = data.extra_usage;
+    if (ex?.is_enabled && ex.monthly_limit > 0) {
+      const pct = Math.min(100, (ex.used_credits / ex.monthly_limit) * 100);
+      const bar = document.getElementById('bar-credits');
+      const label = document.getElementById('pct-credits');
+      if (bar) bar.style.width = `${pct}%`;
+      if (label) label.textContent = `${Math.round(pct)}%`;
+      creditsRow.style.display = '';
+    } else {
+      creditsRow.style.display = 'none';
+    }
+  }
 
   const updatedEl = document.getElementById('updated-text');
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
