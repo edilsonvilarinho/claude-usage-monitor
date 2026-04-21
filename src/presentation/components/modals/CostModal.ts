@@ -7,7 +7,7 @@ export function initCostGauge(): void {
 export function setupCostModalHandlers(): void {
   document.getElementById('btn-cost')?.addEventListener('click', () => {
     document.getElementById('cost-modal')?.classList.remove('hidden');
-    initCostGauge();
+    try { initCostGauge(); } catch (_) { /* canvas not ready */ }
     loadCostData();
   });
   document.getElementById('cost-modal-close')?.addEventListener('click', () => {
@@ -60,7 +60,7 @@ export function loadCostData(): void {
     document.getElementById('cost-monthly-pct')!.textContent = String(cost.budgetPercentage);
     document.getElementById('cost-budget-input')!.value = String(cost.budget);
 
-    costGauge.update(cost.budgetPercentage);
+    try { costGauge.update(cost.budgetPercentage); } catch (_) { /* chart not ready */ }
 
     const modelLabel = cost.session.model.charAt(0).toUpperCase() + cost.session.model.slice(1);
     const ratesLabel = `$${cost.modelRates.input}/M in · $${cost.modelRates.output}/M out`;

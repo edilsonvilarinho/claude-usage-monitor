@@ -95,9 +95,14 @@ function createPopup(): BrowserWindow {
     ...(process.platform === 'win32' ? { backgroundMaterial: 'acrylic' as const } : {}),
     ...(isLinux ? { title: 'Claude Usage Monitor' } : {}),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: process.env['NODE_ENV'] === 'test'
+        ? path.join(__dirname, 'preload-test.js')
+        : path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      additionalArguments: process.env['NODE_ENV'] === 'test'
+        ? process.argv.filter(a => a.startsWith('--test-settings='))
+        : [],
     },
   });
 
