@@ -12,3 +12,12 @@ export const DAILY_HISTORY_3DAYS: DailySnapshot[] = [
   { date: '2026-04-19', maxWeekly: 60, maxSession: 80, sessionWindowCount: 2, sessionAccum: 75 },
   { date: '2026-04-18', maxWeekly: 50, maxSession: 35, sessionWindowCount: 1, sessionAccum: 0 },
 ];
+
+// 14 dias com tendência crescente de weekly — para testar forecast de esgotamento
+export const DAILY_HISTORY_14DAYS: DailySnapshot[] = Array.from({ length: 14 }, (_, i) => ({
+  date: `2026-04-${String(7 + i).padStart(2, '0')}`,
+  maxWeekly: 10 + i * 5, // +5%/dia: 10, 15, 20, ..., 75
+  maxSession: i % 3 === 0 ? 110 : 60,
+  sessionWindowCount: 1,
+  sessionAccum: 0,
+}));

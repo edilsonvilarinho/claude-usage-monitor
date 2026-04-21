@@ -1,7 +1,16 @@
 import { Chart } from 'chart.js';
 import { getLang, tr } from '../../layouts/i18n';
 import { showConfirm } from './GenericModals';
-import { computeSaturationRate, computeHeatmap, computeWeeklyTrend } from '../../../domain/reportMetrics';
+import {
+  computeSaturationRate,
+  computeHeatmap,
+  computeWeeklyTrend,
+  computeExhaustionForecast,
+  computeHourlyDistribution,
+  computeNoSatStreak,
+  computeRiskDays,
+  computeExcessCost,
+} from '../../../domain/reportMetrics';
 import type { SessionWindow, CurrentSessionWindow } from '../../../domain/entities/Usage';
 
 let reportChart: Chart | null = null;
@@ -296,6 +305,104 @@ export async function openReportModal(): Promise<void> {
         <div class="report-trend-title">${t.reportTrendTitle}</div>
         <div class="report-trend-value ${direction}">${trendText}</div>
         <div class="report-trend-sub">${t.reportTrendSub(avgLast, avgPrev)}</div>
+      `;
+    }
+  }
+
+  const allWindows: (SessionWindow | CurrentSessionWindow)[] = [
+    ...(sessionWindows ?? []),
+    ...(currentWindow ? [currentWindow] : []),
+  ];
+
+  // ── Previsão de esgotamento ──────────────────────────────────────────────────
+  const forecastEl = document.getElementById('report-forecast');
+  if (forecastEl) {
+    const t = tr();
+    const forecast = computeExhaustionForecast(dailyHistory ?? []);
+    let valueHtml: string;
+    let subHtml = '';
+    if (!forecast.hasData) {
+      valueHtml = `<div class="report-forecast-value flat">${t.reportForecastNoData}</div>`;
+    } else if (forecast.alreadySaturated) {
+      valueHtml = `<div class="report-forecast-value saturated">${t.reportForecastSaturated}</div>`;
+    } else {
+      const label = forecast.daysLeft != null ? t.reportForecastDays(forecast.daysLeft) : '—';
+      valueHtml = `<div class="report-forecast-value">${label}</div>`;
+      subHtml = `<div class="report-forecast-sub">${t.reportForecastRate(forecast.avgDailyRate)}</div>`;
+    }
+    forecastEl.innerHTML = `<div class="report-forecast-title">${t.reportForecastTitle}</div>${valueHtml}${subHtml}`;
+  }
+
+  // ── Distribuição por hora do dia ─────────────────────────────────────────────
+  const hourlyEl = document.getElementById('report-hourly');
+  if (hourlyEl) {
+    const t = tr();
+    const buckets = computeHourlyDistribution(allWindows);
+    const maxVal = Math.max(1, ...buckets);
+    const CHART_H = 34;
+    const bars = buckets.map((v, h) => {
+      const barH = v === 0 ? 2 : Math.max(3, Math.round((v / maxVal) * CHART_H));
+      const label = String(h).padStart(2, '0');
+      return `<div class="hourly-bar-wrap" title="${label}h: ${v}">
+        <div class="hourly-bar" style="height:${barH}px"></div>
+        ${h % 6 === 0 ? `<div class="hourly-label">${label}h</div>` : ''}
+      </div>`;
+    }).join('');
+    hourlyEl.innerHTML = `
+      <div class="report-hourly-title">${t.reportHourlyTitle}</div>
+      <div class="report-hourly-chart">${bars}</div>
+    `;
+  }
+
+  // ── Streak sem saturação ─────────────────────────────────────────────────────
+  const streakEl = document.getElementById('report-streak');
+  if (streakEl) {
+    const t = tr();
+    const streak = computeNoSatStreak(dailyHistory ?? []);
+    const streakText = streak === 0 ? t.reportStreakZero : t.reportStreakDays(streak);
+    const cls = streak === 0 ? 'saturated' : streak >= 7 ? 'good' : '';
+    streakEl.innerHTML = `
+      <div class="report-streak-title">${t.reportStreakTitle}</div>
+      <div class="report-streak-value ${cls}">${streakText}</div>
+    `;
+  }
+
+  // ── Dias de maior risco ──────────────────────────────────────────────────────
+  const riskEl = document.getElementById('report-risk-days');
+  if (riskEl) {
+    const t = tr();
+    const DAY_LABELS = isPtBR
+      ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const riskDays = computeRiskDays(allWindows);
+    const rows = riskDays.length === 0
+      ? `<div class="risk-day-empty">${t.reportRiskDaysEmpty}</div>`
+      : riskDays.slice(0, 3).map(d => {
+          const color = d.pct >= 70 ? '#ef4444' : d.pct >= 40 ? '#f59e0b' : '#22c55e';
+          return `<div class="risk-day-row">
+            <span class="risk-day-name">${DAY_LABELS[d.dayIndex]}</span>
+            <span class="risk-day-bar-wrap"><span class="risk-day-bar" style="width:${d.pct}%;background:${color}"></span></span>
+            <span class="risk-day-pct" style="color:${color}">${d.pct}%</span>
+          </div>`;
+        }).join('');
+    riskEl.innerHTML = `<div class="report-risk-days-title">${t.reportRiskDaysTitle}</div>${rows}`;
+  }
+
+  // ── Custo de excesso ──────────────────────────────────────────────────────────
+  const excessEl = document.getElementById('report-excess');
+  if (excessEl) {
+    const t = tr();
+    const excess = computeExcessCost(allWindows);
+    if (!excess.hasData || excess.excessWindows === 0) {
+      excessEl.innerHTML = `
+        <div class="report-excess-title">${t.reportExcessTitle}</div>
+        <div class="report-excess-value none">${t.reportExcessNone}</div>
+      `;
+    } else {
+      excessEl.innerHTML = `
+        <div class="report-excess-title">${t.reportExcessTitle}</div>
+        <div class="report-excess-value">${t.reportExcessPct(excess.pct)}</div>
+        <div class="report-excess-sub">${t.reportExcessAvg(excess.avgExcess)}</div>
       `;
     }
   }

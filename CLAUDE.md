@@ -14,6 +14,8 @@ npm run release      # dist + dist:portable + zip → dist-build/
 ```
 Run `npm test` after changes to services. Run `npm run build` and confirm clean exit before committing.
 
+**Testes Playwright obrigatórios:** todo código adicionado ou alterado deve ter testes E2E Playwright correspondentes em `tests/e2e/`. Execute `npx playwright test` para validar.
+
 ## Release checklist (`npm run dist`)
 Before publishing:
 1. `dist-build/*.exe` sizes are ~70–90 MB — if much larger, old artifacts leaked in
@@ -70,3 +72,22 @@ Anthropic API → usageApiService → pollingService → IPC:usage-updated → r
 - `rateLimitedUntil` + `rateLimitCount` persisted in settings. On startup, `main.ts` calls `pollingService.restoreRateLimit(until, count)` before `start()`.
 - Renderer: Chart.js doughnut `circumference:180°`. Tray icon drawn on `<canvas>`, sent as PNG via `ipcRenderer.send('tray-icon-data',...)`.
 - **Never tighten `minimum`/`maximum` on existing `electron-store` schema fields without a migration** — crashes app on startup.
+
+## ReportModal — métricas analíticas (`src/domain/reportMetrics.ts`)
+
+Todas as funções de métricas vivem no domínio (sem dependências externas). A UI em `ReportModal.ts` apenas chama e renderiza.
+
+| Função | Input | O que calcula |
+|--------|-------|---------------|
+| `computeSaturationRate` | `SessionWindow[]` | % de janelas que atingiram ≥100% |
+| `computeHeatmap` | `SessionWindow[]` | Grid 7×3 (dia×período) de picos |
+| `computeWeeklyTrend` | `DailySnapshot[]` | Delta % entre média das últimas 7 e 7 anteriores (precisa 14d) |
+| `computeExhaustionForecast` | `DailySnapshot[]` | Dias até cota semanal esgotar, com taxa média diária |
+| `computeHourlyDistribution` | `SessionWindow[]` | Array 24 buckets — picos por hora do dia |
+| `computeNoSatStreak` | `DailySnapshot[]` | Dias consecutivos sem sessão ≥100% (contados a partir do fim) |
+| `computeRiskDays` | `SessionWindow[]` | Dias da semana ordenados por % de saturação histórica |
+| `computeExcessCost` | `SessionWindow[]` | % de janelas com peak >100 e média de excesso acima do limite |
+
+**Elementos HTML:** `#report-forecast`, `#report-hourly`, `#report-streak`, `#report-risk-days`, `#report-excess`
+**Testes unitários:** `src/domain/__tests__/reportMetrics.test.ts`
+**Testes E2E:** `e2e/tests/smoke/15-report-novas-metricas.spec.ts` (TC-15.1–TC-15.14)
