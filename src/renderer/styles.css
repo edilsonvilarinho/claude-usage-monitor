@@ -2057,6 +2057,66 @@ body {
   margin-bottom: 2px;
 }
 
+.report-saturation {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.report-saturation-title,
+.report-heatmap-title,
+.report-trend-title {
+  font-size: calc(10px * var(--fs));
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.report-heatmap {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.report-heatmap-grid {
+  display: grid;
+  grid-template-columns: auto repeat(3, 1fr);
+  gap: 3px;
+  font-size: calc(9px * var(--fs));
+}
+.heatmap-header {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 2px 0;
+}
+.heatmap-day-label {
+  color: var(--text-secondary);
+  padding-right: 4px;
+  display: flex;
+  align-items: center;
+}
+.heatmap-cell {
+  height: 14px;
+  border-radius: 2px;
+  background: var(--accent-green);
+  transition: opacity 0.15s;
+}
+.report-trend {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.report-trend-value {
+  font-size: calc(13px * var(--fs));
+  font-weight: 600;
+}
+.report-trend-value.up   { color: var(--accent-green); }
+.report-trend-value.down { color: #ef4444; }
+.report-trend-value.flat { color: var(--text-secondary); }
+.report-trend-sub {
+  font-size: calc(9px * var(--fs));
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
 /* Cost Modal */
 .cost-modal-box {
   width: 320px;

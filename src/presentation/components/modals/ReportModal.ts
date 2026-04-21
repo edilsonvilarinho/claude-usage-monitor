@@ -1,6 +1,8 @@
 import { Chart } from 'chart.js';
 import { getLang, tr } from '../../layouts/i18n';
 import { showConfirm } from './GenericModals';
+import { computeSaturationRate, computeHeatmap, computeWeeklyTrend } from '../../../domain/reportMetrics';
+import type { SessionWindow, CurrentSessionWindow } from '../../../domain/entities/Usage';
 
 let reportChart: Chart | null = null;
 
@@ -224,5 +226,77 @@ export async function openReportModal(): Promise<void> {
       <div class="stat-card"><div class="stat-value">${peakInterval}</div><div class="stat-label">${isPtBR ? 'Pico comum' : 'Common peak'}</div></div>
       <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">${isPtBR ? 'Dias >80%' : 'Days >80%'}</div></div>
     `;
+  }
+
+  // ── Taxa de saturação ────────────────────────────────────────────────────────
+  const satEl = document.getElementById('report-saturation');
+  if (satEl) {
+    const allWindows: (SessionWindow | CurrentSessionWindow)[] = [
+      ...(sessionWindows ?? []),
+      ...(currentWindow ? [currentWindow] : []),
+    ];
+    const t = tr();
+    const { saturated, total, pct } = computeSaturationRate(allWindows);
+    satEl.innerHTML = `
+      <div class="report-saturation-title">${t.reportSaturationTitle}</div>
+      <div class="stat-card">
+        <div class="stat-value">${total > 0 ? `${pct}%` : '—'}</div>
+        <div class="stat-label">${total > 0 ? t.reportSaturationLabel(saturated, total, pct) : (isPtBR ? 'sem janelas' : 'no windows')}</div>
+      </div>
+    `;
+  }
+
+  // ── Heatmap dia-da-semana × período ─────────────────────────────────────────
+  const heatmapEl = document.getElementById('report-heatmap');
+  if (heatmapEl) {
+    const allWindows: (SessionWindow | CurrentSessionWindow)[] = [
+      ...(sessionWindows ?? []),
+      ...(currentWindow ? [currentWindow] : []),
+    ];
+    const t = tr();
+    const grid = computeHeatmap(allWindows);
+    const maxVal = Math.max(1, ...grid.flat());
+    const DAY_LABELS = isPtBR
+      ? ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const headers = ['', t.reportHeatmapMorning, t.reportHeatmapAfternoon, t.reportHeatmapNight]
+      .map(h => `<div class="heatmap-header">${h}</div>`)
+      .join('');
+    const rows = grid.map((periods, dayIdx) =>
+      `<div class="heatmap-day-label">${DAY_LABELS[dayIdx]}</div>` +
+      periods.map(v => {
+        const opacity = v === 0 ? 0.08 : 0.15 + 0.85 * (v / maxVal);
+        return `<div class="heatmap-cell" style="opacity:${opacity.toFixed(2)}" title="${v}"></div>`;
+      }).join('')
+    ).join('');
+    heatmapEl.innerHTML = `
+      <div class="report-heatmap-title">${t.reportHeatmapTitle}</div>
+      <div class="report-heatmap-grid">${headers}${rows}</div>
+    `;
+  }
+
+  // ── Tendência semanal ────────────────────────────────────────────────────────
+  const trendEl = document.getElementById('report-trend');
+  if (trendEl) {
+    const t = tr();
+    const { delta, direction, avgLast, avgPrev, hasData } = computeWeeklyTrend(dailyHistory ?? []);
+    if (!hasData) {
+      trendEl.innerHTML = `
+        <div class="report-trend-title">${t.reportTrendTitle}</div>
+        <div class="report-trend-value flat">${t.reportTrendNoData}</div>
+        <div class="report-trend-sub">${t.reportTrendNoDataSub}</div>
+      `;
+    } else {
+      const trendText = direction === 'up'
+        ? t.reportTrendUp(delta)
+        : direction === 'down'
+        ? t.reportTrendDown(delta)
+        : t.reportTrendFlat;
+      trendEl.innerHTML = `
+        <div class="report-trend-title">${t.reportTrendTitle}</div>
+        <div class="report-trend-value ${direction}">${trendText}</div>
+        <div class="report-trend-sub">${t.reportTrendSub(avgLast, avgPrev)}</div>
+      `;
+    }
   }
 }

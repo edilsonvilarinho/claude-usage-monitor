@@ -134,8 +134,8 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   getProfile: () => Promise.resolve(null),
   getDailyHistory: () => Promise.resolve(mockData.dailyHistory ?? []),
   getDayTimeSeries: (_date: string) => Promise.resolve(mockData.dailyTimeSeries ?? []),
-  getSessionWindows: () => Promise.resolve([]),
-  getCurrentSessionWindow: () => Promise.resolve(null),
+  getSessionWindows: () => Promise.resolve(mockData.sessionWindows ?? []),
+  getCurrentSessionWindow: () => Promise.resolve(mockData.currentWindow ?? null),
   getCostEstimate: () => Promise.resolve(mockData.costEstimate ?? null),
   refreshNow: () => Promise.resolve(),
   forceRefreshNow: () => {
