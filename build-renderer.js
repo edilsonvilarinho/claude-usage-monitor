@@ -69,4 +69,15 @@ esbuild.buildSync({
   external: ['electron'],
 });
 
+// Bundle test preload (somente para testes E2E — não incluído no installer)
+esbuild.buildSync({
+  entryPoints: [path.join(__dirname, 'src', 'preload-test.ts')],
+  bundle: true,
+  outfile: path.join(distDir, 'preload-test.js'),
+  platform: 'node',
+  target: 'node20',
+  sourcemap: true,
+  external: ['electron'],
+});
+
 console.log('Renderer built successfully.');
