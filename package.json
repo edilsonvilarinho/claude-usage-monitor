@@ -55,6 +55,8 @@
     "files": [
       "dist/**/*",
       "!dist/**/__tests__/**",
+      "!dist/preload-test.js",
+      "!dist/preload-test.js.map",
       "assets/**/*"
     ],
     "linux": {
