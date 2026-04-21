@@ -11,9 +11,17 @@ export interface UsageWindow {
   resets_at: string;   // ISO datetime string
 }
 
+export interface ExtraUsage {
+  is_enabled: boolean;
+  monthly_limit: number; // cents
+  used_credits: number;  // cents
+}
+
 export interface UsageData {
   five_hour: UsageWindow;
   seven_day: UsageWindow;
+  seven_day_sonnet?: UsageWindow;
+  extra_usage?: ExtraUsage;
 }
 
 // Uso normal — sessão 45%, semanal 72%
@@ -50,4 +58,33 @@ export const NEAR_RESET_USAGE: UsageData = {
 export const ZERO_USAGE: UsageData = {
   five_hour: { utilization: 0, resets_at: '2026-04-20T17:00:00Z' },
   seven_day: { utilization: 0, resets_at: '2026-04-27T00:00:00Z' },
+};
+
+// Com créditos extras — 60% usado (6000/10000 cents)
+export const USAGE_WITH_CREDITS: UsageData = {
+  five_hour: { utilization: 45, resets_at: '2026-04-20T17:00:00Z' },
+  seven_day: { utilization: 72, resets_at: '2026-04-27T00:00:00Z' },
+  extra_usage: { is_enabled: true, monthly_limit: 10000, used_credits: 6000 },
+};
+
+// Com Sonnet semanal — 38%
+export const USAGE_WITH_SONNET: UsageData = {
+  five_hour: { utilization: 45, resets_at: '2026-04-20T17:00:00Z' },
+  seven_day: { utilization: 72, resets_at: '2026-04-27T00:00:00Z' },
+  seven_day_sonnet: { utilization: 38, resets_at: '2026-04-27T00:00:00Z' },
+};
+
+// Com ambas as barras extras
+export const USAGE_WITH_BOTH_EXTRAS: UsageData = {
+  five_hour: { utilization: 45, resets_at: '2026-04-20T17:00:00Z' },
+  seven_day: { utilization: 72, resets_at: '2026-04-27T00:00:00Z' },
+  seven_day_sonnet: { utilization: 38, resets_at: '2026-04-27T00:00:00Z' },
+  extra_usage: { is_enabled: true, monthly_limit: 10000, used_credits: 6000 },
+};
+
+// Extra usage desabilitado (is_enabled=false)
+export const USAGE_CREDITS_DISABLED: UsageData = {
+  five_hour: { utilization: 45, resets_at: '2026-04-20T17:00:00Z' },
+  seven_day: { utilization: 72, resets_at: '2026-04-27T00:00:00Z' },
+  extra_usage: { is_enabled: false, monthly_limit: 10000, used_credits: 6000 },
 };
