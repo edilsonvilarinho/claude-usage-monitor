@@ -170,6 +170,26 @@ npm run dist:portable
 npm run release
 ```
 
+### Testes E2E (Playwright)
+
+Na primeira vez, instale os browsers do Playwright:
+
+```bash
+npx playwright install
+```
+
+```bash
+# Rodar todos os testes (54 TCs) e exibir resultado no terminal
+npm run test:e2e
+
+# Ver relatório HTML detalhado após rodar (screenshots, trace em falhas)
+npm run test:e2e
+npm run test:e2e:report
+
+# Interface gráfica interativa — recomendado para debug
+npm run test:e2e:ui
+```
+
 ---
 
 ## Requisitos
