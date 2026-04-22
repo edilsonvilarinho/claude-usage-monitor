@@ -148,6 +148,16 @@ async function refreshIfNeeded(): Promise<void> {
   }
 }
 
+export interface CliSession {
+  sessionId: string;
+  toolName: string;
+  ts: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+}
+
 class CliHookService {
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -155,6 +165,30 @@ class CliHookService {
     installHookScript();
     await refreshIfNeeded();
     this.timer = setInterval(() => { void refreshIfNeeded(); }, REFRESH_INTERVAL);
+  }
+
+  async getCliSessions(): Promise<CliSession[]> {
+    const token = readTokenFile();
+    if (!token?.jwt || !token.serverUrl) return [];
+    if (token.expiresAt < Date.now()) {
+      await refreshIfNeeded();
+      const refreshed = readTokenFile();
+      if (!refreshed?.jwt) return [];
+      return this.fetchSessions(refreshed.serverUrl ?? CLI_SERVER_URL, refreshed.jwt);
+    }
+    return this.fetchSessions(token.serverUrl, token.jwt);
+  }
+
+  private async fetchSessions(serverUrl: string, jwt: string): Promise<CliSession[]> {
+    try {
+      const resp = await fetch(`${serverUrl}/sync/cli-sessions`, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      if (!resp.ok) return [];
+      return resp.json() as Promise<CliSession[]>;
+    } catch {
+      return [];
+    }
   }
 
   destroy(): void {
