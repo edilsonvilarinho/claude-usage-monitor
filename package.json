@@ -83,6 +83,9 @@
       "category": "Utility",
       "icon": "assets/icon-linux.png"
     },
+    "deb": {
+      "afterInstall": "build/linux/after-install.sh"
+    },
     "win": {
       "target": [
         {
