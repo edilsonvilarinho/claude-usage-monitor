@@ -16,10 +16,15 @@ Run `npm test` after changes to services. Run `npm run build` and confirm clean 
 
 **Testes Playwright obrigatórios:** todo código adicionado ou alterado deve ter testes E2E Playwright correspondentes em `tests/e2e/`. Execute `npx playwright test` para validar.
 
-## Release checklist (`npm run dist`)
-Before publishing:
+## Release checklist
+**Windows** (`npm run dist`):
 1. `dist-build/*.exe` sizes are ~70–90 MB — if much larger, old artifacts leaked in
 2. `dist/` contains only compiled JS/HTML (no `.exe`, no `win-unpacked/`)
+
+**Linux** (GitHub Actions — dispara ao publicar tag `v*`):
+3. `package.json` targets incluem: `deb`, `rpm`, `AppImage`
+4. `.github/workflows/release-linux.yml` faz upload de `*.deb`, `*.rpm`, `*.AppImage`
+5. Verificar itens 3 e 4 antes de taguear — no v3.2.0 `.rpm` faltou nos targets e `.AppImage` faltou no upload
 
 ## Clean Architecture — Regra Inviolável
 
