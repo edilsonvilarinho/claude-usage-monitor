@@ -26,19 +26,30 @@ process.stdin.on('data', (chunk) => { raw += chunk; });
 process.stdin.on('end', () => {
   try {
     const hook = JSON.parse(raw);
-    const usage = hook?.tool_response?.usage ?? hook?.usage;
-    if (!usage) process.exit(0);
-    const inputTokens = usage.input_tokens ?? 0;
-    const outputTokens = usage.output_tokens ?? 0;
-    const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
-    const cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
+    const transcriptPath = hook.transcript_path;
+    if (!transcriptPath) process.exit(0);
+    let lines;
+    try { lines = fs.readFileSync(transcriptPath, 'utf8').trim().split('\\n'); } catch { process.exit(0); }
+    let inputTokens = 0, outputTokens = 0, cacheReadTokens = 0, cacheCreationTokens = 0;
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        const u = entry?.message?.usage ?? entry?.usage;
+        if (u) {
+          inputTokens += u.input_tokens ?? 0;
+          outputTokens += u.output_tokens ?? 0;
+          cacheReadTokens += u.cache_read_input_tokens ?? 0;
+          cacheCreationTokens += u.cache_creation_input_tokens ?? 0;
+        }
+      } catch {}
+    }
     if (inputTokens === 0 && outputTokens === 0) process.exit(0);
     let tokenData;
     try { tokenData = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8')); } catch { process.exit(0); }
     const { jwt, deviceId, serverUrl, expiresAt } = tokenData;
     if (!jwt || !deviceId || !serverUrl) process.exit(0);
     if (expiresAt && expiresAt < Date.now()) process.exit(0);
-    const event = { ts: Date.now(), sessionId: hook.session_id ?? 'unknown', toolName: hook.tool_name ?? 'unknown', inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens };
+    const event = { ts: Date.now(), sessionId: hook.session_id ?? 'unknown', toolName: hook.hook_event_name ?? hook.tool_name ?? 'unknown', inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens };
     const payload = JSON.stringify({ deviceId, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], cliEvents: [event] });
     if (typeof fetch === 'function') {
       fetch(\`\${serverUrl}/sync/push\`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${jwt}\` }, body: payload })
