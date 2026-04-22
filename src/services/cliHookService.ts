@@ -41,13 +41,17 @@ process.stdin.on('end', () => {
     const event = { ts: Date.now(), sessionId: hook.session_id ?? 'unknown', toolName: hook.tool_name ?? 'unknown', inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens };
     const payload = JSON.stringify({ deviceId, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], cliEvents: [event] });
     if (typeof fetch === 'function') {
-      fetch(\`\${serverUrl}/sync/push\`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${jwt}\` }, body: payload }).catch(() => {});
+      fetch(\`\${serverUrl}/sync/push\`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${jwt}\` }, body: payload })
+        .catch(() => {}).finally(() => process.exit(0));
     } else {
       const url = new URL(\`\${serverUrl}/sync/push\`);
       const mod = url.protocol === 'https:' ? require('https') : require('http');
       const req = mod.request({ hostname: url.hostname, port: url.port || (url.protocol === 'https:' ? 443 : 80), path: url.pathname, method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${jwt}\`, 'Content-Length': Buffer.byteLength(payload) } });
-      req.on('error', () => {}); req.write(payload); req.end();
+      req.on('error', () => process.exit(0));
+      req.on('response', () => process.exit(0));
+      req.write(payload); req.end();
     }
+    return;
   } catch {}
   process.exit(0);
 });
