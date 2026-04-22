@@ -56,6 +56,8 @@ function hitBadge(hit: number | null): string {
   return `<span class="cli-hit-badge ${cls}">${pct}% cache</span>`;
 }
 
+let currentSessionId: string | null = null;
+
 function hitCell(hit: number | null): string {
   if (hit === null) return `<span class="cli-row-hit-cell none"><span class="cli-dot"></span><span class="cli-hit-pct">—</span></span>`;
   const pct = (hit * 100).toFixed(0);
@@ -132,7 +134,8 @@ function renderList(sessions: CliSession[]): void {
   });
 }
 
-function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement): void {
+function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement, skipScroll = false): void {
+  currentSessionId = s.sessionId;
   const hit = cacheHitRate(s);
   const cost = calcCost(s);
   const hitCls = hit !== null ? (hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad') : '';
@@ -188,15 +191,16 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement)
   detailEl.classList.remove('hidden');
 
   document.getElementById('cli-sessions-back')?.addEventListener('click', () => {
+    currentSessionId = null;
     detailEl.classList.add('hidden');
     listEl.classList.remove('hidden');
   });
 
   document.getElementById('cli-detail-delete')?.addEventListener('click', async () => {
     await window.claudeUsage.deleteCliSession(s.sessionId);
+    currentSessionId = null;
     detailEl.classList.add('hidden');
     listEl.classList.remove('hidden');
-    // recarrega lista atualizada
     const updated = await window.claudeUsage.getCliSessions();
     renderList(updated);
   });
@@ -207,7 +211,35 @@ export function setupCliSessionsHandlers(): void {
   document.getElementById('cli-sessions-modal')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('cli-sessions-modal')) closeCliSessionsModal();
   });
-  document.getElementById('cli-sessions-refresh')?.addEventListener('click', () => void reloadList());
+  document.getElementById('cli-sessions-refresh')?.addEventListener('click', () => void reloadCurrent());
+}
+
+async function reloadCurrent(): Promise<void> {
+  const refreshBtn = document.getElementById('cli-sessions-refresh');
+  refreshBtn?.classList.add('spinning');
+  try {
+    const sessions = await window.claudeUsage.getCliSessions();
+    if (currentSessionId) {
+      const updated = sessions.find(s => s.sessionId === currentSessionId);
+      const listEl = document.getElementById('cli-sessions-list')!;
+      const detailEl = document.getElementById('cli-sessions-detail')!;
+      if (updated) {
+        renderDetail(updated, listEl, detailEl);
+      } else {
+        // sessão foi deletada externamente — volta para a lista
+        currentSessionId = null;
+        detailEl.classList.add('hidden');
+        listEl.classList.remove('hidden');
+        renderList(sessions);
+      }
+    } else {
+      renderList(sessions);
+    }
+  } catch {
+    /* silencioso */
+  } finally {
+    refreshBtn?.classList.remove('spinning');
+  }
 }
 
 async function reloadList(): Promise<void> {
