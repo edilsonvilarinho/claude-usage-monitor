@@ -167,6 +167,25 @@ syncRoute.post('/push', async (c) => {
       { email, deviceId, daily: daily.length, sessionWindows: sessionWindows.length },
       'Push accepted',
     );
+
+    if (cliEvents && cliEvents.length > 0) {
+      logger.info(
+        {
+          email,
+          deviceId,
+          count: cliEvents.length,
+          events: cliEvents.map((e) => ({
+            tool: e.toolName,
+            session: e.sessionId,
+            in: e.inputTokens,
+            out: e.outputTokens,
+            cacheRead: e.cacheReadTokens,
+            cacheCreate: e.cacheCreationTokens,
+          })),
+        },
+        'CLI events received',
+      );
+    }
     return c.json({ accepted: true, mergedAt: now });
   } catch (err) {
     logger.error({ err, email }, 'Push failed');
