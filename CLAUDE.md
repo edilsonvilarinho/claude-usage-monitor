@@ -47,28 +47,15 @@ Todo código novo ou modificado deve respeitar Clean Architecture. Sem exceçõe
 - Tipos e contratos definidos na camada mais interna que os usa
 
 ## Architecture
-Electron app: main process (`src/main.ts`) + renderer (`src/renderer/`), context-isolated preload bridge.
 
-**Main**: owns `Tray` + `BrowserWindow` (popup). Popup hidden by default, toggled on tray left-click, positioned above icon. `userMovedPopup` flag: when `true`, `set-window-height` only resizes (no reposition); resets on each open.
-
-**Data flow**:
 ```
 Anthropic API → usageApiService → pollingService → IPC:usage-updated → renderer
                                                → IPC:rate-limited  → countdown
                                                → notificationService → tray tooltip
 ```
 
-## Services (`src/services/`)
-| File | Role |
-|------|------|
-| `credentialService.ts` | Reads `~/.claude/.credentials.json`, refreshes OAuth token when <5min from expiry. Falls back to WSL paths. |
-| `usageApiService.ts` | `GET /api/oauth/usage` (`anthropic-beta: oauth-2025-04-20`). Retries on 5xx only. 429 → throws `{isRateLimit:true}`, reads `Retry-After`. |
-| `pollingService.ts` | Normal=10min, Fast=7min (>1% spike), Idle=30min. Rate limit backoff: 5→10→20→40→60min. `triggerNow()` no-op while rate limited. `setCustomInterval(ms)` sobrescreve intervalo normal. |
-| `settingsService.ts` | `electron-store`. Dev: `%APPDATA%\Electron\config.json`. Prod: `%APPDATA%\Claude Usage Monitor\config.json`. |
-| `notificationService.ts` | Debounced — won't re-notify until usage drops below 50%. |
+`src/services/` — credenciais OAuth, API usage, polling adaptativo, settings (electron-store), notificações.
 
 ## Key notes
-- `utilization` float can exceed 1.0 (e.g. `16.0` = 1600%). UI caps gauge at 100%, displays `>1600%`. Tray shows `!!!` above 100%.
-- `rateLimitedUntil` + `rateLimitCount` persisted in settings. On startup, `main.ts` calls `pollingService.restoreRateLimit(until, count)` before `start()`.
-- Renderer: Chart.js doughnut `circumference:180°`. Tray icon drawn on `<canvas>`, sent as PNG via `ipcRenderer.send('tray-icon-data',...)`.
-- **Never tighten `minimum`/`maximum` on existing `electron-store` schema fields without a migration** — crashes app on startup.
+- `utilization` pode exceder 1.0 (ex: `16.0` = 1600%). UI limita gauge a 100%, exibe `>1600%`. Tray mostra `!!!` acima de 100%.
+- **Nunca restringir `minimum`/`maximum` em campos existentes do electron-store sem migration** — crasha o app no startup.
