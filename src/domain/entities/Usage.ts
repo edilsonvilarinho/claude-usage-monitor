@@ -41,8 +41,6 @@ export interface UsageWindow {
   resetsAt: string;
 }
 
-export const SessionUsage = UsageWindow;
-export const WeeklyUsage = UsageWindow;
 
 export interface ExtraUsage {
   isEnabled: boolean;
