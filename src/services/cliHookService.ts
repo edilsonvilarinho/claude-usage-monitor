@@ -92,7 +92,7 @@ async function exchangeJwt(deviceId: string): Promise<{ jwt: string; expiresAt: 
   }
 }
 
-function readTokenFile(): { jwt: string; deviceId: string; expiresAt: number } | null {
+function readTokenFile(): { jwt: string; deviceId: string; serverUrl?: string; expiresAt: number } | null {
   try {
     return JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
   } catch {
