@@ -14,7 +14,12 @@ function fmtTokens(n: number): string {
 }
 
 function fmtCost(usd: number): string {
-  if (usd < 0.000001) return '$0.000000';
+  if (usd < 0.000001) return '$0.00';
+  if (usd < 0.01) return `$${usd.toFixed(4)}`;
+  return `$${usd.toFixed(2)}`;
+}
+
+function fmtCostFull(usd: number): string {
   return `$${usd.toFixed(6)}`;
 }
 
@@ -33,6 +38,24 @@ function cacheHitRate(s: CliSession): number | null {
   return s.cacheReadTokens / total;
 }
 
+function fmtDate(ts: number): string {
+  const d = new Date(ts);
+  const today = new Date();
+  const isToday = d.toDateString() === today.toDateString();
+  if (isToday) {
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  return d.toLocaleDateString([], { day: '2-digit', month: '2-digit' }) +
+    ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function hitBadge(hit: number | null): string {
+  if (hit === null) return '';
+  const pct = (hit * 100).toFixed(0);
+  const cls = hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad';
+  return `<span class="cli-hit-badge ${cls}">${pct}% cache</span>`;
+}
+
 function renderList(sessions: CliSession[]): void {
   const listEl = document.getElementById('cli-sessions-list')!;
   const detailEl = document.getElementById('cli-sessions-detail')!;
@@ -48,29 +71,39 @@ function renderList(sessions: CliSession[]): void {
   detailEl.classList.add('hidden');
   listEl.classList.remove('hidden');
 
-  listEl.innerHTML = sessions
-    .map((s, i) => {
-      const date = new Date(s.ts).toLocaleString([], {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-      const cost = calcCost(s);
-      const shortId = s.sessionId.slice(0, 8);
-      return `<div class="cli-session-card" data-idx="${i}">
-        <span class="cli-session-id">${shortId}</span>
-        <span class="cli-session-date">${date}</span>
-        <span class="cli-session-tool">${s.toolName}</span>
-        <span class="cli-session-cost">${fmtCost(cost)}</span>
-      </div>`;
-    })
-    .join('');
+  const totalCost = sessions.reduce((acc, s) => acc + calcCost(s), 0);
 
-  listEl.querySelectorAll<HTMLElement>('.cli-session-card').forEach((card) => {
-    card.addEventListener('click', () => {
-      const idx = Number(card.dataset.idx);
-      renderDetail(sessions[idx], listEl, detailEl);
+  listEl.innerHTML = `
+    <div class="cli-sessions-summary">
+      <span>${sessions.length} sessões</span>
+      <span class="cli-summary-cost">Total: ${fmtCostFull(totalCost)}</span>
+    </div>
+    <div class="cli-sessions-table-head">
+      <span>ID</span>
+      <span>Horário</span>
+      <span>Tokens</span>
+      <span>Cache</span>
+      <span>Custo</span>
+    </div>
+    ${sessions.map((s, i) => {
+      const cost = calcCost(s);
+      const hit = cacheHitRate(s);
+      const hitCls = hit === null ? '' : hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad';
+      const hitTxt = hit !== null ? `${(hit * 100).toFixed(0)}%` : '—';
+      const totalTok = s.inputTokens + s.outputTokens + s.cacheReadTokens;
+      return `<div class="cli-session-row" data-idx="${i}">
+        <span class="cli-row-id">${s.sessionId.slice(0, 8)}</span>
+        <span class="cli-row-date">${fmtDate(s.ts)}</span>
+        <span class="cli-row-tokens">${fmtTokens(totalTok)}</span>
+        <span class="cli-row-hit ${hitCls}">${hitTxt}</span>
+        <span class="cli-row-cost">${fmtCost(cost)}</span>
+      </div>`;
+    }).join('')}
+  `;
+
+  listEl.querySelectorAll<HTMLElement>('.cli-session-row').forEach((row) => {
+    row.addEventListener('click', () => {
+      renderDetail(sessions[Number(row.dataset.idx)], listEl, detailEl);
     });
   });
 }
@@ -78,22 +111,52 @@ function renderList(sessions: CliSession[]): void {
 function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement): void {
   const hit = cacheHitRate(s);
   const cost = calcCost(s);
-  const date = new Date(s.ts).toLocaleString();
+  const hitCls = hit !== null ? (hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad') : '';
 
   detailEl.innerHTML = `
     <button id="cli-sessions-back" class="cli-sessions-back">← Voltar</button>
-    <div class="cli-detail-id" title="${s.sessionId}">${s.sessionId}</div>
-    <div class="cli-detail-row"><span>Data</span><span>${date}</span></div>
-    <div class="cli-detail-row"><span>Evento</span><span>${s.toolName}</span></div>
-    <div class="cli-detail-sep"></div>
-    <div class="cli-detail-row"><span>Input</span><span>${fmtTokens(s.inputTokens)}</span></div>
-    <div class="cli-detail-row"><span>Output</span><span>${fmtTokens(s.outputTokens)}</span></div>
-    <div class="cli-detail-row"><span>Cache read</span><span>${fmtTokens(s.cacheReadTokens)}</span></div>
-    <div class="cli-detail-row"><span>Cache create</span><span>${fmtTokens(s.cacheCreationTokens)}</span></div>
-    ${hit !== null ? `<div class="cli-detail-row cli-detail-hit ${hit >= 0.8 ? 'good' : 'warn'}"><span>Cache hit rate</span><span>${(hit * 100).toFixed(1)}%</span></div>` : ''}
-    <div class="cli-detail-sep"></div>
-    <div class="cli-detail-row cli-detail-cost"><span>Custo est. (Sonnet)</span><span>${fmtCost(cost)}</span></div>
-    <div class="cli-detail-note">$3/M in · $15/M out · $0.30/M cR · $3.75/M cW</div>
+    <div class="cli-detail-header">
+      <div class="cli-detail-id" title="${s.sessionId}">${s.sessionId}</div>
+      <div class="cli-detail-meta">${new Date(s.ts).toLocaleString()} · ${s.toolName}</div>
+    </div>
+
+    <div class="cli-detail-cards">
+      <div class="cli-detail-card">
+        <div class="cli-card-label">Input</div>
+        <div class="cli-card-value">${fmtTokens(s.inputTokens)}</div>
+        <div class="cli-card-sub">${fmtCostFull(s.inputTokens * RATES.input)}</div>
+      </div>
+      <div class="cli-detail-card">
+        <div class="cli-card-label">Output</div>
+        <div class="cli-card-value">${fmtTokens(s.outputTokens)}</div>
+        <div class="cli-card-sub">${fmtCostFull(s.outputTokens * RATES.output)}</div>
+      </div>
+      <div class="cli-detail-card">
+        <div class="cli-card-label">Cache read</div>
+        <div class="cli-card-value">${fmtTokens(s.cacheReadTokens)}</div>
+        <div class="cli-card-sub">${fmtCostFull(s.cacheReadTokens * RATES.cacheRead)}</div>
+      </div>
+      <div class="cli-detail-card">
+        <div class="cli-card-label">Cache create</div>
+        <div class="cli-card-value">${fmtTokens(s.cacheCreationTokens)}</div>
+        <div class="cli-card-sub">${fmtCostFull(s.cacheCreationTokens * RATES.cacheCreate)}</div>
+      </div>
+    </div>
+
+    ${hit !== null ? `
+    <div class="cli-detail-hit-wrap">
+      <div class="cli-detail-hit-label">Cache hit rate</div>
+      <div class="cli-hit-bar-wrap">
+        <div class="cli-hit-bar-fill ${hitCls}" style="width:${(hit * 100).toFixed(1)}%"></div>
+      </div>
+      <div class="cli-hit-bar-pct ${hitCls}">${(hit * 100).toFixed(1)}%${hit >= 0.8 ? ' ✓' : ''}</div>
+    </div>` : ''}
+
+    <div class="cli-detail-total">
+      <span>Custo estimado</span>
+      <span>${fmtCostFull(cost)}</span>
+    </div>
+    <div class="cli-detail-note">Sonnet · $3/M in · $15/M out · $0.30/M cR · $3.75/M cW</div>
   `;
 
   listEl.classList.add('hidden');
