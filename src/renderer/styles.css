@@ -2429,9 +2429,10 @@ body {
 .cli-cache-tooltip {
   display: none;
   position: absolute;
-  left: 0;
+  right: 0;
+  left: auto;
   top: calc(100% + 6px);
-  width: 240px;
+  width: 230px;
   background: var(--bg-solid);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
