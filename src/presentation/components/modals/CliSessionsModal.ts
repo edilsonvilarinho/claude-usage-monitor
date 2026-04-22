@@ -56,6 +56,13 @@ function hitBadge(hit: number | null): string {
   return `<span class="cli-hit-badge ${cls}">${pct}% cache</span>`;
 }
 
+function hitLabel(hit: number | null): { cls: string; txt: string } {
+  if (hit === null) return { cls: '', txt: '—' };
+  if (hit >= 0.8) return { cls: 'good', txt: `${(hit * 100).toFixed(0)}% ótimo` };
+  if (hit >= 0.5) return { cls: 'warn', txt: `${(hit * 100).toFixed(0)}% médio` };
+  return { cls: 'bad', txt: `${(hit * 100).toFixed(0)}% baixo` };
+}
+
 function renderList(sessions: CliSession[]): void {
   const listEl = document.getElementById('cli-sessions-list')!;
   const detailEl = document.getElementById('cli-sessions-detail')!;
@@ -89,8 +96,7 @@ function renderList(sessions: CliSession[]): void {
     ${sessions.map((s, i) => {
       const cost = calcCost(s);
       const hit = cacheHitRate(s);
-      const hitCls = hit === null ? '' : hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad';
-      const hitTxt = hit !== null ? `${(hit * 100).toFixed(0)}%` : '—';
+      const { cls: hitCls, txt: hitTxt } = hitLabel(hit);
       const totalTok = s.inputTokens + s.outputTokens + s.cacheReadTokens;
       return `<div class="cli-session-row" data-idx="${i}">
         <span class="cli-row-id">${s.sessionId.slice(0, 8)}</span>
@@ -202,6 +208,21 @@ export function setupCliSessionsHandlers(): void {
   document.getElementById('cli-sessions-modal')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('cli-sessions-modal')) closeCliSessionsModal();
   });
+  document.getElementById('cli-sessions-refresh')?.addEventListener('click', () => void reloadList());
+}
+
+async function reloadList(): Promise<void> {
+  const listEl = document.getElementById('cli-sessions-list')!;
+  const detailEl = document.getElementById('cli-sessions-detail')!;
+  detailEl.classList.add('hidden');
+  listEl.classList.remove('hidden');
+  listEl.innerHTML = '<div class="cli-sessions-loading">Carregando…</div>';
+  try {
+    const sessions = await window.claudeUsage.getCliSessions();
+    renderList(sessions);
+  } catch {
+    listEl.innerHTML = '<div class="cli-sessions-empty">Erro ao carregar sessões.</div>';
+  }
 }
 
 export function closeCliSessionsModal(): void {
@@ -209,15 +230,6 @@ export function closeCliSessionsModal(): void {
 }
 
 export async function openCliSessionsModal(): Promise<void> {
-  const modal = document.getElementById('cli-sessions-modal')!;
-  const listEl = document.getElementById('cli-sessions-list')!;
-  modal.classList.remove('hidden');
-  listEl.innerHTML = '<div class="cli-sessions-loading">Carregando…</div>';
-
-  try {
-    const sessions = await window.claudeUsage.getCliSessions();
-    renderList(sessions);
-  } catch {
-    listEl.innerHTML = '<div class="cli-sessions-empty">Erro ao carregar sessões.</div>';
-  }
+  document.getElementById('cli-sessions-modal')!.classList.remove('hidden');
+  await reloadList();
 }
