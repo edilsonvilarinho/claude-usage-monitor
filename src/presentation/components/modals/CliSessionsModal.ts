@@ -140,6 +140,22 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
   const cost = calcCost(s);
   const hitCls = hit !== null ? (hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad') : '';
 
+  // Indicadores derivados
+  const costInput    = s.inputTokens * RATES.input;
+  const costOutput   = s.outputTokens * RATES.output;
+  const costCacheR   = s.cacheReadTokens * RATES.cacheRead;
+  const costCacheC   = s.cacheCreationTokens * RATES.cacheCreate;
+
+  // Economia: quanto cacheRead custaria se fosse cobrado como input normal
+  const cacheSaving  = s.cacheReadTokens * (RATES.input - RATES.cacheRead);
+  const costNoCache  = costInput + costOutput + s.cacheReadTokens * RATES.input + costCacheC;
+
+  // Distribuição de custo em %
+  const pIn  = cost > 0 ? (costInput  / cost * 100) : 0;
+  const pOut = cost > 0 ? (costOutput / cost * 100) : 0;
+  const pCR  = cost > 0 ? (costCacheR / cost * 100) : 0;
+  const pCC  = cost > 0 ? (costCacheC / cost * 100) : 0;
+
   detailEl.innerHTML = `
     <button id="cli-sessions-back" class="cli-sessions-back">← Voltar</button>
     <div class="cli-detail-header">
@@ -151,22 +167,22 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
       <div class="cli-detail-card">
         <div class="cli-card-label">Input</div>
         <div class="cli-card-value">${fmtTokens(s.inputTokens)}</div>
-        <div class="cli-card-sub">${fmtCostFull(s.inputTokens * RATES.input)}</div>
+        <div class="cli-card-sub">${fmtCostFull(costInput)}</div>
       </div>
       <div class="cli-detail-card">
         <div class="cli-card-label">Output</div>
         <div class="cli-card-value">${fmtTokens(s.outputTokens)}</div>
-        <div class="cli-card-sub">${fmtCostFull(s.outputTokens * RATES.output)}</div>
+        <div class="cli-card-sub">${fmtCostFull(costOutput)}</div>
       </div>
       <div class="cli-detail-card">
         <div class="cli-card-label">Cache read</div>
         <div class="cli-card-value">${fmtTokens(s.cacheReadTokens)}</div>
-        <div class="cli-card-sub">${fmtCostFull(s.cacheReadTokens * RATES.cacheRead)}</div>
+        <div class="cli-card-sub">${fmtCostFull(costCacheR)}</div>
       </div>
       <div class="cli-detail-card">
         <div class="cli-card-label">Cache create</div>
         <div class="cli-card-value">${fmtTokens(s.cacheCreationTokens)}</div>
-        <div class="cli-card-sub">${fmtCostFull(s.cacheCreationTokens * RATES.cacheCreate)}</div>
+        <div class="cli-card-sub">${fmtCostFull(costCacheC)}</div>
       </div>
     </div>
 
@@ -177,6 +193,37 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
         <div class="cli-hit-bar-fill ${hitCls}" style="width:${(hit * 100).toFixed(1)}%"></div>
       </div>
       <div class="cli-hit-bar-pct ${hitCls}">${(hit * 100).toFixed(1)}%${hit >= 0.8 ? ' ✓' : ''}</div>
+    </div>` : ''}
+
+    <div class="cli-detail-sep"></div>
+
+    <div class="cli-dist-section">
+      <div class="cli-dist-label">Distribuição do custo</div>
+      <div class="cli-dist-bar">
+        <div class="cli-dist-seg input"  style="width:${pIn.toFixed(1)}%"  title="Input ${pIn.toFixed(1)}%"></div>
+        <div class="cli-dist-seg output" style="width:${pOut.toFixed(1)}%" title="Output ${pOut.toFixed(1)}%"></div>
+        <div class="cli-dist-seg cacher" style="width:${pCR.toFixed(1)}%"  title="Cache read ${pCR.toFixed(1)}%"></div>
+        <div class="cli-dist-seg cachec" style="width:${pCC.toFixed(1)}%"  title="Cache create ${pCC.toFixed(1)}%"></div>
+      </div>
+      <div class="cli-dist-legend">
+        <span class="cli-dist-dot input"></span>In ${pIn.toFixed(0)}%
+        <span class="cli-dist-dot output"></span>Out ${pOut.toFixed(0)}%
+        <span class="cli-dist-dot cacher"></span>cR ${pCR.toFixed(0)}%
+        <span class="cli-dist-dot cachec"></span>cW ${pCC.toFixed(0)}%
+      </div>
+    </div>
+
+    ${cacheSaving > 0 ? `
+    <div class="cli-saving-box">
+      <div class="cli-saving-row">
+        <span>💰 Economia de cache</span>
+        <span class="cli-saving-value">+${fmtCostFull(cacheSaving)}</span>
+      </div>
+      <div class="cli-saving-row cli-saving-sub">
+        <span>Custo sem cache</span>
+        <span>${fmtCostFull(costNoCache)}</span>
+      </div>
+      <div class="cli-saving-pct">${((cacheSaving / costNoCache) * 100).toFixed(0)}% mais barato com cache</div>
     </div>` : ''}
 
     <div class="cli-detail-total">
