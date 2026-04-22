@@ -68,6 +68,16 @@ export const AuthExchangeResponseSchema = z.object({
   email: z.string().email(),
 });
 
+export const SyncCliEventSchema = z.object({
+  ts: z.number().int().positive(),
+  sessionId: z.string().min(1),
+  toolName: z.string().min(1),
+  inputTokens: z.number().int().min(0),
+  outputTokens: z.number().int().min(0),
+  cacheReadTokens: z.number().int().min(0).default(0),
+  cacheCreationTokens: z.number().int().min(0).default(0),
+});
+
 export const SyncPushRequestSchema = z.object({
   deviceId: z.string().min(1),
   daily: z.array(SyncDailySnapshotSchema),
@@ -76,6 +86,7 @@ export const SyncPushRequestSchema = z.object({
   usageSnapshots: z.array(SyncUsageSnapshotSchema),
   currentWindow: SyncCurrentWindowSchema.optional(),
   settings: SyncSettingsSchema.optional(),
+  cliEvents: z.array(SyncCliEventSchema).optional(),
 });
 
 export const SyncPullResponseSchema = z.object({

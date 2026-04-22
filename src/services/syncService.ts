@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as os from 'os';
 import {
   getSettings,
@@ -35,6 +37,20 @@ import type { AccountData } from './settingsService';
 
 // Backoff em minutos: [1, 2, 5, 10, 30]
 const BACKOFF_MINUTES = [1, 2, 5, 10, 30];
+
+const CLI_TOKEN_FILE = path.join(os.homedir(), '.claude', 'claude-usage-token.json');
+
+function writeCliTokenFile(jwt: string, deviceId: string, serverUrl: string, expiresAt: number): void {
+  try {
+    fs.writeFileSync(CLI_TOKEN_FILE, JSON.stringify({ jwt, deviceId, serverUrl, expiresAt }), { mode: 0o600 });
+  } catch {
+    // silencioso — não bloqueia o sync
+  }
+}
+
+function deleteCliTokenFile(): void {
+  try { fs.unlinkSync(CLI_TOKEN_FILE); } catch { /* já inexistente */ }
+}
 
 export interface SyncStatus {
   enabled: boolean;
@@ -84,6 +100,7 @@ class SyncService extends EventEmitter {
 
       setCloudSyncSecrets({ jwt: exchangeResp.jwt, jwtExpiresAt: exchangeResp.expiresAt });
       this.jwtEmail = exchangeResp.email;
+      writeCliTokenFile(exchangeResp.jwt, deviceId, serverUrl, exchangeResp.expiresAt);
 
       const updatedCloudSync: CloudSyncSettings = {
         ...settings.cloudSync,
@@ -129,6 +146,7 @@ class SyncService extends EventEmitter {
     setCloudSyncSecrets({ jwt: '', jwtExpiresAt: 0 });
     clearOutbox();
     this.jwtEmail = '';
+    deleteCliTokenFile();
 
     const settings = getSettings();
     saveSettings({
@@ -427,6 +445,7 @@ class SyncService extends EventEmitter {
       const exchangeResp = await this.doExchange(serverUrl, accessToken, deviceId, deviceLabel);
       setCloudSyncSecrets({ jwt: exchangeResp.jwt, jwtExpiresAt: exchangeResp.expiresAt });
       this.jwtEmail = exchangeResp.email;
+      writeCliTokenFile(exchangeResp.jwt, deviceId, serverUrl, exchangeResp.expiresAt);
       return exchangeResp.jwt;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

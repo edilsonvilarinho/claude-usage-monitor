@@ -69,3 +69,15 @@ CREATE TABLE IF NOT EXISTS sync_cursors (
   last_pulled_at INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (email, device_id)
 );
+
+CREATE TABLE IF NOT EXISTS cli_usage_events (
+  email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+  ts INTEGER NOT NULL,
+  session_id TEXT NOT NULL,
+  tool_name TEXT NOT NULL,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+  cache_creation_tokens INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (email, ts, session_id, tool_name)
+);

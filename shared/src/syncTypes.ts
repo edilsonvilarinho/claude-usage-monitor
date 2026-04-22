@@ -66,6 +66,16 @@ export interface SyncSettings {
   updatedAt: number;         // unix ms
 }
 
+export interface SyncCliEvent {
+  ts: number;                // unix ms
+  sessionId: string;
+  toolName: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+}
+
 /** Payload enviado no POST /sync/push */
 export interface SyncPushPayload {
   deviceId: string;
@@ -75,6 +85,7 @@ export interface SyncPushPayload {
   usageSnapshots: SyncUsageSnapshot[];
   currentWindow?: SyncCurrentWindow;
   settings?: SyncSettings;
+  cliEvents?: SyncCliEvent[];
 }
 
 /** Resposta do GET /sync/pull */

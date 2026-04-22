@@ -7,6 +7,7 @@ import {
   type SyncUsageSnapshot,
   type SyncCurrentWindow,
   type SyncSettings,
+  type SyncCliEvent,
 } from '@claude-usage/shared';
 import { getDb } from '../db/client';
 import { logger } from '../logger';
@@ -32,7 +33,7 @@ syncRoute.post('/push', async (c) => {
     return c.json({ error: 'validation_error', details: parsed.error.flatten() }, 400);
   }
 
-  const { daily, sessionWindows, timeSeries, usageSnapshots, currentWindow, settings } =
+  const { daily, sessionWindows, timeSeries, usageSnapshots, currentWindow, settings, cliEvents } =
     parsed.data;
   const { email, deviceId } = getUser(c);
   const now = Date.now();
@@ -102,6 +103,20 @@ syncRoute.post('/push', async (c) => {
       `);
       for (const s of usageSnapshots as SyncUsageSnapshot[]) {
         insertSnap.run(email, s.ts, s.session, s.weekly);
+      }
+
+      if (cliEvents && cliEvents.length > 0) {
+        const insertCli = db.prepare(`
+          INSERT OR IGNORE INTO cli_usage_events
+            (email, ts, session_id, tool_name, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const ev of cliEvents as SyncCliEvent[]) {
+          insertCli.run(
+            email, ev.ts, ev.sessionId, ev.toolName,
+            ev.inputTokens, ev.outputTokens, ev.cacheReadTokens, ev.cacheCreationTokens,
+          );
+        }
       }
 
       if (currentWindow || settings) {
