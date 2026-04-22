@@ -52,6 +52,103 @@ function deleteCliTokenFile(): void {
   try { fs.unlinkSync(CLI_TOKEN_FILE); } catch { /* já inexistente */ }
 }
 
+const CLAUDE_DIR = path.join(os.homedir(), '.claude');
+const HOOK_SCRIPT = path.join(CLAUDE_DIR, 'hooks', 'claude-usage-capture.js');
+const CLAUDE_SETTINGS = path.join(CLAUDE_DIR, 'settings.json');
+const HOOK_COMMAND = `node ${HOOK_SCRIPT.replace(/\\/g, '/')}`;
+
+const HOOK_SCRIPT_CONTENT = `#!/usr/bin/env node
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const TOKEN_FILE = path.join(os.homedir(), '.claude', 'claude-usage-token.json');
+let raw = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => { raw += chunk; });
+process.stdin.on('end', () => {
+  try {
+    const hook = JSON.parse(raw);
+    const usage = hook?.tool_response?.usage ?? hook?.usage;
+    if (!usage) process.exit(0);
+    const inputTokens = usage.input_tokens ?? 0;
+    const outputTokens = usage.output_tokens ?? 0;
+    const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
+    const cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
+    if (inputTokens === 0 && outputTokens === 0) process.exit(0);
+    let tokenData;
+    try { tokenData = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8')); } catch { process.exit(0); }
+    const { jwt, deviceId, serverUrl, expiresAt } = tokenData;
+    if (!jwt || !deviceId || !serverUrl) process.exit(0);
+    if (expiresAt && expiresAt < Date.now()) process.exit(0);
+    const event = { ts: Date.now(), sessionId: hook.session_id ?? 'unknown', toolName: hook.tool_name ?? 'unknown', inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens };
+    const payload = JSON.stringify({ deviceId, daily: [], sessionWindows: [], timeSeries: [], usageSnapshots: [], cliEvents: [event] });
+    if (typeof fetch === 'function') {
+      fetch(\`\${serverUrl}/sync/push\`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${jwt}\` }, body: payload }).catch(() => {});
+    } else {
+      const url = new URL(\`\${serverUrl}/sync/push\`);
+      const mod = url.protocol === 'https:' ? require('https') : require('http');
+      const req = mod.request({ hostname: url.hostname, port: url.port || (url.protocol === 'https:' ? 443 : 80), path: url.pathname, method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: \`Bearer \${jwt}\`, 'Content-Length': Buffer.byteLength(payload) } });
+      req.on('error', () => {}); req.write(payload); req.end();
+    }
+  } catch {}
+  process.exit(0);
+});
+`;
+
+function installHook(): void {
+  try {
+    fs.mkdirSync(path.join(CLAUDE_DIR, 'hooks'), { recursive: true });
+    fs.writeFileSync(HOOK_SCRIPT, HOOK_SCRIPT_CONTENT, { mode: 0o755 });
+
+    let settings: Record<string, unknown> = {};
+    try { settings = JSON.parse(fs.readFileSync(CLAUDE_SETTINGS, 'utf8')); } catch { /* novo arquivo */ }
+
+    const hooks = (settings['hooks'] ?? {}) as Record<string, unknown>;
+    const postToolUse = Array.isArray(hooks['PostToolUse']) ? hooks['PostToolUse'] as unknown[] : [];
+
+    const alreadyRegistered = postToolUse.some(
+      (entry) => typeof entry === 'object' && entry !== null &&
+        (entry as Record<string, unknown>)['hooks'] != null &&
+        JSON.stringify(entry).includes(HOOK_COMMAND),
+    );
+
+    if (!alreadyRegistered) {
+      postToolUse.push({ matcher: '*', hooks: [{ type: 'command', command: HOOK_COMMAND }] });
+      hooks['PostToolUse'] = postToolUse;
+      settings['hooks'] = hooks;
+      fs.writeFileSync(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2), 'utf8');
+    }
+  } catch {
+    // silencioso
+  }
+}
+
+function uninstallHook(): void {
+  try {
+    let settings: Record<string, unknown> = {};
+    try { settings = JSON.parse(fs.readFileSync(CLAUDE_SETTINGS, 'utf8')); } catch { return; }
+
+    const hooks = (settings['hooks'] ?? {}) as Record<string, unknown>;
+    if (!Array.isArray(hooks['PostToolUse'])) return;
+
+    const filtered = (hooks['PostToolUse'] as unknown[]).filter(
+      (entry) => !JSON.stringify(entry).includes(HOOK_COMMAND),
+    );
+
+    if (filtered.length === 0) delete hooks['PostToolUse'];
+    else hooks['PostToolUse'] = filtered;
+
+    if (Object.keys(hooks).length === 0) delete settings['hooks'];
+    else settings['hooks'] = hooks;
+
+    fs.writeFileSync(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2), 'utf8');
+    try { fs.unlinkSync(HOOK_SCRIPT); } catch { /* já inexistente */ }
+  } catch {
+    // silencioso
+  }
+}
+
 export interface SyncStatus {
   enabled: boolean;
   lastSyncAt: number;
@@ -101,6 +198,7 @@ class SyncService extends EventEmitter {
       setCloudSyncSecrets({ jwt: exchangeResp.jwt, jwtExpiresAt: exchangeResp.expiresAt });
       this.jwtEmail = exchangeResp.email;
       writeCliTokenFile(exchangeResp.jwt, deviceId, serverUrl, exchangeResp.expiresAt);
+      installHook();
 
       const updatedCloudSync: CloudSyncSettings = {
         ...settings.cloudSync,
@@ -147,6 +245,7 @@ class SyncService extends EventEmitter {
     clearOutbox();
     this.jwtEmail = '';
     deleteCliTokenFile();
+    uninstallHook();
 
     const settings = getSettings();
     saveSettings({
