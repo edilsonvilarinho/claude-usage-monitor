@@ -30,6 +30,7 @@ import {
   SyncPullResponse,
   AuthExchangeResponse,
   SyncSettings,
+  type CliSession,
 } from '@claude-usage/shared';
 import type { AccountData } from './settingsService';
 
@@ -194,6 +195,19 @@ class SyncService extends EventEmitter {
 
     // Tenta sync imediatamente em background
     void this.syncNow();
+  }
+
+  async getCliSessions(): Promise<CliSession[]> {
+    const settings = getSettings();
+    const { cloudSync } = settings;
+    if (!cloudSync.enabled || !cloudSync.serverUrl) return [];
+    const jwt = await this.ensureValidJwt(cloudSync.serverUrl, cloudSync.deviceId, cloudSync.deviceLabel);
+    if (!jwt) return [];
+    const resp = await fetch(`${cloudSync.serverUrl}/sync/cli-sessions`, {
+      headers: { Authorization: `Bearer ${jwt}` },
+    });
+    if (!resp.ok) return [];
+    return resp.json() as Promise<CliSession[]>;
   }
 
   getStatus(): SyncStatus {

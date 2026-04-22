@@ -76,6 +76,17 @@ export interface SyncCliEvent {
   cacheCreationTokens: number;
 }
 
+/** Sessão CLI retornada pelo GET /sync/cli-sessions */
+export interface CliSession {
+  sessionId: string;
+  toolName: string;
+  ts: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+}
+
 /** Payload enviado no POST /sync/push */
 export interface SyncPushPayload {
   deviceId: string;

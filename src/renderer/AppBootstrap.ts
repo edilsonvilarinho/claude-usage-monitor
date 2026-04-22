@@ -19,6 +19,7 @@ import { setupServerStatus } from '../presentation/components/status/ServerStatu
 import { applyProfile } from '../presentation/components/status/AccountBar';
 import { applyAutoRefresh, startNextPollCountdown, stopNextPollCountdown, isAutoRefreshEnabled } from '../presentation/shared/autoRefresh';
 import { setupHistoryHandlers, setupReportHandlers } from '../presentation/components/history/HistoryPanel';
+import { setupCliSessionsHandlers } from '../presentation/components/modals/CliSessionsModal';
 import { setupHeaderHandlers } from '../presentation/components/header/HeaderHandlers';
 
 let lastWeeklyResetsAt: string | null = null;
@@ -34,6 +35,7 @@ export async function bootstrap(): Promise<void> {
   setupHeaderHandlers();
   setupServerStatus();
   setupCostModalHandlers();
+  setupCliSessionsHandlers();
 
   document.getElementById('day-detail-close')?.addEventListener('click', closeDayDetailModal);
   document.getElementById('day-detail-modal')?.addEventListener('click', (e) => {

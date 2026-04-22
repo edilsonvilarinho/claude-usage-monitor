@@ -410,6 +410,46 @@ syncRoute.get('/snapshot', (c) => {
   }
 });
 
+// GET /sync/cli-sessions — lista sessões CLI deduplicadas (último evento por session_id)
+syncRoute.get('/cli-sessions', (c) => {
+  const { email } = getUser(c);
+  const db = getDb();
+
+  try {
+    const rows = db
+      .prepare(
+        `SELECT session_id, tool_name, ts, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens
+         FROM cli_usage_events
+         WHERE email = ?
+         ORDER BY ts DESC`,
+      )
+      .all(email) as Array<{
+      session_id: string;
+      tool_name: string;
+      ts: number;
+      input_tokens: number;
+      output_tokens: number;
+      cache_read_tokens: number;
+      cache_creation_tokens: number;
+    }>;
+
+    return c.json(
+      rows.map((r) => ({
+        sessionId: r.session_id,
+        toolName: r.tool_name,
+        ts: r.ts,
+        inputTokens: r.input_tokens,
+        outputTokens: r.output_tokens,
+        cacheReadTokens: r.cache_read_tokens,
+        cacheCreationTokens: r.cache_creation_tokens,
+      })),
+    );
+  } catch (err) {
+    logger.error({ err, email }, 'cli-sessions failed');
+    return c.json({ error: 'internal_error' }, 500);
+  }
+});
+
 // DELETE /sync/account
 syncRoute.delete('/account', (c) => {
   const { email } = getUser(c);

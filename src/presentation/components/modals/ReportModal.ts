@@ -12,6 +12,7 @@ import {
   computeExcessCost,
 } from '../../../domain/reportMetrics';
 import type { SessionWindow, CurrentSessionWindow } from '../../../domain/entities/Usage';
+import { openCliSessionsModal } from './CliSessionsModal';
 
 let reportChart: Chart | null = null;
 
@@ -40,6 +41,15 @@ export async function openReportModal(): Promise<void> {
       await openReportModal();
     };
     headerEl.insertBefore(clearBtn, headerEl.querySelector('#btn-close-report'));
+  }
+
+  if (!headerEl.querySelector('#btn-cli-sessions')) {
+    const cliBtn = document.createElement('button');
+    cliBtn.id = 'btn-cli-sessions';
+    cliBtn.className = 'report-clear-btn';
+    cliBtn.textContent = 'Sessões CLI';
+    cliBtn.onclick = () => void openCliSessionsModal();
+    headerEl.insertBefore(cliBtn, headerEl.querySelector('#btn-close-report'));
   }
 
   const [dailyHistory, sessionWindows, currentWindow] = await Promise.all([

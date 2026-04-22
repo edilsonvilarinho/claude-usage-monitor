@@ -147,6 +147,9 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.on('profile-updated', (_event, profile: ProfileData) => cb(profile));
   },
 
+  getCliSessions: (): Promise<import('./domain/entities/Usage').CliSession[]> =>
+    ipcRenderer.invoke('get-cli-sessions'),
+
   sync: {
     getStatus: (): Promise<import('./services/syncService').SyncStatus> =>
       ipcRenderer.invoke('sync:get-status'),

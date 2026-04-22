@@ -58,6 +58,16 @@ export interface UsageData {
   extraUsage?: ExtraUsage;
 }
 
+export interface CliSession {
+  sessionId: string;
+  toolName: string;
+  ts: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+}
+
 export interface ProfileData {
   account: {
     displayName: string;

@@ -776,6 +776,8 @@ function registerIpcHandlers(): void {
     await syncService.syncNow();
   });
 
+  ipcMain.handle('get-cli-sessions', () => syncService.getCliSessions());
+
   ipcMain.handle('server:get-status', () => serverStatusService.getStatus());
 
   ipcMain.handle('server:connect', () => {
