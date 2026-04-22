@@ -168,15 +168,48 @@ class CliHookService {
   }
 
   async getCliSessions(): Promise<CliSession[]> {
-    const token = readTokenFile();
-    if (!token?.jwt || !token.serverUrl) return [];
+    const token = await this.validToken();
+    if (!token) return [];
+    return this.fetchSessions(token.serverUrl, token.jwt);
+  }
+
+  async deleteAllCliSessions(): Promise<boolean> {
+    const token = await this.validToken();
+    if (!token) return false;
+    try {
+      const resp = await fetch(`${token.serverUrl}/sync/cli-sessions`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token.jwt}` },
+      });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  async deleteCliSession(sessionId: string): Promise<boolean> {
+    const token = await this.validToken();
+    if (!token) return false;
+    try {
+      const resp = await fetch(`${token.serverUrl}/sync/cli-sessions/${encodeURIComponent(sessionId)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token.jwt}` },
+      });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private async validToken(): Promise<{ jwt: string; serverUrl: string } | null> {
+    let token = readTokenFile();
+    if (!token?.jwt || !token.serverUrl) return null;
     if (token.expiresAt < Date.now()) {
       await refreshIfNeeded();
-      const refreshed = readTokenFile();
-      if (!refreshed?.jwt) return [];
-      return this.fetchSessions(refreshed.serverUrl ?? CLI_SERVER_URL, refreshed.jwt);
+      token = readTokenFile();
     }
-    return this.fetchSessions(token.serverUrl, token.jwt);
+    if (!token?.jwt || !token.serverUrl) return null;
+    return { jwt: token.jwt, serverUrl: token.serverUrl };
   }
 
   private async fetchSessions(serverUrl: string, jwt: string): Promise<CliSession[]> {

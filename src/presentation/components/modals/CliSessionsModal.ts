@@ -75,8 +75,8 @@ function renderList(sessions: CliSession[]): void {
 
   listEl.innerHTML = `
     <div class="cli-sessions-summary">
-      <span>${sessions.length} sessões</span>
-      <span class="cli-summary-cost">Total: ${fmtCostFull(totalCost)}</span>
+      <span>${sessions.length} sessões · Total: ${fmtCostFull(totalCost)}</span>
+      <button id="cli-clear-all" class="cli-clear-all-btn" title="Limpar todas as sessões">Limpar tudo</button>
     </div>
     <div class="cli-sessions-table-head">
       <span>ID</span>
@@ -84,6 +84,7 @@ function renderList(sessions: CliSession[]): void {
       <span>Tokens</span>
       <span>Cache</span>
       <span>Custo</span>
+      <span></span>
     </div>
     ${sessions.map((s, i) => {
       const cost = calcCost(s);
@@ -97,9 +98,27 @@ function renderList(sessions: CliSession[]): void {
         <span class="cli-row-tokens">${fmtTokens(totalTok)}</span>
         <span class="cli-row-hit ${hitCls}">${hitTxt}</span>
         <span class="cli-row-cost">${fmtCost(cost)}</span>
+        <button class="cli-row-delete" data-session-id="${s.sessionId}" title="Apagar sessão">✕</button>
       </div>`;
     }).join('')}
   `;
+
+  document.getElementById('cli-clear-all')?.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!confirm('Apagar todas as sessões CLI? Essa ação não pode ser desfeita.')) return;
+    await window.claudeUsage.deleteAllCliSessions();
+    renderList([]);
+  });
+
+  listEl.querySelectorAll<HTMLElement>('.cli-row-delete').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const sessionId = btn.dataset.sessionId!;
+      await window.claudeUsage.deleteCliSession(sessionId);
+      const remaining = sessions.filter(s => s.sessionId !== sessionId);
+      renderList(remaining);
+    });
+  });
 
   listEl.querySelectorAll<HTMLElement>('.cli-session-row').forEach((row) => {
     row.addEventListener('click', () => {
@@ -157,6 +176,7 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement)
       <span>${fmtCostFull(cost)}</span>
     </div>
     <div class="cli-detail-note">Sonnet · $3/M in · $15/M out · $0.30/M cR · $3.75/M cW</div>
+    <button id="cli-detail-delete" class="cli-detail-delete-btn">Apagar esta sessão</button>
   `;
 
   listEl.classList.add('hidden');
@@ -165,6 +185,15 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement)
   document.getElementById('cli-sessions-back')?.addEventListener('click', () => {
     detailEl.classList.add('hidden');
     listEl.classList.remove('hidden');
+  });
+
+  document.getElementById('cli-detail-delete')?.addEventListener('click', async () => {
+    await window.claudeUsage.deleteCliSession(s.sessionId);
+    detailEl.classList.add('hidden');
+    listEl.classList.remove('hidden');
+    // recarrega lista atualizada
+    const updated = await window.claudeUsage.getCliSessions();
+    renderList(updated);
   });
 }
 

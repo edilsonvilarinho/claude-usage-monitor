@@ -777,6 +777,8 @@ function registerIpcHandlers(): void {
   });
 
   ipcMain.handle('get-cli-sessions', () => cliHookService.getCliSessions());
+  ipcMain.handle('delete-all-cli-sessions', () => cliHookService.deleteAllCliSessions());
+  ipcMain.handle('delete-cli-session', (_event, sessionId: string) => cliHookService.deleteCliSession(sessionId));
 
   ipcMain.handle('server:get-status', () => serverStatusService.getStatus());
 

@@ -450,6 +450,33 @@ syncRoute.get('/cli-sessions', (c) => {
   }
 });
 
+// DELETE /sync/cli-sessions — apaga todas as sessões CLI do usuário
+syncRoute.delete('/cli-sessions', (c) => {
+  const { email } = getUser(c);
+  const db = getDb();
+  try {
+    db.prepare(`DELETE FROM cli_usage_events WHERE email = ?`).run(email);
+    return c.json({ deleted: true });
+  } catch (err) {
+    logger.error({ err, email }, 'delete cli-sessions failed');
+    return c.json({ error: 'internal_error' }, 500);
+  }
+});
+
+// DELETE /sync/cli-sessions/:sessionId — apaga uma sessão CLI específica
+syncRoute.delete('/cli-sessions/:sessionId', (c) => {
+  const { email } = getUser(c);
+  const sessionId = c.req.param('sessionId');
+  const db = getDb();
+  try {
+    db.prepare(`DELETE FROM cli_usage_events WHERE email = ? AND session_id = ?`).run(email, sessionId);
+    return c.json({ deleted: true });
+  } catch (err) {
+    logger.error({ err, email, sessionId }, 'delete cli-session failed');
+    return c.json({ error: 'internal_error' }, 500);
+  }
+});
+
 // DELETE /sync/account
 syncRoute.delete('/account', (c) => {
   const { email } = getUser(c);

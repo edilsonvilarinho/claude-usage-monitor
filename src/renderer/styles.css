@@ -2367,9 +2367,48 @@ body {
 }
 .cli-summary-cost { font-family: monospace; color: var(--text-primary); }
 /* Table header */
+/* Clear all button */
+.cli-clear-all-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: calc(10px * var(--fs));
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.cli-clear-all-btn:hover { color: #f44336; border-color: #f44336; }
+/* Row delete button */
+.cli-row-delete {
+  background: none;
+  border: none;
+  color: transparent;
+  cursor: pointer;
+  font-size: calc(10px * var(--fs));
+  padding: 0 2px;
+  line-height: 1;
+}
+.cli-session-row:hover .cli-row-delete { color: var(--text-secondary); }
+.cli-row-delete:hover { color: #f44336 !important; }
+/* Delete button in detail */
+.cli-detail-delete-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: calc(11px * var(--fs));
+  text-align: center;
+}
+.cli-detail-delete-btn:hover { color: #f44336; border-color: #f44336; }
 .cli-sessions-table-head {
   display: grid;
-  grid-template-columns: 72px 70px 1fr 44px 56px;
+  grid-template-columns: 72px 70px 1fr 44px 56px 16px;
   gap: 4px;
   padding: 4px 8px;
   font-size: calc(9px * var(--fs));
@@ -2383,7 +2422,7 @@ body {
 /* Rows */
 .cli-session-row {
   display: grid;
-  grid-template-columns: 72px 70px 1fr 44px 56px;
+  grid-template-columns: 72px 70px 1fr 44px 56px 16px;
   gap: 4px;
   align-items: center;
   padding: 6px 8px;

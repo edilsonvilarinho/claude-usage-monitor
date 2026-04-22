@@ -150,6 +150,12 @@ contextBridge.exposeInMainWorld('claudeUsage', {
   getCliSessions: (): Promise<import('./domain/entities/Usage').CliSession[]> =>
     ipcRenderer.invoke('get-cli-sessions'),
 
+  deleteAllCliSessions: (): Promise<boolean> =>
+    ipcRenderer.invoke('delete-all-cli-sessions'),
+
+  deleteCliSession: (sessionId: string): Promise<boolean> =>
+    ipcRenderer.invoke('delete-cli-session', sessionId),
+
   sync: {
     getStatus: (): Promise<import('./services/syncService').SyncStatus> =>
       ipcRenderer.invoke('sync:get-status'),
