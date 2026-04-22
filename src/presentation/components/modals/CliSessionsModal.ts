@@ -56,11 +56,11 @@ function hitBadge(hit: number | null): string {
   return `<span class="cli-hit-badge ${cls}">${pct}% cache</span>`;
 }
 
-function hitLabel(hit: number | null): { cls: string; txt: string } {
-  if (hit === null) return { cls: '', txt: '—' };
-  if (hit >= 0.8) return { cls: 'good', txt: `${(hit * 100).toFixed(0)}% ótimo` };
-  if (hit >= 0.5) return { cls: 'warn', txt: `${(hit * 100).toFixed(0)}% médio` };
-  return { cls: 'bad', txt: `${(hit * 100).toFixed(0)}% baixo` };
+function hitCell(hit: number | null): string {
+  if (hit === null) return `<span class="cli-row-hit-cell none"><span class="cli-dot"></span><span class="cli-hit-pct">—</span></span>`;
+  const pct = (hit * 100).toFixed(0);
+  const cls = hit >= 0.8 ? 'good' : hit >= 0.5 ? 'warn' : 'bad';
+  return `<span class="cli-row-hit-cell ${cls}"><span class="cli-dot"></span><span class="cli-hit-pct">${pct}%</span></span>`;
 }
 
 function renderList(sessions: CliSession[]): void {
@@ -89,20 +89,19 @@ function renderList(sessions: CliSession[]): void {
       <span>ID</span>
       <span>Horário</span>
       <span>Tokens</span>
-      <span>Cache</span>
+      <span title="🟢 ≥80% ótimo · 🟡 50–80% médio · 🔴 &lt;50% baixo" style="cursor:help">Cache ⓘ</span>
       <span>Custo</span>
       <span></span>
     </div>
     ${sessions.map((s, i) => {
       const cost = calcCost(s);
       const hit = cacheHitRate(s);
-      const { cls: hitCls, txt: hitTxt } = hitLabel(hit);
       const totalTok = s.inputTokens + s.outputTokens + s.cacheReadTokens;
-      return `<div class="cli-session-row" data-idx="${i}">
+      return `<div class="cli-session-row" data-idx="${i}" style="animation-delay:${i * 30}ms">
         <span class="cli-row-id">${s.sessionId.slice(0, 8)}</span>
         <span class="cli-row-date">${fmtDate(s.ts)}</span>
         <span class="cli-row-tokens">${fmtTokens(totalTok)}</span>
-        <span class="cli-row-hit ${hitCls}">${hitTxt}</span>
+        ${hitCell(hit)}
         <span class="cli-row-cost">${fmtCost(cost)}</span>
         <button class="cli-row-delete" data-session-id="${s.sessionId}" title="Apagar sessão">✕</button>
       </div>`;
@@ -214,14 +213,18 @@ export function setupCliSessionsHandlers(): void {
 async function reloadList(): Promise<void> {
   const listEl = document.getElementById('cli-sessions-list')!;
   const detailEl = document.getElementById('cli-sessions-detail')!;
+  const refreshBtn = document.getElementById('cli-sessions-refresh');
   detailEl.classList.add('hidden');
   listEl.classList.remove('hidden');
-  listEl.innerHTML = '<div class="cli-sessions-loading">Carregando…</div>';
+  listEl.innerHTML = '<div class="cli-sessions-loading"><span class="cli-spinner"></span> Carregando…</div>';
+  refreshBtn?.classList.add('spinning');
   try {
     const sessions = await window.claudeUsage.getCliSessions();
     renderList(sessions);
   } catch {
     listEl.innerHTML = '<div class="cli-sessions-empty">Erro ao carregar sessões.</div>';
+  } finally {
+    refreshBtn?.classList.remove('spinning');
   }
 }
 
