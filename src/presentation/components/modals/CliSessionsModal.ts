@@ -91,7 +91,7 @@ function renderList(sessions: CliSession[]): void {
       <span>ID</span>
       <span>Horário</span>
       <span>Tokens</span>
-      <span title="🟢 ≥80% ótimo · 🟡 50–80% médio · 🔴 &lt;50% baixo" style="cursor:help">Cache ⓘ</span>
+      <span class="cli-cache-th">Cache <span class="cli-cache-info-icon">ⓘ</span><div class="cli-cache-tooltip"><strong>Cache hit rate</strong><br>cacheRead ÷ (cacheRead + cacheCreate)<br><br>🟢 &ge;80% — ótimo: maioria dos tokens vem do cache, custo de leitura é 10× mais barato que criar<br>🟡 50–80% — médio: cache parcial, ainda há criação relevante<br>🔴 &lt;50% — baixo: muitos tokens criados do zero, custo elevado</div></span>
       <span>Custo</span>
       <span></span>
     </div>

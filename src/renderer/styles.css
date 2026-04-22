@@ -2416,6 +2416,44 @@ body {
   white-space: nowrap;
 }
 .cli-clear-all-btn:hover { color: #f44336; border-color: #f44336; }
+/* Cache column header tooltip */
+.cli-cache-th {
+  position: relative;
+  cursor: default;
+}
+.cli-cache-info-icon {
+  font-size: calc(9px * var(--fs));
+  color: var(--text-secondary);
+  cursor: help;
+}
+.cli-cache-tooltip {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  width: 240px;
+  background: var(--bg-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  padding: 10px 12px;
+  font-size: calc(10px * var(--fs));
+  color: var(--text-primary);
+  line-height: 1.5;
+  z-index: 200;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  pointer-events: none;
+}
+.cli-cache-th:hover .cli-cache-tooltip { display: block; }
+.cli-cache-tooltip strong {
+  font-size: calc(11px * var(--fs));
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
 /* Cache dot indicator */
 .cli-row-hit-cell {
   display: flex;
