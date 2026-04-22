@@ -110,7 +110,8 @@ async function refreshIfNeeded(): Promise<void> {
   const existing = readTokenFile();
   const deviceId = existing?.deviceId ?? crypto.randomUUID();
 
-  if (existing?.jwt && existing.expiresAt > Date.now() + FIVE_MIN) return;
+  const serverUrlMatch = existing?.serverUrl === CLI_SERVER_URL;
+  if (serverUrlMatch && existing?.jwt && existing.expiresAt > Date.now() + FIVE_MIN) return;
 
   const result = await exchangeJwt(deviceId);
   if (result) {
