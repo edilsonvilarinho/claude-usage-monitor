@@ -67,11 +67,25 @@ function installHookScript(): void {
 
     const hooks = (settings['hooks'] ?? {}) as Record<string, unknown>;
     const postToolUse = Array.isArray(hooks['PostToolUse']) ? (hooks['PostToolUse'] as unknown[]) : [];
+    const stopHooks = Array.isArray(hooks['Stop']) ? (hooks['Stop'] as unknown[]) : [];
 
-    const alreadyRegistered = postToolUse.some((e) => JSON.stringify(e).includes(HOOK_COMMAND));
-    if (!alreadyRegistered) {
+    let changed = false;
+
+    const postToolUseRegistered = postToolUse.some((e) => JSON.stringify(e).includes(HOOK_COMMAND));
+    if (!postToolUseRegistered) {
       postToolUse.push({ matcher: '*', hooks: [{ type: 'command', command: HOOK_COMMAND }] });
       hooks['PostToolUse'] = postToolUse;
+      changed = true;
+    }
+
+    const stopRegistered = stopHooks.some((e) => JSON.stringify(e).includes(HOOK_COMMAND));
+    if (!stopRegistered) {
+      stopHooks.push({ hooks: [{ type: 'command', command: HOOK_COMMAND }] });
+      hooks['Stop'] = stopHooks;
+      changed = true;
+    }
+
+    if (changed) {
       settings['hooks'] = hooks;
       fs.writeFileSync(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2), 'utf8');
     }
