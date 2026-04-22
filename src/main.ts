@@ -5,6 +5,7 @@ import { pollingService, LastResponseInfo } from './services/pollingService';
 import { getSettings, saveSettings, setActiveAccount, getAccountData, saveAccountData } from './services/settingsService';
 import { calculateCostEstimate } from './services/costService';
 import { syncService } from './services/syncService';
+import { cliHookService } from './services/cliHookService';
 import { setLaunchAtStartup, isLaunchAtStartupEnabled } from './services/startupService';
 import { checkAndNotify, syncWindowState, sendTestNotification } from './services/notificationService';
 import { getMainTranslations } from './i18n/mainTranslations';
@@ -1166,6 +1167,7 @@ app.whenReady().then(() => {
   pollingService.start();
 
   syncService.init().catch(err => console.warn('[sync] init failed:', err));
+  cliHookService.init().catch(err => console.warn('[cli-hook] init failed:', err));
 
   // Encaminhar eventos do syncService para o renderer
   syncService.on('sync-event', (event: { type: string; payload: unknown }) => {
