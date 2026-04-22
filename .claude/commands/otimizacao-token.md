@@ -54,7 +54,19 @@ Para cada seção do CLAUDE.md, classificar como **derivável** ou **não deriv�
 
 ## Modo padrão
 
-Produzir 5 tabelas: (1) inventário auto-loaded (arquivo | chars | tokens), (2) custo por skill (command | linhas | tokens), (3) problemas (severidade | arquivo | descrição | impacto), (4) análise de seções do CLAUDE.md se >60 linhas, (5) previsão de economia total. Finalizar perguntando quais corrigir.
+Produzir 6 tabelas: (1) inventário auto-loaded (arquivo | chars | tokens), (2) custo por skill (command | linhas | tokens), (3) problemas (severidade | arquivo | descrição | impacto), (4) análise de seções do CLAUDE.md se >60 linhas, (5) previsão de economia total, (6) impacto na janela de contexto.
+
+**Tabela 6 — Impacto na janela de contexto (200k tokens):**
+
+| Métrica | Antes | Depois | Δ |
+|---------|-------|--------|---|
+| Tokens auto-loaded (seus arquivos) | X | Y | −Z |
+| % da janela de contexto | X% | Y% | −Z% |
+| Overhead fixo estimado total¹ | ~5–10k tokens | — | — |
+
+¹ Inclui system prompt do harness, skills disponíveis e lembretes de sistema — não alterados por esta auditoria.
+
+Calcular: `% = tokens_auto_loaded / 200.000 × 100`. Mostrar antes (estado atual) e depois (após aplicar todas as correções previstas).
 
 ## Modo `--fix`
 
@@ -62,4 +74,4 @@ Produzir 5 tabelas: (1) inventário auto-loaded (arquivo | chars | tokens), (2) 
 
 **Alto risco (pedir confirmação):** deletar `project_*` | remover tool `Agent` | alterar `model:` | condensar commands
 
-**Fluxo:** auditar → aplicar baixo risco → atualizar MEMORY.md → `git add` (CLAUDE.md, .claude/*) → commit `chore: otimização de tokens — <resumo>` → push → tabela final → listar pendentes de alto risco
+**Fluxo:** auditar → aplicar baixo risco → atualizar MEMORY.md → `git add` (CLAUDE.md, .claude/*) → commit `chore: otimização de tokens — <resumo>` → push → tabela final (incluindo tabela 6 com impacto antes/depois na janela de contexto) → listar pendentes de alto risco
