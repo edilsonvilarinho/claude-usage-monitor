@@ -30,15 +30,6 @@ Run `npm test` after changes to services. Run `npm run build` and confirm clean 
 
 Todo código novo ou modificado deve respeitar Clean Architecture. Sem exceções.
 
-**Camadas e onde vive cada coisa:**
-| Camada | Pasta | O que contém |
-|--------|-------|--------------|
-| Domain | `src/domain/` | Entidades, tipos, regras de negócio puras (sem dependências externas) |
-| Application | `src/application/` | Use cases, mapeadores, orquestração entre domain e infra |
-| Infrastructure | `src/services/`, `src/main.ts` | Electron, IPC, APIs externas, storage |
-| Presentation | `src/presentation/` | Páginas, layouts, componentes, formatters, i18n |
-| Renderer bootstrap | `src/renderer/` | Apenas inicialização e stores reativos |
-
 **Proibido:**
 - Presentation importar de `src/services/` ou `src/main.ts` diretamente
 - Domain importar de qualquer outra camada
@@ -58,8 +49,6 @@ Anthropic API → usageApiService → pollingService → IPC:usage-updated → r
                                                → IPC:rate-limited  → countdown
                                                → notificationService → tray tooltip
 ```
-
-`src/services/` — credenciais OAuth, API usage, polling adaptativo, settings (electron-store), notificações.
 
 ## Key notes
 - `utilization` pode exceder 1.0 (ex: `16.0` = 1600%). UI limita gauge a 100%, exibe `>1600%`. Tray mostra `!!!` acima de 100%.
