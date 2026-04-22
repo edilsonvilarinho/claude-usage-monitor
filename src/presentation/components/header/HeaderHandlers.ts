@@ -1,6 +1,7 @@
 import { tr } from '../../layouts/i18n';
 import { showForceRefreshModal } from '../modals/GenericModals';
 import { isRateLimited, clearRateLimitBanner } from '../banners/RateLimitBanner';
+import { openCliSessionsModal } from '../modals/CliSessionsModal';
 
 export function setupHeaderHandlers(): void {
   document.getElementById('btn-close')?.addEventListener('click', () => {
@@ -36,4 +37,5 @@ export function setupHeaderHandlers(): void {
   });
 
   document.getElementById('btn-update-header')?.addEventListener('click', () => void window.claudeUsage.checkForUpdate());
+  document.getElementById('btn-cli-sessions')?.addEventListener('click', () => void openCliSessionsModal());
 }

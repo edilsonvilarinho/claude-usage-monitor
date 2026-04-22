@@ -1,4 +1,5 @@
 import type { CliSession } from '../../../domain/entities/Usage';
+import { tr } from '../../layouts/i18n';
 
 const RATES = {
   input: 3.0 / 1_000_000,
@@ -81,18 +82,19 @@ function renderList(sessions: CliSession[]): void {
   listEl.classList.remove('hidden');
 
   const totalCost = sessions.reduce((acc, s) => acc + calcCost(s), 0);
+  const tl = tr();
 
   listEl.innerHTML = `
     <div class="cli-sessions-summary">
-      <span>${sessions.length} sessões · Total: ${fmtCostFull(totalCost)}</span>
-      <button id="cli-clear-all" class="cli-clear-all-btn" title="Limpar todas as sessões">Limpar tudo</button>
+      <span>${tl.cliSummary(sessions.length, fmtCostFull(totalCost))}</span>
+      <button id="cli-clear-all" class="cli-clear-all-btn" title="${tl.cliClearAllTitle}">${tl.cliClearAll}</button>
     </div>
     <div class="cli-sessions-table-head">
       <span>ID</span>
-      <span>Horário</span>
+      <span>${tl.cliColTime}</span>
       <span>Tokens</span>
-      <span class="cli-cache-th">Cache <span class="cli-cache-info-icon">ⓘ</span><div class="cli-cache-tooltip"><strong>Cache hit rate</strong><br>cacheRead ÷ (cacheRead + cacheCreate)<br><br>🟢 &ge;80% — ótimo: maioria dos tokens vem do cache, custo de leitura é 10× mais barato que criar<br>🟡 50–80% — médio: cache parcial, ainda há criação relevante<br>🔴 &lt;50% — baixo: muitos tokens criados do zero, custo elevado</div></span>
-      <span>Custo</span>
+      <span class="cli-cache-th">Cache <span class="cli-cache-info-icon">ⓘ</span><div class="cli-cache-tooltip">${tl.cliCacheColTooltipHtml}</div></span>
+      <span>${tl.cliColCost}</span>
       <span></span>
     </div>
     ${sessions.map((s, i) => {
@@ -105,14 +107,14 @@ function renderList(sessions: CliSession[]): void {
         <span class="cli-row-tokens">${fmtTokens(totalTok)}</span>
         ${hitCell(hit)}
         <span class="cli-row-cost">${fmtCost(cost)}</span>
-        <button class="cli-row-delete" data-session-id="${s.sessionId}" title="Apagar sessão">✕</button>
+        <button class="cli-row-delete" data-session-id="${s.sessionId}" title="${tl.cliDeleteSession}">✕</button>
       </div>`;
     }).join('')}
   `;
 
   document.getElementById('cli-clear-all')?.addEventListener('click', async (e) => {
     e.stopPropagation();
-    if (!confirm('Apagar todas as sessões CLI? Essa ação não pode ser desfeita.')) return;
+    if (!confirm(tl.cliClearAllConfirm)) return;
     await window.claudeUsage.deleteAllCliSessions();
     renderList([]);
   });
@@ -156,8 +158,13 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
   const pCR  = cost > 0 ? (costCacheR / cost * 100) : 0;
   const pCC  = cost > 0 ? (costCacheC / cost * 100) : 0;
 
+  const t = tr();
+  function hint(text: string): string {
+    return `<span class="cli-card-hint-wrap"><span class="cli-card-hint-icon">ⓘ</span><div class="cli-card-hint-tooltip">${text}</div></span>`;
+  }
+
   detailEl.innerHTML = `
-    <button id="cli-sessions-back" class="cli-sessions-back">← Voltar</button>
+    <button id="cli-sessions-back" class="cli-sessions-back">${t.cliLabelBack}</button>
     <div class="cli-detail-header">
       <div class="cli-detail-id" title="${s.sessionId}">${s.sessionId}</div>
       <div class="cli-detail-meta">${new Date(s.ts).toLocaleString()} · ${s.toolName}</div>
@@ -165,22 +172,34 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
 
     <div class="cli-detail-cards">
       <div class="cli-detail-card">
-        <div class="cli-card-label">Input</div>
+        <div class="cli-card-label-row">
+          <span class="cli-card-label">Input</span>
+          ${hint(t.cliHintInput)}
+        </div>
         <div class="cli-card-value">${fmtTokens(s.inputTokens)}</div>
         <div class="cli-card-sub">${fmtCostFull(costInput)}</div>
       </div>
       <div class="cli-detail-card">
-        <div class="cli-card-label">Output</div>
+        <div class="cli-card-label-row">
+          <span class="cli-card-label">Output</span>
+          ${hint(t.cliHintOutput)}
+        </div>
         <div class="cli-card-value">${fmtTokens(s.outputTokens)}</div>
         <div class="cli-card-sub">${fmtCostFull(costOutput)}</div>
       </div>
       <div class="cli-detail-card">
-        <div class="cli-card-label">Cache read</div>
+        <div class="cli-card-label-row">
+          <span class="cli-card-label">Cache read</span>
+          ${hint(t.cliHintCacheRead)}
+        </div>
         <div class="cli-card-value">${fmtTokens(s.cacheReadTokens)}</div>
         <div class="cli-card-sub">${fmtCostFull(costCacheR)}</div>
       </div>
       <div class="cli-detail-card">
-        <div class="cli-card-label">Cache create</div>
+        <div class="cli-card-label-row">
+          <span class="cli-card-label">Cache create</span>
+          ${hint(t.cliHintCacheCreate)}
+        </div>
         <div class="cli-card-value">${fmtTokens(s.cacheCreationTokens)}</div>
         <div class="cli-card-sub">${fmtCostFull(costCacheC)}</div>
       </div>
@@ -188,7 +207,9 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
 
     ${hit !== null ? `
     <div class="cli-detail-hit-wrap">
-      <div class="cli-detail-hit-label">Cache hit rate</div>
+      <div class="cli-detail-hit-label">
+        <span class="cli-section-label-row">Cache hit rate ${hint(t.cliHintCacheHitRate)}</span>
+      </div>
       <div class="cli-hit-bar-wrap">
         <div class="cli-hit-bar-fill ${hitCls}" style="width:${(hit * 100).toFixed(1)}%"></div>
       </div>
@@ -198,7 +219,9 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
     <div class="cli-detail-sep"></div>
 
     <div class="cli-dist-section">
-      <div class="cli-dist-label">Distribuição do custo</div>
+      <div class="cli-dist-label">
+        <span class="cli-section-label-row">${t.cliLabelCostDist} ${hint(t.cliHintCostDist)}</span>
+      </div>
       <div class="cli-dist-bar">
         <div class="cli-dist-seg input"  style="width:${pIn.toFixed(1)}%"  title="Input ${pIn.toFixed(1)}%"></div>
         <div class="cli-dist-seg output" style="width:${pOut.toFixed(1)}%" title="Output ${pOut.toFixed(1)}%"></div>
@@ -216,22 +239,22 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
     ${cacheSaving > 0 ? `
     <div class="cli-saving-box">
       <div class="cli-saving-row">
-        <span>💰 Economia de cache</span>
+        <span class="cli-section-label-row">${t.cliLabelCacheSaving} ${hint(t.cliHintCacheSaving)}</span>
         <span class="cli-saving-value">+${fmtCostFull(cacheSaving)}</span>
       </div>
       <div class="cli-saving-row cli-saving-sub">
-        <span>Custo sem cache</span>
+        <span>${t.cliLabelCostNoCache}</span>
         <span>${fmtCostFull(costNoCache)}</span>
       </div>
-      <div class="cli-saving-pct">${((cacheSaving / costNoCache) * 100).toFixed(0)}% mais barato com cache</div>
+      <div class="cli-saving-pct">${t.cliLabelCheaperWithCache(Math.round((cacheSaving / costNoCache) * 100))}</div>
     </div>` : ''}
 
     <div class="cli-detail-total">
-      <span>Custo estimado</span>
+      <span>${t.cliLabelEstimatedCost}</span>
       <span>${fmtCostFull(cost)}</span>
     </div>
     <div class="cli-detail-note">Sonnet · $3/M in · $15/M out · $0.30/M cR · $3.75/M cW</div>
-    <button id="cli-detail-delete" class="cli-detail-delete-btn">Apagar esta sessão</button>
+    <button id="cli-detail-delete" class="cli-detail-delete-btn">${t.cliLabelDeleteSession}</button>
   `;
 
   listEl.classList.add('hidden');
@@ -295,13 +318,14 @@ async function reloadList(): Promise<void> {
   const refreshBtn = document.getElementById('cli-sessions-refresh');
   detailEl.classList.add('hidden');
   listEl.classList.remove('hidden');
-  listEl.innerHTML = '<div class="cli-sessions-loading"><span class="cli-spinner"></span> Carregando…</div>';
+  const trl = tr();
+  listEl.innerHTML = `<div class="cli-sessions-loading"><span class="cli-spinner"></span> ${trl.cliLabelLoading}</div>`;
   refreshBtn?.classList.add('spinning');
   try {
     const sessions = await window.claudeUsage.getCliSessions();
     renderList(sessions);
   } catch {
-    listEl.innerHTML = '<div class="cli-sessions-empty">Erro ao carregar sessões.</div>';
+    listEl.innerHTML = `<div class="cli-sessions-empty">${trl.cliLabelLoadError}</div>`;
   } finally {
     refreshBtn?.classList.remove('spinning');
   }

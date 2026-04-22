@@ -12,7 +12,6 @@ import {
   computeExcessCost,
 } from '../../../domain/reportMetrics';
 import type { SessionWindow, CurrentSessionWindow } from '../../../domain/entities/Usage';
-import { openCliSessionsModal } from './CliSessionsModal';
 
 let reportChart: Chart | null = null;
 
@@ -20,21 +19,19 @@ export async function openReportModal(): Promise<void> {
   const modal = document.getElementById('report-modal')!;
   modal.classList.remove('hidden');
 
-  const isPtBRHeader = getLang() === 'pt-BR';
   const headerEl = modal.querySelector('.day-detail-header')!;
-  if (!headerEl.querySelector('#btn-clear-report')) {
-    const clearBtn = document.createElement('button');
+
+  let clearBtn = headerEl.querySelector<HTMLButtonElement>('#btn-clear-report');
+  if (!clearBtn) {
+    clearBtn = document.createElement('button');
     clearBtn.id = 'btn-clear-report';
     clearBtn.className = 'report-clear-btn';
-    clearBtn.textContent = isPtBRHeader ? 'Limpar tudo' : 'Clear all';
     clearBtn.onclick = async () => {
-      const msg = isPtBRHeader
-        ? 'Apagar todo o histórico e janelas de sessão? Essa ação não pode ser desfeita.'
-        : 'Delete all history and session windows? This cannot be undone.';
+      const t2 = tr();
       const ok = await showConfirm(
-        msg,
-        isPtBRHeader ? 'Limpar' : 'Clear',
-        isPtBRHeader ? 'Cancelar' : 'Cancel',
+        t2.reportClearAllConfirm,
+        t2.confirmClear,
+        t2.confirmCancel,
       );
       if (!ok) return;
       await window.claudeUsage.clearAllReportData();
@@ -42,15 +39,8 @@ export async function openReportModal(): Promise<void> {
     };
     headerEl.insertBefore(clearBtn, headerEl.querySelector('#btn-close-report'));
   }
+  clearBtn.textContent = tr().reportClearAllBtn;
 
-  if (!headerEl.querySelector('#btn-cli-sessions')) {
-    const cliBtn = document.createElement('button');
-    cliBtn.id = 'btn-cli-sessions';
-    cliBtn.className = 'report-clear-btn';
-    cliBtn.textContent = 'Sessões CLI';
-    cliBtn.onclick = () => void openCliSessionsModal();
-    headerEl.insertBefore(cliBtn, headerEl.querySelector('#btn-close-report'));
-  }
 
   const [dailyHistory, sessionWindows, currentWindow] = await Promise.all([
     window.claudeUsage.getDailyHistory(),

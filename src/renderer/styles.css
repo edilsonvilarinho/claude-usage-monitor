@@ -1324,17 +1324,6 @@ body {
   color: var(--text-primary);
 }
 
-#btn-report-history {
-  color: var(--accent-blue);
-  border-color: rgba(59,130,246,0.25);
-  background: rgba(59,130,246,0.07);
-}
-#btn-report-history:hover {
-  background: rgba(59,130,246,0.14);
-  border-color: rgba(59,130,246,0.45);
-  color: #7ab8fb;
-}
-
 /* Daily chart tooltip */
 .daily-col { position: relative; }
 .daily-col:not(.future) { cursor: pointer; }
@@ -2601,6 +2590,55 @@ body {
   font-family: monospace;
   margin-top: 2px;
 }
+/* Card label row with hint icon */
+.cli-card-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+.cli-card-label-row .cli-card-label { margin-bottom: 0; }
+.cli-card-hint-wrap {
+  position: relative;
+  line-height: 1;
+}
+.cli-card-hint-icon {
+  font-size: calc(9px * var(--fs));
+  color: var(--text-secondary);
+  cursor: help;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.cli-card-hint-wrap:hover .cli-card-hint-icon { opacity: 1; }
+.cli-card-hint-tooltip {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 5px);
+  width: 200px;
+  background: var(--bg-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: calc(10px * var(--fs));
+  color: var(--text-primary);
+  line-height: 1.5;
+  z-index: 300;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.cli-card-hint-wrap:hover .cli-card-hint-tooltip { display: block; }
+/* Section hint row (cache hit rate, distribution, savings labels) */
+.cli-section-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.cli-section-label-row .cli-card-hint-tooltip { bottom: calc(100% + 5px); }
 /* Hit rate bar */
 .cli-detail-hit-wrap { margin-bottom: 10px; }
 .cli-detail-hit-label {
