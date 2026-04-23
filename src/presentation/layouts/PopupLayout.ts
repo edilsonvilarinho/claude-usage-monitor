@@ -25,7 +25,7 @@ export function applyTheme(theme: string): void {
 }
 
 export function applySectionVisibility(opts: { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean }): void {
-  const dailyChart = document.getElementById('history-section');
+  const dailyChart = document.getElementById('daily-chart-section');
   const extraSection = document.getElementById('extra-section');
   const footer = document.querySelector('.footer') as HTMLElement;
   const accountBar = document.getElementById('account-bar');
