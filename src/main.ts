@@ -68,7 +68,7 @@ let cachedProfile: ProfileData | null = null;
 let cachedProfileAt = 0;
 
 const POPUP_WIDTH  = 460;
-const POPUP_HEIGHT = 210;
+const POPUP_HEIGHT = 250;
 
 function markAsProgrammaticMove(): void {
   isProgrammaticMove = true;
