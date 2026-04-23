@@ -135,17 +135,6 @@ export function openSmartModalWithStatus(s: SmartStatus): void {
 
   modal.classList.remove('hidden');
 
-  requestAnimationFrame(() => {
-    const box = modal.querySelector('.modal-box') as HTMLElement;
-    const hdr = document.querySelector('.header') as HTMLElement;
-    if (box && hdr) {
-      const maxBoxH = window.screen.availHeight - hdr.offsetHeight - 80;
-      box.style.maxHeight = `${maxBoxH}px`;
-      const h = hdr.offsetHeight + box.offsetHeight + 48;
-      window.claudeUsage.setWindowHeight(h);
-    }
-  });
-
   const closeModal = () => {
     modal.classList.add('hidden');
     fitWindow();
