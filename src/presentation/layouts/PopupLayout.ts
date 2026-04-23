@@ -9,8 +9,7 @@ export function fitWindow(): void {
     const footer = document.querySelector('.footer') as HTMLElement;
     const accountBarH = (accountBar?.style.display !== 'none' ? accountBar?.offsetHeight : 0) ?? 0;
     const h = header.offsetHeight + accountBarH + (smartRecBar?.offsetHeight ?? 0) + content.scrollHeight + (footer?.offsetHeight ?? 0);
-    const minHeight = 300;
-    window.claudeUsage.setWindowHeight(Math.max(h, minHeight));
+    window.claudeUsage.setWindowHeight(h);
   });
 }
 

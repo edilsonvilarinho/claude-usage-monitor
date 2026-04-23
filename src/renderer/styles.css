@@ -1753,7 +1753,7 @@ body {
 /* ── Settings Modal ─────────────────────────────────────────────────── */
 .settings-modal-box {
   width: 400px;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
