@@ -16,7 +16,7 @@ const CHANGE_IDS = [
   'setting-weekly-threshold', 'setting-auto-backup-mode',
   'setting-show-daily-chart', 'setting-show-extra-bars',
   'setting-show-footer', 'setting-show-account-bar',
-  'setting-compact-mode',
+  'setting-show-in-taskbar', 'setting-compact-mode',
   'sp-enabled', 'sp-day-0', 'sp-day-1', 'sp-day-2', 'sp-day-3',
   'sp-day-4', 'sp-day-5', 'sp-day-6',
   'sp-work-start', 'sp-work-end', 'sp-break-start', 'sp-break-end',

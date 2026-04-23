@@ -24,14 +24,16 @@ export function applyTheme(theme: string): void {
   document.body.dataset.theme = theme;
 }
 
-export function applySectionVisibility(opts: { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean }): void {
+export function applySectionVisibility(opts: { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean; showInTaskbar?: boolean }): void {
   const dailyChart = document.getElementById('daily-chart-section');
   const footer = document.querySelector('.footer') as HTMLElement;
   const accountBar = document.getElementById('account-bar');
+  const btnMinimize = document.getElementById('btn-minimize') as HTMLElement | null;
 
   if (dailyChart) dailyChart.style.display = opts.showDailyChart ? '' : 'none';
   if (footer) footer.style.display = opts.showFooter ? '' : 'none';
   if (accountBar) accountBar.style.display = opts.showAccountBar ? '' : 'none';
+  if (btnMinimize) btnMinimize.style.display = opts.showInTaskbar ? '' : 'none';
 
   fitWindow();
 }

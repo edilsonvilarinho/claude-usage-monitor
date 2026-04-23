@@ -147,6 +147,7 @@ export interface AppSettings {
   showNotifSettings:   boolean;
   showBackupSettings:  boolean;
   showAccountBar: boolean;
+  showInTaskbar: boolean;
   compactMode: boolean;
   essentialMode: boolean;
   settingsUpdatedAt: number;
@@ -192,6 +193,7 @@ const defaults: AppSettings = {
   showNotifSettings:   true,
   showBackupSettings:  true,
   showAccountBar: false,
+  showInTaskbar: false,
   compactMode: false,
   essentialMode: false,
   settingsUpdatedAt: 0,
@@ -259,6 +261,7 @@ const store = new Store<AppSettings>({
     showNotifSettings:   { type: 'boolean' },
     showBackupSettings:  { type: 'boolean' },
     showAccountBar: { type: 'boolean' },
+    showInTaskbar: { type: 'boolean' },
     compactMode: { type: 'boolean' },
     essentialMode: { type: 'boolean' },
     settingsUpdatedAt: { type: 'number' },
@@ -298,6 +301,7 @@ export function getSettings(): AppSettings {
     showNotifSettings:   store.get('showNotifSettings',   defaults.showNotifSettings),
     showBackupSettings:  store.get('showBackupSettings',  defaults.showBackupSettings),
     showAccountBar: store.get('showAccountBar', defaults.showAccountBar),
+    showInTaskbar: store.get('showInTaskbar', defaults.showInTaskbar),
     compactMode: store.get('compactMode', defaults.compactMode),
     essentialMode: store.get('essentialMode', defaults.essentialMode),
     settingsUpdatedAt: store.get('settingsUpdatedAt', 0) as number,

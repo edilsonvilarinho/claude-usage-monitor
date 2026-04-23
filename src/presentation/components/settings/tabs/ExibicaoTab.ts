@@ -11,9 +11,10 @@ export function bindExibicaoTab(s: AppSettings): void {
   (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked = s.showDailyChart;
   (document.getElementById('setting-show-extra-bars') as HTMLInputElement).checked = s.showExtraBars;
   (document.getElementById('setting-show-footer') as HTMLInputElement).checked = s.showFooter;
+  (document.getElementById('setting-show-in-taskbar') as HTMLInputElement).checked = s.showInTaskbar;
 }
 
-export function readExibicaoTab(): Pick<AppSettings, 'theme' | 'language' | 'windowSize' | 'autoRefresh' | 'autoRefreshInterval' | 'compactMode' | 'showAccountBar' | 'showDailyChart' | 'showExtraBars' | 'showFooter'> {
+export function readExibicaoTab(): Pick<AppSettings, 'theme' | 'language' | 'windowSize' | 'autoRefresh' | 'autoRefreshInterval' | 'compactMode' | 'showAccountBar' | 'showDailyChart' | 'showExtraBars' | 'showFooter' | 'showInTaskbar'> {
   return {
     theme: (document.getElementById('setting-theme') as HTMLSelectElement).value as AppSettings['theme'],
     language: (document.getElementById('setting-language') as HTMLSelectElement).value as AppSettings['language'],
@@ -25,5 +26,6 @@ export function readExibicaoTab(): Pick<AppSettings, 'theme' | 'language' | 'win
     showDailyChart: (document.getElementById('setting-show-daily-chart') as HTMLInputElement).checked,
     showExtraBars: (document.getElementById('setting-show-extra-bars') as HTMLInputElement).checked,
     showFooter: (document.getElementById('setting-show-footer') as HTMLInputElement).checked,
+    showInTaskbar: (document.getElementById('setting-show-in-taskbar') as HTMLInputElement).checked,
   };
 }

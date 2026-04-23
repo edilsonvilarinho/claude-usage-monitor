@@ -51,6 +51,10 @@ contextBridge.exposeInMainWorld('claudeUsage', {
     ipcRenderer.send('close-popup');
   },
 
+  minimizeWindow: (): void => {
+    ipcRenderer.send('minimize-popup');
+  },
+
   setWindowHeight: (height: number): void => {
     ipcRenderer.send('set-window-height', height);
   },

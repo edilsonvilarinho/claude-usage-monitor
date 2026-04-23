@@ -9,6 +9,10 @@ export function setupHeaderHandlers(): void {
     window.claudeUsage.closeWindow();
   });
 
+  document.getElementById('btn-minimize')?.addEventListener('click', () => {
+    window.claudeUsage.minimizeWindow();
+  });
+
   document.getElementById('btn-refresh')?.addEventListener('click', () => {
     if (isRateLimited()) {
       showForceRefreshModal();

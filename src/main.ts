@@ -89,8 +89,8 @@ function createPopup(): BrowserWindow {
     height: POPUP_HEIGHT,
     frame: isLinux,
     transparent: !isLinux,
-    skipTaskbar: !isLinux,
-    alwaysOnTop: !isLinux,
+    skipTaskbar: !isLinux && !getSettings().showInTaskbar,
+    alwaysOnTop: !isLinux && !getSettings().showInTaskbar,
     resizable: isLinux,
     show: false,
     ...(process.platform === 'win32' ? { backgroundMaterial: 'acrylic' as const } : {}),
@@ -131,6 +131,7 @@ function createPopup(): BrowserWindow {
 
   win.on('blur', () => {
     if (isLinux) return; // Linux: never auto-hide on blur
+    if (getSettings().showInTaskbar) return; // taskbar mode: behaves like a regular window
     if (popup && popup.isVisible() && !getSettings().alwaysVisible) {
       popup.hide();
     }
@@ -615,6 +616,10 @@ function registerIpcHandlers(): void {
     if (settings.launchAtStartup !== undefined) {
       setLaunchAtStartup(settings.launchAtStartup);
     }
+    if (settings.showInTaskbar !== undefined && popup && process.platform === 'win32') {
+      popup.setSkipTaskbar(!settings.showInTaskbar);
+      popup.setAlwaysOnTop(!settings.showInTaskbar);
+    }
     // Rebuild tray context menu to reflect startup state changes
     tray?.setContextMenu(buildContextMenu());
     // Se mudou preferência sincronizável, atualizar timestamp e enfileirar push
@@ -680,6 +685,10 @@ function registerIpcHandlers(): void {
 
   ipcMain.on('close-popup', () => {
     popup?.hide();
+  });
+
+  ipcMain.on('minimize-popup', () => {
+    popup?.minimize();
   });
 
   ipcMain.on('open-release-url', (_e, url: string) => {
