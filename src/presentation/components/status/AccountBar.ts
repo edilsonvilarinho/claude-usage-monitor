@@ -1,4 +1,5 @@
 import { fitWindow } from '../../layouts/PopupLayout';
+import { appStore } from '../../../renderer/stores/appStore';
 
 type Profile = { account: { display_name: string; email: string; has_claude_pro: boolean; has_claude_max: boolean } };
 
@@ -27,7 +28,7 @@ export function applyProfile(profile: Profile): void {
   }
   if (barEl) {
     barEl.dataset.hasProfile = 'true';
-    barEl.style.display = '';
+    barEl.style.display = appStore.get('showAccountBar') ? '' : 'none';
     fitWindow();
   }
 }
