@@ -144,7 +144,6 @@ async function loadSettings(): Promise<void> {
     applyTranslations();
     loadSettingsToModal(settings);
     appStore.set('showAccountBar', settings.showAccountBar);
-    appStore.set('extraSectionAllowed', settings.showExtraBars);
     await loadCloudSyncStatus();
   } catch (err) {
     console.error('[App] loadSettings failed:', err);
@@ -161,9 +160,6 @@ async function saveSettingsFromUI(): Promise<void> {
     applyAutoRefresh(settings.autoRefresh!, settings.autoRefreshInterval!);
     if (settings.showAccountBar !== undefined) {
       appStore.set('showAccountBar', settings.showAccountBar);
-    }
-    if (settings.showExtraBars !== undefined) {
-      appStore.set('extraSectionAllowed', settings.showExtraBars);
     }
     if (settings.language) {
       setLang(settings.language as Lang);
