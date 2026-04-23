@@ -75,6 +75,7 @@ export function mountAnalyticsCharts(session: CliSession, analytics: SessionAnal
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -179,21 +180,24 @@ export function mountAnalyticsCharts(session: CliSession, analytics: SessionAnal
     const hasCreateData = createValues.some((v) => v > 0);
     if (hasCreateData) {
       chartC = new Chart(canvasC, {
-        type: 'bar',
+        type: 'line',
         data: {
           labels,
           datasets: [{
             data: createValues,
-            backgroundColor: dark ? 'rgba(251,191,36,0.7)' : 'rgba(217,119,6,0.65)',
             borderColor: dark ? '#FBB024' : '#D97706',
-            borderWidth: 1,
-            borderRadius: 2,
+            backgroundColor: dark ? 'rgba(251,191,36,0.2)' : 'rgba(217,119,6,0.15)',
+            borderWidth: 2,
+            pointRadius: createValues.length > 20 ? 0 : 3,
+            fill: 'origin',
+            tension: 0.4,
           }],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
+          interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: false },
             tooltip: {
