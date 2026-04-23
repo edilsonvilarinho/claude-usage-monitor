@@ -17,7 +17,6 @@ Chart.register(
 let chartA: Chart | null = null;
 let chartB: Chart | null = null;
 let chartC: Chart | null = null;
-let chartD: Chart | null = null;
 
 function isDark(): boolean {
   const theme = document.body.dataset.theme;
@@ -36,7 +35,6 @@ export function destroyAnalyticsCharts(): void {
   if (chartA) { chartA.destroy(); chartA = null; }
   if (chartB) { chartB.destroy(); chartB = null; }
   if (chartC) { chartC.destroy(); chartC = null; }
-  if (chartD) { chartD.destroy(); chartD = null; }
 }
 
 export function mountAnalyticsCharts(session: CliSession, analytics: SessionAnalytics): void {
@@ -236,65 +234,4 @@ export function mountAnalyticsCharts(session: CliSession, analytics: SessionAnal
     }
   }
 
-  // ── Chart D: Cumulative average context per turn ─────────────────────────────
-  const canvasD = document.getElementById('cli-chart-avg-context') as HTMLCanvasElement | null;
-  if (canvasD && turns.length > 1) {
-    let sum = 0;
-    const avgValues = turns.map((t, i) => {
-      sum += t.cacheReadTokens;
-      return Math.round(sum / (i + 1));
-    });
-    chartD = new Chart(canvasD, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          data: avgValues,
-          borderColor: dark ? '#A78BFA' : '#7C3AED',
-          backgroundColor: dark ? 'rgba(167,139,250,0.2)' : 'rgba(124,58,237,0.15)',
-          borderWidth: 2,
-          pointRadius: avgValues.length > 20 ? 0 : 3,
-          fill: 'origin',
-          tension: 0.4,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const v = ctx.parsed.y as number;
-                if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M tokens`;
-                if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k tokens`;
-                return `${v} tokens`;
-              },
-            },
-          },
-        },
-        scales: {
-          x: {
-            grid: { color: tc.grid },
-            ticks: { color: tc.labels, maxTicksLimit: 10 },
-          },
-          y: {
-            grid: { color: tc.grid },
-            ticks: {
-              color: tc.labels,
-              callback: (v) => {
-                const n = Number(v);
-                if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-                if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-                return String(n);
-              },
-            },
-          },
-        },
-      },
-    });
-  }
 }
