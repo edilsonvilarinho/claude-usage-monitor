@@ -2818,6 +2818,8 @@ body[data-theme="dark"] .session-health-card.saturated {
   margin-top: 8px;
 }
 .cli-analytics-chart-wrap {
+  position: relative;
+  height: 140px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 8px;
