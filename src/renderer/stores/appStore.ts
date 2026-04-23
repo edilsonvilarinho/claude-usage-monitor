@@ -24,6 +24,6 @@ export const appStore = createStore<AppState>({
   autoRefreshEnabled: false,
   autoRefreshIntervalMs: 300 * 1000,
   isRateLimited: false,
-  showAccountBar: true,
+  showAccountBar: false,
   extraSectionAllowed: true,
 });

@@ -18,6 +18,7 @@ import { setupCloudSync, loadCloudSyncStatus } from '../presentation/components/
 import { setupServerStatus } from '../presentation/components/status/ServerStatus';
 import { applyProfile } from '../presentation/components/status/AccountBar';
 import { applyAutoRefresh, startNextPollCountdown, stopNextPollCountdown, isAutoRefreshEnabled } from '../presentation/shared/autoRefresh';
+import { appStore } from './stores/appStore';
 import { setupHistoryHandlers, setupReportHandlers } from '../presentation/components/history/HistoryPanel';
 import { setupCliSessionsHandlers } from '../presentation/components/modals/CliSessionsModal';
 import { setupHeaderHandlers } from '../presentation/components/header/HeaderHandlers';
@@ -142,6 +143,7 @@ async function loadSettings(): Promise<void> {
     setLang(settings.language as Lang);
     applyTranslations();
     loadSettingsToModal(settings);
+    appStore.set('showAccountBar', settings.showAccountBar);
     await loadCloudSyncStatus();
   } catch (err) {
     console.error('[App] loadSettings failed:', err);
@@ -156,6 +158,9 @@ async function saveSettingsFromUI(): Promise<void> {
     applySize(settings.windowSize!);
     applySectionVisibility(settings as { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean });
     applyAutoRefresh(settings.autoRefresh!, settings.autoRefreshInterval!);
+    if (settings.showAccountBar !== undefined) {
+      appStore.set('showAccountBar', settings.showAccountBar);
+    }
     if (settings.language) {
       setLang(settings.language as Lang);
       applyTranslations();

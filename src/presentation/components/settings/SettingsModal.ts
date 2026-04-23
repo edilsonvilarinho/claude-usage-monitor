@@ -26,8 +26,10 @@ export function setupSettingsModal(
   onSave: () => void,
   loadCloudSync: () => void,
 ): void {
-  document.getElementById('btn-settings')?.addEventListener('click', () => {
+  document.getElementById('btn-settings')?.addEventListener('click', async () => {
     document.getElementById('settings-modal')?.classList.remove('hidden');
+    const settings = await window.claudeUsage.getSettings();
+    loadSettingsToModal(settings);
     loadCloudSync();
   });
   document.getElementById('btn-settings-close')?.addEventListener('click', () => {
