@@ -26,12 +26,10 @@ export function applyTheme(theme: string): void {
 
 export function applySectionVisibility(opts: { showDailyChart: boolean; showExtraBars: boolean; showFooter: boolean; showAccountBar: boolean }): void {
   const dailyChart = document.getElementById('daily-chart-section');
-  const extraSection = document.getElementById('extra-section');
   const footer = document.querySelector('.footer') as HTMLElement;
   const accountBar = document.getElementById('account-bar');
 
   if (dailyChart) dailyChart.style.display = opts.showDailyChart ? '' : 'none';
-  if (extraSection) extraSection.style.display = opts.showExtraBars ? '' : 'none';
   if (footer) footer.style.display = opts.showFooter ? '' : 'none';
   if (accountBar) accountBar.style.display = opts.showAccountBar ? '' : 'none';
 
