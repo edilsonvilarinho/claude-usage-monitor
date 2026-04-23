@@ -16,6 +16,7 @@ Chart.register(
 
 let chartA: Chart | null = null;
 let chartB: Chart | null = null;
+let chartC: Chart | null = null;
 
 function isDark(): boolean {
   const theme = document.body.dataset.theme;
@@ -33,6 +34,7 @@ function themeColors(): { grid: string; labels: string } {
 export function destroyAnalyticsCharts(): void {
   if (chartA) { chartA.destroy(); chartA = null; }
   if (chartB) { chartB.destroy(); chartB = null; }
+  if (chartC) { chartC.destroy(); chartC = null; }
 }
 
 export function mountAnalyticsCharts(session: CliSession, analytics: SessionAnalytics): void {
@@ -169,4 +171,62 @@ export function mountAnalyticsCharts(session: CliSession, analytics: SessionAnal
       },
     },
   });
+
+  // ── Chart C: Cache creation per turn ────────────────────────────────────────
+  const canvasC = document.getElementById('cli-chart-cache-create') as HTMLCanvasElement | null;
+  if (canvasC && turns.length > 0) {
+    const createValues = turns.map((t) => t.cacheCreationTokens);
+    const hasCreateData = createValues.some((v) => v > 0);
+    if (hasCreateData) {
+      chartC = new Chart(canvasC, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: createValues,
+            backgroundColor: dark ? 'rgba(251,191,36,0.7)' : 'rgba(217,119,6,0.65)',
+            borderColor: dark ? '#FBB024' : '#D97706',
+            borderWidth: 1,
+            borderRadius: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const v = ctx.parsed.y as number;
+                  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(2)}M tokens`;
+                  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}k tokens`;
+                  return `${v} tokens`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: tc.grid },
+              ticks: { color: tc.labels, maxTicksLimit: 10 },
+            },
+            y: {
+              grid: { color: tc.grid },
+              ticks: {
+                color: tc.labels,
+                callback: (v) => {
+                  const n = Number(v);
+                  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+                  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
+                  return String(n);
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+  }
 }

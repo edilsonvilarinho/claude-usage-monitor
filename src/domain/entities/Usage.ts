@@ -70,6 +70,7 @@ export interface CliSessionTurn {
   ts: number;
   cacheReadTokens: number;
   inputTokens: number;
+  cacheCreationTokens: number;
 }
 
 export interface SessionAnalytics {

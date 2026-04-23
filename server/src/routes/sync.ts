@@ -455,7 +455,7 @@ syncRoute.get('/cli-session-turns/:sessionId', (c) => {
   try {
     const rows = db
       .prepare(
-        `SELECT ts, cache_read_tokens, input_tokens
+        `SELECT ts, cache_read_tokens, input_tokens, cache_creation_tokens
          FROM cli_usage_events
          WHERE email = ? AND session_id = ?
          ORDER BY ts ASC`,
@@ -464,6 +464,7 @@ syncRoute.get('/cli-session-turns/:sessionId', (c) => {
       ts: number;
       cache_read_tokens: number;
       input_tokens: number;
+      cache_creation_tokens: number;
     }>;
 
     return c.json(
@@ -471,6 +472,7 @@ syncRoute.get('/cli-session-turns/:sessionId', (c) => {
         ts: r.ts,
         cacheReadTokens: r.cache_read_tokens,
         inputTokens: r.input_tokens,
+        cacheCreationTokens: r.cache_creation_tokens,
       })),
     );
   } catch (err) {

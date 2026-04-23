@@ -16,15 +16,16 @@ export class AnalyticsFormatter {
       ? session.cacheReadTokens / turns.length
       : 0;
 
-    // Próxima mensagem: contexto acumulado vira cache-read para o modelo
-    const nextInteractionCost = session.inputTokens * RATES.cacheRead;
+    // Próxima mensagem: último turno acumulado vira cache-read para o modelo
+    const lastTurnCacheRead = turns.length > 0 ? turns[turns.length - 1].cacheReadTokens : 0;
+    const nextInteractionCost = lastTurnCacheRead * RATES.cacheRead;
 
     // Economia = o que cacheReadTokens custaria a preço de input - o que custou de fato
     const cacheSavingsUSD = session.cacheReadTokens * (RATES.input - RATES.cacheRead);
 
     const isSaturated =
       nextInteractionCost > SATURATED_COST_THRESHOLD ||
-      session.cacheReadTokens > SATURATED_TOKENS_THRESHOLD;
+      lastTurnCacheRead > SATURATED_TOKENS_THRESHOLD;
 
     return { averageContextPerTurn, nextInteractionCost, cacheSavingsUSD, isSaturated, turns };
   }

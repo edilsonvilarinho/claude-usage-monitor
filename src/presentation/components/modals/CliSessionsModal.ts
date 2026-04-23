@@ -308,6 +308,10 @@ async function renderDetailAsync(s: CliSession, listEl: HTMLElement, detailEl: H
             <canvas id="cli-chart-trend"></canvas>
           </div>
           <div class="cli-analytics-chart-wrap">
+            <div class="cli-analytics-chart-title">Cache create por turno</div>
+            <canvas id="cli-chart-cache-create"></canvas>
+          </div>
+          <div class="cli-analytics-chart-wrap">
             <div class="cli-analytics-chart-title">Custo × Economia</div>
             <canvas id="cli-chart-efficiency"></canvas>
           </div>
