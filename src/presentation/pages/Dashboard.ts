@@ -2,6 +2,7 @@ import { sessionGauge, weeklyGauge, trayIcon } from '../../renderer/chartsInstan
 import { formatResetsIn, formatResetAt } from '../shared/formatters';
 import { tr, getLang } from '../layouts/i18n';
 import { fitWindow } from '../layouts/PopupLayout';
+import { appStore } from '../../renderer/stores/appStore';
 
 type UsageWindow = { utilization: number; resets_at: string };
 type ExtraUsage = { is_enabled: boolean; monthly_limit: number; used_credits: number };
@@ -61,6 +62,14 @@ export function updateDashboard(data: UsageData, onResetsAtChange: (v: string) =
     } else {
       creditsRow.style.display = 'none';
     }
+  }
+
+  const extraSection = document.getElementById('extra-section');
+  const sonnetVisible = sonnetRow?.style.display !== 'none';
+  const creditsVisible = creditsRow?.style.display !== 'none';
+  const showExtras = appStore.get('extraSectionAllowed') !== false;
+  if (extraSection) {
+    extraSection.style.display = (sonnetVisible || creditsVisible) && showExtras ? '' : 'none';
   }
 
   const updatedEl = document.getElementById('updated-text');
