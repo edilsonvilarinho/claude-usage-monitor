@@ -172,9 +172,7 @@ export function applySmartIndicator(s: SmartStatus): void {
   const resolvedText = statusText.replace('{time}', s.idealStartTime ?? '');
   btn.title = resolvedText;
   if (recBar) {
-    recBar.textContent = resolvedText;
-    recBar.style.borderLeftColor = s.colorHex;
-    recBar.classList.remove('hidden');
+    recBar.classList.add('hidden');
   }
 }
 
