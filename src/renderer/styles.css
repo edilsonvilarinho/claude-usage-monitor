@@ -1877,7 +1877,7 @@ body {
 }
 
 /* ── Smart Scheduler Modal ── */
-.smart-scheduler-box { width: 320px; }
+.smart-scheduler-box { width: 320px; overflow-y: auto; }
 .sp-verdict {
   display: flex;
   justify-content: space-between;
