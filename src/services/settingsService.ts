@@ -146,6 +146,7 @@ export interface AppSettings {
   showGeneralSettings: boolean;
   showNotifSettings:   boolean;
   showBackupSettings:  boolean;
+  showAccountBar: boolean;
   compactMode: boolean;
   essentialMode: boolean;
   settingsUpdatedAt: number;
@@ -190,6 +191,7 @@ const defaults: AppSettings = {
   showGeneralSettings: true,
   showNotifSettings:   true,
   showBackupSettings:  true,
+  showAccountBar: false,
   compactMode: false,
   essentialMode: false,
   settingsUpdatedAt: 0,
@@ -256,6 +258,7 @@ const store = new Store<AppSettings>({
     showGeneralSettings: { type: 'boolean' },
     showNotifSettings:   { type: 'boolean' },
     showBackupSettings:  { type: 'boolean' },
+    showAccountBar: { type: 'boolean' },
     compactMode: { type: 'boolean' },
     essentialMode: { type: 'boolean' },
     settingsUpdatedAt: { type: 'number' },
@@ -294,6 +297,7 @@ export function getSettings(): AppSettings {
     showGeneralSettings: store.get('showGeneralSettings', defaults.showGeneralSettings),
     showNotifSettings:   store.get('showNotifSettings',   defaults.showNotifSettings),
     showBackupSettings:  store.get('showBackupSettings',  defaults.showBackupSettings),
+    showAccountBar: store.get('showAccountBar', defaults.showAccountBar),
     compactMode: store.get('compactMode', defaults.compactMode),
     essentialMode: store.get('essentialMode', defaults.essentialMode),
     settingsUpdatedAt: store.get('settingsUpdatedAt', 0) as number,
@@ -370,6 +374,7 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.showGeneralSettings !== undefined) store.set('showGeneralSettings', settings.showGeneralSettings);
   if (settings.showNotifSettings   !== undefined) store.set('showNotifSettings',   settings.showNotifSettings);
   if (settings.showBackupSettings  !== undefined) store.set('showBackupSettings',  settings.showBackupSettings);
+  if (settings.showAccountBar !== undefined) store.set('showAccountBar', settings.showAccountBar);
   if (settings.compactMode !== undefined) store.set('compactMode', settings.compactMode);
   if (settings.essentialMode !== undefined) store.set('essentialMode', settings.essentialMode);
   if (settings.settingsUpdatedAt !== undefined) store.set('settingsUpdatedAt', settings.settingsUpdatedAt);
