@@ -158,6 +158,12 @@ export interface CliSession {
   cacheCreationTokens: number;
 }
 
+export interface CliSessionTurn {
+  ts: number;
+  cacheReadTokens: number;
+  inputTokens: number;
+}
+
 class CliHookService {
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -171,6 +177,21 @@ class CliHookService {
     const token = await this.validToken();
     if (!token) return [];
     return this.fetchSessions(token.serverUrl, token.jwt);
+  }
+
+  async getCliSessionTurns(sessionId: string): Promise<CliSessionTurn[]> {
+    const token = await this.validToken();
+    if (!token) return [];
+    try {
+      const resp = await fetch(
+        `${token.serverUrl}/sync/cli-session-turns/${encodeURIComponent(sessionId)}`,
+        { headers: { Authorization: `Bearer ${token.jwt}` } },
+      );
+      if (!resp.ok) return [];
+      return resp.json() as Promise<CliSessionTurn[]>;
+    } catch {
+      return [];
+    }
   }
 
   async deleteAllCliSessions(): Promise<boolean> {

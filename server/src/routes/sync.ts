@@ -450,6 +450,39 @@ syncRoute.get('/cli-sessions', (c) => {
   }
 });
 
+// GET /sync/cli-session-turns/:sessionId — todos os eventos de uma sessão, ordenados por ts
+syncRoute.get('/cli-session-turns/:sessionId', (c) => {
+  const { email } = getUser(c);
+  const sessionId = c.req.param('sessionId');
+  const db = getDb();
+
+  try {
+    const rows = db
+      .prepare(
+        `SELECT ts, cache_read_tokens, input_tokens
+         FROM cli_usage_events
+         WHERE email = ? AND session_id = ?
+         ORDER BY ts ASC`,
+      )
+      .all(email, sessionId) as Array<{
+      ts: number;
+      cache_read_tokens: number;
+      input_tokens: number;
+    }>;
+
+    return c.json(
+      rows.map((r) => ({
+        ts: r.ts,
+        cacheReadTokens: r.cache_read_tokens,
+        inputTokens: r.input_tokens,
+      })),
+    );
+  } catch (err) {
+    logger.error({ err, email, sessionId }, 'cli-session-turns failed');
+    return c.json({ error: 'internal_error' }, 500);
+  }
+});
+
 // DELETE /sync/cli-sessions — apaga todas as sessões CLI do usuário
 syncRoute.delete('/cli-sessions', (c) => {
   const { email } = getUser(c);

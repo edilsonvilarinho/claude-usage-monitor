@@ -66,6 +66,20 @@ export interface CliSession {
   cacheCreationTokens: number;
 }
 
+export interface CliSessionTurn {
+  ts: number;
+  cacheReadTokens: number;
+  inputTokens: number;
+}
+
+export interface SessionAnalytics {
+  averageContextPerTurn: number;
+  nextInteractionCost: number;
+  cacheSavingsUSD: number;
+  isSaturated: boolean;
+  turns: CliSessionTurn[];
+}
+
 export interface ProfileData {
   account: {
     displayName: string;

@@ -1,5 +1,7 @@
 import type { CliSession } from '../../../domain/entities/Usage';
 import { tr } from '../../layouts/i18n';
+import { AnalyticsFormatter } from '../../../application/analyticsFormatter';
+import { mountAnalyticsCharts, destroyAnalyticsCharts } from '../charts/SessionAnalyticsCharts';
 
 const RATES = {
   input: 3.0 / 1_000_000,
@@ -137,6 +139,11 @@ function renderList(sessions: CliSession[]): void {
 }
 
 function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement, skipScroll = false): void {
+  void renderDetailAsync(s, listEl, detailEl, skipScroll);
+}
+
+async function renderDetailAsync(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement, skipScroll = false): Promise<void> {
+  destroyAnalyticsCharts();
   currentSessionId = s.sessionId;
   const hit = cacheHitRate(s);
   const cost = calcCost(s);
@@ -254,6 +261,13 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
       <span>${fmtCostFull(cost)}</span>
     </div>
     <div class="cli-detail-note">Sonnet · $3/M in · $15/M out · $0.30/M cR · $3.75/M cW</div>
+
+    <div id="cli-analytics-section" class="cli-analytics-section">
+      <div id="cli-analytics-kpis" class="cli-analytics-kpis cli-analytics-loading">
+        <span class="cli-spinner"></span>
+      </div>
+    </div>
+
     <button id="cli-detail-delete" class="cli-detail-delete-btn">${t.cliLabelDeleteSession}</button>
   `;
 
@@ -261,12 +275,14 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
   detailEl.classList.remove('hidden');
 
   document.getElementById('cli-sessions-back')?.addEventListener('click', () => {
+    destroyAnalyticsCharts();
     currentSessionId = null;
     detailEl.classList.add('hidden');
     listEl.classList.remove('hidden');
   });
 
   document.getElementById('cli-detail-delete')?.addEventListener('click', async () => {
+    destroyAnalyticsCharts();
     await window.claudeUsage.deleteCliSession(s.sessionId);
     currentSessionId = null;
     detailEl.classList.add('hidden');
@@ -274,6 +290,66 @@ function renderDetail(s: CliSession, listEl: HTMLElement, detailEl: HTMLElement,
     const updated = await window.claudeUsage.getCliSessions();
     renderList(updated);
   });
+
+  // Carrega analytics de forma assíncrona
+  try {
+    const turns = await window.claudeUsage.getCliSessionTurns(s.sessionId);
+    const analytics = AnalyticsFormatter.compute(s, turns);
+    const analyticsEl = document.getElementById('cli-analytics-kpis');
+    if (!analyticsEl || currentSessionId !== s.sessionId) return;
+    analyticsEl.classList.remove('cli-analytics-loading');
+    analyticsEl.innerHTML = renderAnalyticsKpis(analytics) + renderHealthCard(analytics);
+    const section = document.getElementById('cli-analytics-section');
+    if (section) {
+      section.insertAdjacentHTML('beforeend', `
+        <div class="cli-analytics-charts">
+          <div class="cli-analytics-chart-wrap">
+            <div class="cli-analytics-chart-title">Cache read por turno</div>
+            <canvas id="cli-chart-trend" height="120"></canvas>
+          </div>
+          <div class="cli-analytics-chart-wrap">
+            <div class="cli-analytics-chart-title">Custo × Economia</div>
+            <canvas id="cli-chart-efficiency" height="120"></canvas>
+          </div>
+        </div>
+      `);
+      mountAnalyticsCharts(s, analytics);
+    }
+  } catch {
+    const analyticsEl = document.getElementById('cli-analytics-kpis');
+    if (analyticsEl) analyticsEl.innerHTML = '';
+  }
+}
+
+function renderAnalyticsKpis(analytics: ReturnType<typeof AnalyticsFormatter.compute>): string {
+  const t = tr();
+  function fmtK(n: number): string {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+    return n.toFixed(0);
+  }
+  return `
+    <div class="cli-kpi-grid">
+      <div class="cli-kpi-card">
+        <div class="cli-kpi-label">${t.analyticsAvgContext}</div>
+        <div class="cli-kpi-value">${fmtK(analytics.averageContextPerTurn)}</div>
+      </div>
+      <div class="cli-kpi-card">
+        <div class="cli-kpi-label">${t.analyticsNextCost}</div>
+        <div class="cli-kpi-value">$${analytics.nextInteractionCost.toFixed(4)}</div>
+      </div>
+      <div class="cli-kpi-card">
+        <div class="cli-kpi-label">${t.analyticsSavings}</div>
+        <div class="cli-kpi-value">+$${analytics.cacheSavingsUSD.toFixed(4)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHealthCard(analytics: ReturnType<typeof AnalyticsFormatter.compute>): string {
+  if (!analytics.isSaturated) return '';
+  const t = tr();
+  return `<div class="session-health-card saturated">${t.analyticsSaturated}</div>`;
 }
 
 export function setupCliSessionsHandlers(): void {
@@ -332,6 +408,7 @@ async function reloadList(): Promise<void> {
 }
 
 export function closeCliSessionsModal(): void {
+  destroyAnalyticsCharts();
   document.getElementById('cli-sessions-modal')?.classList.add('hidden');
 }
 

@@ -263,6 +263,10 @@ export const translations = {
     cliSessionsBtnLabel: 'CLI Sessions',
     reportClearAllBtn: 'Clear all',
     reportClearAllConfirm: 'Delete all history and session windows? This cannot be undone.',
+    analyticsAvgContext: 'Avg. context/turn',
+    analyticsNextCost: 'Next msg. cost (est.)',
+    analyticsSavings: 'Cache savings',
+    analyticsSaturated: 'Saturated session — consider "Resume from summary"',
   },
   'pt-BR': {
     sessionLabel:     'Sessão (5h)',
@@ -526,6 +530,10 @@ export const translations = {
     cliSessionsBtnLabel: 'Sessões CLI',
     reportClearAllBtn: 'Limpar tudo',
     reportClearAllConfirm: 'Apagar todo o histórico e janelas de sessão? Essa ação não pode ser desfeita.',
+    analyticsAvgContext: 'Contexto médio/turno',
+    analyticsNextCost: 'Custo próxima msg. (est.)',
+    analyticsSavings: 'Economia com cache',
+    analyticsSaturated: 'Sessão saturada — considere "Retomar do resumo"',
   },
 } as const;
 
