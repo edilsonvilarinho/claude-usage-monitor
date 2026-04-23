@@ -19,8 +19,7 @@ export function formatResetsIn(isoDate: string, t: {
 }
 
 export function formatResetAt(date: Date, lang: Lang, t: { resetsAt: (s: string) => string }): string {
-  const diffMs = date.getTime() - Date.now();
-  const isMultiDay = diffMs > 24 * 60 * 60 * 1000;
+  const isMultiDay = date.toDateString() !== new Date().toDateString();
   const locale = lang === 'pt-BR' ? 'pt-BR' : 'en';
 
   const timeStr = date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit' });
