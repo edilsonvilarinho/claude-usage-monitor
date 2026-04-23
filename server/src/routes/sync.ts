@@ -106,24 +106,14 @@ syncRoute.post('/push', async (c) => {
       }
 
       if (cliEvents && cliEvents.length > 0) {
-        // manter apenas o evento mais recente por session_id (os tokens são cumulativos do transcript)
-        const latestBySession = new Map<string, SyncCliEvent>();
-        for (const ev of cliEvents as SyncCliEvent[]) {
-          const cur = latestBySession.get(ev.sessionId);
-          if (!cur || ev.ts > cur.ts) latestBySession.set(ev.sessionId, ev);
-        }
-        const deleteCli = db.prepare(`DELETE FROM cli_usage_events WHERE email = ? AND session_id = ?`);
+        // Cada evento é um turno com tokens cumulativos — guardar todos para histórico por turno
         const insertCli = db.prepare(`
-          INSERT OR REPLACE INTO cli_usage_events
+          INSERT OR IGNORE INTO cli_usage_events
             (email, ts, session_id, tool_name, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `);
-        for (const ev of latestBySession.values()) {
-          const existing = db.prepare(`SELECT ts FROM cli_usage_events WHERE email = ? AND session_id = ?`).get(email, ev.sessionId) as { ts: number } | undefined;
-          if (!existing || ev.ts >= existing.ts) {
-            deleteCli.run(email, ev.sessionId);
-            insertCli.run(email, ev.ts, ev.sessionId, ev.toolName, ev.inputTokens, ev.outputTokens, ev.cacheReadTokens, ev.cacheCreationTokens);
-          }
+        for (const ev of cliEvents as SyncCliEvent[]) {
+          insertCli.run(email, ev.ts, ev.sessionId, ev.toolName, ev.inputTokens, ev.outputTokens, ev.cacheReadTokens, ev.cacheCreationTokens);
         }
       }
 
@@ -418,12 +408,18 @@ syncRoute.get('/cli-sessions', (c) => {
   try {
     const rows = db
       .prepare(
-        `SELECT session_id, tool_name, ts, input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens
-         FROM cli_usage_events
-         WHERE email = ?
-         ORDER BY ts DESC`,
+        `SELECT e.session_id, e.tool_name, e.ts, e.input_tokens, e.output_tokens, e.cache_read_tokens, e.cache_creation_tokens
+         FROM cli_usage_events e
+         INNER JOIN (
+           SELECT session_id, MAX(ts) AS max_ts
+           FROM cli_usage_events
+           WHERE email = ?
+           GROUP BY session_id
+         ) latest ON e.session_id = latest.session_id AND e.ts = latest.max_ts
+         WHERE e.email = ?
+         ORDER BY e.ts DESC`,
       )
-      .all(email) as Array<{
+      .all(email, email) as Array<{
       session_id: string;
       tool_name: string;
       ts: number;
