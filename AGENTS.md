@@ -236,6 +236,22 @@ Sair do Plan Mode quando:
 
 ---
 
+## gh issue/create — Regra de Sintaxe
+
+Ao criar issues via CLI, usar **strings diretas** — **sem heredocs, sem pipes, sem subshells**:
+
+```bash
+# ✅ Correto
+gh issue create --title "título" --body "corpo do issue" --repo user/repo
+
+# ❌ Erro — PowerShell não parseia heredocs
+gh issue create --title "título" --body "$(cat <<'EOF' ... EOF)" --repo user/repo
+```
+
+**Caracteres pt-br funcionam normalmente.** O problema era apenas o uso de pipes/heredocs no Windows PowerShell.
+
+---
+
 ## References
 
 - Architecture: `CLAUDE.md`
