@@ -40,7 +40,7 @@ export async function bootstrap(): Promise<void> {
 
   document.getElementById('day-detail-close')?.addEventListener('click', closeDayDetailModal);
   document.getElementById('day-detail-modal')?.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('.modal-overlay') === document.getElementById('day-detail-modal')) closeDayDetailModal();
+    if (e.target === document.getElementById('day-detail-modal')) closeDayDetailModal();
   });
   document.getElementById('smart-indicator')?.addEventListener('click', openSmartModal);
 

@@ -363,7 +363,7 @@ function renderHealthCard(analytics: ReturnType<typeof AnalyticsFormatter.comput
 export function setupCliSessionsHandlers(): void {
   document.getElementById('cli-sessions-close')?.addEventListener('click', closeCliSessionsModal);
   document.getElementById('cli-sessions-modal')?.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('.modal-overlay') === document.getElementById('cli-sessions-modal')) closeCliSessionsModal();
+    if (e.target === document.getElementById('cli-sessions-modal')) closeCliSessionsModal();
   });
   document.getElementById('cli-sessions-refresh')?.addEventListener('click', () => void reloadCurrent());
 }

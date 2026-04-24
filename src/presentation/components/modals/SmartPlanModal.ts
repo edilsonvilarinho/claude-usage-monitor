@@ -142,7 +142,7 @@ export function openSmartModalWithStatus(s: SmartStatus): void {
 
   document.getElementById('sp-close-btn')?.addEventListener('click', closeModal, { once: true });
   modal.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('.modal-overlay') === modal) closeModal();
+    if (e.target === modal) closeModal();
   }, { once: true });
 }
 

@@ -25,7 +25,7 @@ export function showConfirm(message: string, okText?: string, cancelText?: strin
 
     okBtn.onclick = () => cleanup(true);
     cancelBtn.onclick = () => cleanup(false);
-    modal.onclick = (e) => { if ((e.target as HTMLElement).closest('.modal-overlay') === modal) cleanup(false); };
+    modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
   });
 }
 
@@ -54,7 +54,7 @@ export function showInfo(message: string, okText?: string): Promise<void> {
     };
 
     okBtn.onclick = cleanup;
-    modal.onclick = (e) => { if ((e.target as HTMLElement).closest('.modal-overlay') === modal) cleanup(); };
+    modal.onclick = (e) => { if (e.target === modal) cleanup(); };
   });
 }
 
