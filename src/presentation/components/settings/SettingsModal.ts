@@ -36,7 +36,7 @@ export function setupSettingsModal(
     document.getElementById('settings-modal')?.classList.add('hidden');
   });
   document.getElementById('settings-modal')?.addEventListener('click', (e) => {
-    if (e.target === document.getElementById('settings-modal')) {
+    if ((e.target as HTMLElement).closest('.modal-overlay') === document.getElementById('settings-modal')) {
       document.getElementById('settings-modal')?.classList.add('hidden');
     }
   });

@@ -40,13 +40,21 @@ export async function bootstrap(): Promise<void> {
 
   document.getElementById('day-detail-close')?.addEventListener('click', closeDayDetailModal);
   document.getElementById('day-detail-modal')?.addEventListener('click', (e) => {
-    if (e.target === document.getElementById('day-detail-modal')) closeDayDetailModal();
+    if ((e.target as HTMLElement).closest('.modal-overlay') === document.getElementById('day-detail-modal')) closeDayDetailModal();
   });
   document.getElementById('smart-indicator')?.addEventListener('click', openSmartModal);
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       document.querySelectorAll<HTMLElement>('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden'));
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const overlay = target.closest<HTMLElement>('.modal-overlay');
+    if (overlay && !overlay.classList.contains('hidden') && !target.closest('button')) {
+      overlay.classList.add('hidden');
     }
   });
 

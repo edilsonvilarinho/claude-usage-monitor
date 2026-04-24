@@ -14,7 +14,7 @@ export function setupCostModalHandlers(): void {
     document.getElementById('cost-modal')?.classList.add('hidden');
   });
   document.getElementById('cost-modal')?.addEventListener('click', (e) => {
-    if (e.target === document.getElementById('cost-modal')) {
+    if ((e.target as HTMLElement).closest('.modal-overlay') === document.getElementById('cost-modal')) {
       document.getElementById('cost-modal')?.classList.add('hidden');
     }
   });
