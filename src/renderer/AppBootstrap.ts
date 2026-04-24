@@ -50,6 +50,14 @@ export async function bootstrap(): Promise<void> {
     }
   });
 
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const overlay = target.closest<HTMLElement>('.modal-overlay');
+    if (overlay && !overlay.classList.contains('hidden') && !target.closest('button, input, select, textarea, [contenteditable]')) {
+      overlay.classList.add('hidden');
+    }
+  });
+
   window.claudeUsage.onProfileUpdated(applyProfile);
 
   window.claudeUsage.getAppVersion().then((version) => {
