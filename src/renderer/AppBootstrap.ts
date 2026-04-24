@@ -53,7 +53,8 @@ export async function bootstrap(): Promise<void> {
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     const overlay = target.closest<HTMLElement>('.modal-overlay');
-    if (overlay && !overlay.classList.contains('hidden') && !target.closest('button, input, select, textarea, [contenteditable]')) {
+    const box = target.closest<HTMLElement>('.modal-box');
+    if (overlay && !overlay.classList.contains('hidden') && !box) {
       overlay.classList.add('hidden');
     }
   });
