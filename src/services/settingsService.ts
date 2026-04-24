@@ -379,6 +379,7 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   if (settings.showNotifSettings   !== undefined) store.set('showNotifSettings',   settings.showNotifSettings);
   if (settings.showBackupSettings  !== undefined) store.set('showBackupSettings',  settings.showBackupSettings);
   if (settings.showAccountBar !== undefined) store.set('showAccountBar', settings.showAccountBar);
+  if (settings.showInTaskbar !== undefined) store.set('showInTaskbar', settings.showInTaskbar);
   if (settings.compactMode !== undefined) store.set('compactMode', settings.compactMode);
   if (settings.essentialMode !== undefined) store.set('essentialMode', settings.essentialMode);
   if (settings.settingsUpdatedAt !== undefined) store.set('settingsUpdatedAt', settings.settingsUpdatedAt);
