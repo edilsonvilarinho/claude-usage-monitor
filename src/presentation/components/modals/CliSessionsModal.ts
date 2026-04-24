@@ -132,7 +132,8 @@ function renderList(sessions: CliSession[]): void {
   });
 
   listEl.querySelectorAll<HTMLElement>('.cli-session-row').forEach((row) => {
-    row.addEventListener('click', () => {
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
       renderDetail(sessions[Number(row.dataset.idx)], listEl, detailEl);
     });
   });
