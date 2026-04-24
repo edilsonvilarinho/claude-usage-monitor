@@ -654,21 +654,25 @@ body {
 .settings-tab-content::-webkit-scrollbar,
 .report-modal-box::-webkit-scrollbar,
 .day-detail-box::-webkit-scrollbar,
-.credential-modal-box::-webkit-scrollbar {
+.credential-modal-box::-webkit-scrollbar,
+.smart-scheduler-box::-webkit-scrollbar {
   width: 4px;
 }
 .content::-webkit-scrollbar-track,
 .settings-tab-content::-webkit-scrollbar-track,
 .report-modal-box::-webkit-scrollbar-track,
 .day-detail-box::-webkit-scrollbar-track,
-.credential-modal-box::-webkit-scrollbar-track {
+.credential-modal-box::-webkit-scrollbar-track,
+.smart-scheduler-box::-webkit-scrollbar-track {
   background: transparent;
 }
 .content::-webkit-scrollbar-thumb,
 .settings-tab-content::-webkit-scrollbar-thumb,
 .report-modal-box::-webkit-scrollbar-thumb,
+.settings-tab-content::-webkit-scrollbar-thumb,
 .day-detail-box::-webkit-scrollbar-thumb,
-.credential-modal-box::-webkit-scrollbar-thumb {
+.credential-modal-box::-webkit-scrollbar-thumb,
+.smart-scheduler-box::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 99px;
 }
@@ -1877,7 +1881,7 @@ body {
 }
 
 /* ── Smart Scheduler Modal ── */
-.smart-scheduler-box { width: 320px; }
+.smart-scheduler-box { width: 320px; max-height: 88vh; overflow-y: auto; }
 .sp-verdict {
   display: flex;
   justify-content: space-between;
