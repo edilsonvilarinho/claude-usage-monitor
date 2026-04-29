@@ -5,6 +5,12 @@ Aplicativo Windows para a bandeja do sistema que monitora seus limites de uso da
 ![Preview](img/1.png)
 ![Preview](img/2.png)
 ![Preview](img/3.png)
+![Preview](img/4.png)
+![Preview](img/5.png)
+![Preview](img/6.png)
+![Preview](img/7.png)
+![Preview](img/8.png)
+![Preview](img/9.png)
 
 
 ---
